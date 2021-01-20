@@ -1,0 +1,22 @@
+3D Detection
+
+python demo.py --data_path /home/amrelsersy/KITTI/velodyne/000037.bin
+
+Stereo
+
+python main.py --maxdisp 192 --with_spn --datapath path-to-kitti  --datatype other --pretrained checkpoint/kitti2015_ck/checkpoint.tar --max_high 1
+
+
+cfgs:
+	pointpillar.yaml
+	pointrcnn.yaml
+	pv_rcnn.yaml
+	second.yaml
+	PartA2.yaml
+models_weights:
+	pointpillar.pth
+	pointrcnn.pth
+	pv_rcnn.pth
+	second.pth
+	PartA2.pth
+
