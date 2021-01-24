@@ -1,11 +1,6 @@
-3D Detection
-
-python demo.py --data_path /home/amrelsersy/KITTI/velodyne/000037.bin
-
 Stereo
 
-python main.py --maxdisp 192 --with_spn --datapath path-to-kitti  --datatype other --pretrained checkpoint/kitti2015_ck/checkpoint.tar --max_high 1
-
+python main.py 
 
 cfgs:
 	pointpillar.yaml

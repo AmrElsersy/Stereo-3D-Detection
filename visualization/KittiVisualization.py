@@ -2,6 +2,8 @@ import numpy as np
 from math import sin, cos, radians
 from visualization.KittiDataset import KittiDataset
 from visualization.KittiUtils import * 
+import visualization.BEVutils as BEVutils
+import cv2
 
 from torch import tensor
 from mayavi import mlab
@@ -29,24 +31,78 @@ class KittiVisualizer:
         # 3D Boxes of model output
         for obj in objects:
             bbox_3d = obj.bbox_3d
-            color = self.get_box_color(obj.label)
+            color = self.__get_box_color(obj.label)
             self.visualize_3d_bbox(bbox=bbox_3d, color=color, calib=calib)
 
-            self.draw_text(*bbox_3d.pos, text=str(obj.score), color=color)
+            self.__draw_text(*bbox_3d.pos, text=str(obj.score), color=color)
 
         # 3D Boxes of dataset labels 
         if labels is not None:
             for obj in labels:
                 self.visualize_3d_bbox(obj.bbox_3d, (1,0,0), calib)
 
+    def visualize_bev(self, pointcloud, objects, labels=None, calib=None):
+        BEV = BEVutils.pointcloud_to_bev(pointcloud)
+        BEV = self.__bev_to_colored_bev(BEV)
+
+        # cv2.imshow("BEV0", BEV[:,:,0])
+        # cv2.imshow("BEV1", BEV[:,:,1])
+        # cv2.imshow("BEV2", BEV[:,:,2])
+
+        # clip boxes
+        objects = BEVutils.clip_3d_boxes(objects, calib)
+        
+        # 3D Boxes of model output
+        for obj in objects:
+            color = self.__get_box_color(obj.label)
+            self.__draw_bev_box3d(BEV, obj.bbox_3d, color, calib)
+
+        # # 3D Boxes of dataset labels 
+        if labels is not None:
+            labels = BEVutils.clip_3d_boxes(labels, calib)
+            for obj in labels:
+                self.__draw_bev_box3d(BEV, obj.bbox_3d, (1,0,0), calib)
+
+        cv2.imshow("BEV", BEV)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+        mlab.close(all=True)
+    
+    def __draw_bev_box3d(self, bev, bbox_3d, color, calib):
+        corners = self.__convert_3d_bbox_to_corners(bbox_3d, calib)
+        c0 = BEVutils.corner_to_bev_coord(corners[0])
+        c1 = BEVutils.corner_to_bev_coord(corners[1])
+        c2 = BEVutils.corner_to_bev_coord(corners[2])
+        c3 = BEVutils.corner_to_bev_coord(corners[3])
+
+        cv2.line(bev, (c0[0], c0[1]), (c1[0], c1[1]), color, 1)
+        cv2.line(bev, (c0[0], c0[1]), (c2[0], c2[1]), color, 1)
+        cv2.line(bev, (c3[0], c3[1]), (c1[0], c1[1]), color, 1)
+        cv2.line(bev, (c3[0], c3[1]), (c2[0], c2[1]), color, 1)
+
+    def __bev_to_colored_bev(self, bev):
+        intensity_map = bev[:,:,0] * 255
+        height_map = bev[:,:,1]
+        np.set_printoptions(threshold=np.inf)
+
+        minZ = BEVutils.boundary["minZ"]
+        maxZ = BEVutils.boundary["maxZ"]
+        height_map = 255 - 255 * (height_map - minZ) / (maxZ - minZ) 
+
+        # make empty points black in all channels
+        empty_points_indices = np.where(intensity_map == 0)
+        height_map[empty_points_indices] = 0
+
+        BEV = np.dstack((height_map, height_map, intensity_map))
+        return BEV
 
     def visuallize_pointcloud(self, pointcloud):
-        pointcloud = self.to_numpy(pointcloud)
+        pointcloud = self.__to_numpy(pointcloud)
         mlab.points3d(pointcloud[:,0], pointcloud[:,1], pointcloud[:,2], 
                     colormap='gnuplot', scale_factor=1, mode="point",  figure=self.figure)
-        self.draw_axes()
+        self.__draw_axes()
 
-    def draw_axes(self):
+    def __draw_axes(self):
         l = 4 # axis_length
         w = 1
         mlab.plot3d([0, l], [0, 0], [0, 0], color=(0, 0, 1), line_width=w, figure=self.figure) # x
@@ -54,10 +110,10 @@ class KittiVisualizer:
         mlab.plot3d([0, 0], [0, 0], [0, l], color=(1, 0, 0), line_width=w, figure=self.figure) # z
 
     def visualize_3d_bbox(self, bbox: BBox3D, color=(0,1,0), calib=None):
-        corners = self.convert_3d_bbox_to_corners(bbox, calib)
-        self.draw_box_corners(corners, color)
+        corners = self.__convert_3d_bbox_to_corners(bbox, calib)
+        self.__draw_box_corners(corners, color)
 
-    def convert_3d_bbox_to_corners(self, bbox: BBox3D, calib=None):
+    def __convert_3d_bbox_to_corners(self, bbox: BBox3D, calib=None):
         """
             convert BBox3D with x,y,z, width, height, depth .. to 8 corners
                     h
@@ -145,7 +201,7 @@ class KittiVisualizer:
 
         return corners
 
-    def draw_box_corners(self, corners, clr):
+    def __draw_box_corners(self, corners, clr):
         if corners.shape[0] != 8:
             print("Invalid box format")
             return
@@ -160,32 +216,32 @@ class KittiVisualizer:
         c7 = corners[7] 
 
         # top suqare
-        self.draw_line(c0, c1, clr)
-        self.draw_line(c0, c2, clr)
-        self.draw_line(c3, c1, clr)
-        self.draw_line(c3, c2, clr)
+        self.__draw_line(c0, c1, clr)
+        self.__draw_line(c0, c2, clr)
+        self.__draw_line(c3, c1, clr)
+        self.__draw_line(c3, c2, clr)
         # bottom square
-        self.draw_line(c4, c5, clr)
-        self.draw_line(c4, c6, clr)
-        self.draw_line(c7, c5, clr)
-        self.draw_line(c7, c6, clr)
+        self.__draw_line(c4, c5, clr)
+        self.__draw_line(c4, c6, clr)
+        self.__draw_line(c7, c5, clr)
+        self.__draw_line(c7, c6, clr)
         # vertical edges
-        self.draw_line(c0, c4, clr)
-        self.draw_line(c1, c5, clr)
-        self.draw_line(c2, c6, clr)
-        self.draw_line(c3, c7, clr)
+        self.__draw_line(c0, c4, clr)
+        self.__draw_line(c1, c5, clr)
+        self.__draw_line(c2, c6, clr)
+        self.__draw_line(c3, c7, clr)
 
-    def draw_line(self, corner1, corner2, clr):
+    def __draw_line(self, corner1, corner2, clr):
         x = 0
         y = 1
         z = 2
         mlab.plot3d([corner1[x], corner2[x]], [corner1[y], corner2[y]], [corner1[z], corner2[z]],
                     line_width=2, color=clr, figure=self.figure)
 
-    def draw_text(self, x, y, z, text, color):
+    def __draw_text(self, x, y, z, text, color):
         mlab.text3d(0,0,0, text, scale=0.3, color=color, figure=self.figure)
     
-    def get_box_color(self, class_id):
+    def __get_box_color(self, class_id):
         if type(class_id) == str:
             class_id = class_name_to_label(class_id)
 
@@ -197,15 +253,16 @@ class KittiVisualizer:
 
         return colors[class_id]
 
-    def to_numpy(self, pointcloud):
+    def __to_numpy(self, pointcloud):
         if not isinstance(pointcloud, np.ndarray):
             return pointcloud.cpu().numpy()
         return pointcloud
 
 
 # KITTI = KittiDataset()
-# _, pointcloud, labels, calib = KITTI[37]
+# _, pointcloud, labels, calib = KITTI[10]
 # print(pointcloud.shape)
+# visualizer = KittiVisualizer()
 
 # pred = [{'pred_boxes': tensor([[19.4029,  0.4326, -0.6832,  3.2483,  1.6385,  1.5225,  6.3273],
 #         [24.7294,  3.4589, -0.7314,  4.2589,  1.5571,  1.3714,  6.3081],
@@ -219,20 +276,26 @@ class KittiVisualizer:
 #         [ 2.2620, -4.7594, -1.0531,  0.6414,  0.6154,  1.4674,  1.2008],
 #         [25.2737, -1.4847, -0.6597,  1.5603,  0.3929,  1.5712,  6.2296],
 #         [ 3.1774, -5.3730, -0.8268,  0.7852,  0.6185,  1.8156,  4.2028],
-#         [17.1161,  4.7242, -0.9604,  4.2199,  1.6030,  1.3866,  2.9143]],
-#        device='cuda:0'), 'pred_scores': tensor([0.9641, 0.7366, 0.5543, 0.4312, 0.2171, 0.2127, 0.1781, 0.1690, 0.1525,
-#         0.1475, 0.1276, 0.1198, 0.1106], device='cuda:0'), 'pred_labels': tensor([1, 1, 1, 1, 1, 1, 1, 2, 1, 2, 3, 2, 1], device='cuda:0')}]
+#         [17.1161,  4.7242, -0.9604,  4.2199,  1.6030,  1.3866,  2.9143]]), 'pred_scores': tensor([0.9641, 0.7366, 0.5543, 0.4312, 0.2171, 0.2127, 0.1781, 0.1690, 0.1525,
+#         0.1475, 0.1276, 0.1198, 0.1106]), 'pred_labels': tensor([1, 1, 1, 1, 1, 1, 1, 2, 1, 2, 3, 2, 1])}]
 
-
-# visualizer = KittiVisualizer()
 # objects = model_output_to_kitti_objects(pred)
 # visualizer.visualize(pointcloud, objects)
-# visualizer.show()
 # visualizer.visualize(pointcloud, objects, labels, calib)
-# visualizer.visualize(pointcloud, labels, calib=calib)
+# visualizer.visualize_bev(pointcloud, objects, labels, calib=calib)
+
+# visualizer.show()
 
 
  
+
+
+
+
+
+
+
+
 
 # # import open3d
 # class Open3dVisualizer:

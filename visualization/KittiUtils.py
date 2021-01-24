@@ -77,7 +77,7 @@ class KittiCalibration:
         """
         R = T[0:3, 0:3]
         t = T[0:3, 3]
-        print(R.shape, t.shape)
+        # print(R.shape, t.shape)
         R_inv = np.linalg.inv(R)
         t_inv = np.dot(-R_inv, t).reshape(3,1)
         T_inv = np.hstack((R_inv, t_inv))
@@ -118,7 +118,8 @@ def class_name_to_label(classname):
         'Truck': 0,
         'Pedestrian': 1,
         'Person_sitting': 1,
-        'Cyclist': 2
+        'Cyclist': 2,
+        'Misc' : 0
     }
     return class_to_label[classname]
 

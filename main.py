@@ -60,22 +60,18 @@ def parse_config():
     parser.add_argument('--growth_rate', type=int, nargs='+', default=[4,1,1], help='growth rate in the 3d network')
     parser.add_argument('--spn_init_channels', type=int, default=8, help='initial channels for spnet')
     parser.add_argument('--start_epoch_for_spn', type=int, default=121)
-    parser.add_argument('--pretrained', type=str, default='results/pretrained_anynet/checkpoint.tar',help='pretrained model path')
+    parser.add_argument('--pretrained', type=str, default='checkpoint/kitti2015_ck/checkpoint.tar',help='pretrained model path')
     parser.add_argument('--split_file', type=str, default=None)
     parser.add_argument('--evaluate', action='store_true')
     parser.add_argument('--max_high', type=int, default=1)
     parser.add_argument('--cfg_file', type=str, default=paper.cfg,help='specify the config for demo')
-    parser.add_argument('--data_path', type=str, default='/home/amrelsersy/Stereo-3D-Detection/path-to-kitti/velodyne')
+    parser.add_argument('--data_path', type=str, default=Path.joinpath(Path.home(), "Stereo-3D-Detection/path-to-kitti") )
     parser.add_argument('--ckpt', type=str, default=paper.model, help='specify the pretrained model')
     parser.add_argument('--ext', type=str, default='.bin', help='specify the extension of your point cloud data file')
     args = parser.parse_args()
     cfg_from_yaml_file(args.cfg_file, cfg)
 
     return args, cfg
-
-
-
-
 
 def main():
     args, cfg = parse_config()
@@ -98,7 +94,8 @@ def main():
         pred = pointpillars.predict(psuedo_pointcloud)
 
         objects = model_output_to_kitti_objects(pred)
-        visualizer.visualize(psuedo_pointcloud, objects)
+        # visualizer.visualize(psuedo_pointcloud, objects)
+        visualizer.visualize_bev(psuedo_pointcloud, objects)
         visualizer.show()
   
 

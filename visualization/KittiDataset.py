@@ -50,7 +50,7 @@ class KittiDataset(Dataset):
         # reshape to get each point
         pointCloud = pointCloud.reshape(-1, 4)
         # we don't need reflectivity (4th dim in point)
-        # pointCloud = pointCloud[:,:3]
+        pointCloud = pointCloud[:,:3]
 
         return pointCloud
 
