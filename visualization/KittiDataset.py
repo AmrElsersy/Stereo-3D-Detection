@@ -5,7 +5,8 @@ from torch.utils.data import Dataset
 import numpy as np
 import cv2
 
-from visualization.KittiUtils import *
+from KittiUtils import *
+
 
 class KittiDataset(Dataset):
     def __init__(self, root="/home/amrelsersy/KITTI", transform = None):
@@ -34,9 +35,10 @@ class KittiDataset(Dataset):
         image = self.read_image_cv2(imagePath)
         pointcloud = self.read_pointcloud_bin(pointcloudPath)
         labels = self.read_labels_annotations(annotationPath)
-        calibrations = self.read_calibrations(calibrationPath)
+        # calibrations = self.read_calibrations(calibrationPath)
+        # calibrations = self.convert_to_kitti_calib(calibrations)
+        calibrations = KittiCalibration(calib_path=calibrationPath)
 
-        calibrations = self.convert_to_kitti_calib(calibrations)
         labels = self.convert_to_kitti_objects(labels)
 
         return image, pointcloud, labels, calibrations
@@ -169,7 +171,7 @@ class KittiDataset(Dataset):
         return kitti_labels
 
 
-# KITTI = KittiDataset()
+# KITTI = KittiDataset('/home/ayman/FOE-Linux/Graduation_Project/KITTI/training')
 # _, pointcloud, label, calib = KITTI[1]
 # print(pointcloud.shape)
 # print(label)

@@ -1,5 +1,6 @@
 import numpy as np
 from enum import Enum
+import os
 # ================================================
 class BBox2D:
     def __init__(self, bbox):
@@ -23,10 +24,16 @@ class BBox3D:
         # default coordinates .. same as model output
         self.coordinates = Coordinates.LIDAR
 
+
 class Coordinates(Enum):
     CAM_3D_RECT = 0
     CAM_3D_REF = 1
     LIDAR = 2
+
+
+class VisMode(Enum):
+    SCENE_3D = 0
+    SCENE_2D = 1
 
 # ================================================
 class KittiObject:
@@ -46,22 +53,108 @@ class KittiCalibration:
         image = Projection * R_Rectification * Camera3D_reference
 
     """
-    def __init__(self, calib_dict):
-        self.P0 = np.asarray(calib_dict["P0"])
-        self.P1 = np.asarray(calib_dict["P1"])
-        self.P3 = np.asarray(calib_dict["P3"])
+    def __init__(self, calib_path):
+        self.calib_path = calib_path
+        self.calib_matrix = self.parse_calib_files()
+
+        self.P0 = self.calib_matrix["P0"]
+        self.P1 = self.calib_matrix["P1"]
         # Projection Matrix (Intrensic) .. from camera 3d (after rectification) to image coord.
-        self.P2 = np.asarray(calib_dict["P2"]).reshape(3, 4)
+        self.P2 = self.calib_matrix["P2"].reshape(3, 4)
+        self.P3 = self.calib_matrix["P3"]
         # rectification rotation matrix 3x3
-        self.R0_rect = np.asarray(calib_dict["R0_rect"]).reshape(3,3)
-        # Extrensic Transilation-Rotation Matrix from LIDAR to Cam ref(before rectification) 
-        self.Tr_velo_to_cam = np.asarray(calib_dict["Tr_velo_to_cam"]).reshape(3,4)
+        self.R0_rect = self.calib_matrix["R0_rect"].reshape(3,3)
+        # Extrensic Transilation-Rotation Matrix from LIDAR to Cam ref(before rectification)
+        self.Tr_velo_to_cam = self.calib_matrix["Tr_velo_to_cam"].reshape(3,4)
         # inverse of Tr_velo_cam
         self.Tr_cam_to_velo = self.inverse_Tr(self.Tr_velo_to_cam)
 
+    def parse_calib_files(self):
+        assert self.calib_path is not None
+
+        mat_ = {}
+        with open(os.path.join(self.calib_path), 'r') as calib_file:
+            for line in calib_file:
+                line = line.split()
+                # Avoiding empty line exception
+                try:
+                    mat_[line[0][:-1]] = np.array(line[1:], dtype=np.float32)
+                except:
+                    break
+
+        return mat_
+
+    def rotx(self, t):
+        """ 3D Rotation about the x-axis. """
+        c = np.cos(t)
+        s = np.sin(t)
+        return np.array([[1, 0, 0], [0, c, -s], [0, s, c]])
+
+    def roty(self, t):
+        """ Rotation about the y-axis. """
+        c = np.cos(t)
+        s = np.sin(t)
+        return np.array([[c, 0, s], [0, 1, 0], [-s, 0, c]])
+
+    def rotz(self, t):
+        """ Rotation about the z-axis. """
+        c = np.cos(t)
+        s = np.sin(t)
+        return np.array([[c, s, 0], [-s, c, 0], [0, 0, 1]])
+
+    def project_lidar_to_image(self, corners=None):
+        """
+            Projecting a tensor of objects to image plane (u,v)
+            P^2_rect = [f^2_u,  0,      c^2_u,  -f^2_u b^2_x;
+                        0,      f^2_v,  c^2_v,  -f^2_v b^2_y;
+                        0,      0,      1,      0]
+
+            image2 coord:
+             ----> x-axis (u)
+            |
+            |
+            v y-axis (v)
+
+            velodyne coord:
+            front x, left y, up z
+
+            rect/ref camera coord:
+            right x, down y, front z
+
+            Ref (KITTI paper): http://www.cvlibs.net/publications/Geiger2013IJRR.pdf
+        """
+        assert corners is not None
+
+        P_2 = self.P2
+        # We're using R_0 as a reference rotation
+        # R_0 is expanded to (4,4) by adding a new row & col with zeros & R_0(4,4) = 1
+        R_0 = self.R0_rect
+        R_0 = np.pad(R_0, ((0, 1), (0, 1)), mode='constant', constant_values=0)
+        R_0[-1, -1] = 1
+
+        # Extrinsic transformation matrix from velodyne to camera coordinates
+        T_velo_cam = self.Tr_velo_to_cam
+        T_velo_cam = np.pad(T_velo_cam, ((0, 1), (0, 0)), mode='constant', constant_values=0)
+        T_velo_cam[-1, -1] = 1
+
+        projected_corners = []
+        for corner in corners:
+            # y_homogeneous = P_2.R_0.T_velo_cam.X_homogeneous
+            corner = np.array([corner[0], corner[1], corner[2], 1])
+            y = np.dot(T_velo_cam, corner)
+            y = np.dot(R_0, y)
+            y = np.dot(P_2, y)
+            # Updating x, y & z from homogeneous to non homogeneous (u,v)
+            z = y[2]
+            x = y[0] / z
+            y = y[1] / z
+            projected_corners.append([x, y, z])
+
+        return np.array(projected_corners, dtype=np.float32)
+
     def inverse_Tr(self, T):
         """ 
-            get inverse of Transilation Rotation 4x4 Matrix
+            get inverse of Translation Rotation 4x4 Matrix
             Args:
                 T: 4x4 Matrix
                     ([
@@ -152,6 +245,8 @@ def model_output_to_kitti_objects(pred_dict):
         label_id = labels[i] - 1
 
         kitti_object = KittiObject(bbox, label_id)
+        kitti_object.score = score
         kitti_objects.append(kitti_object)
 
     return kitti_objects
+

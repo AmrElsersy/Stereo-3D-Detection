@@ -94,7 +94,7 @@ def main():
         pred = pointpillars.predict(psuedo_pointcloud)
 
         objects = model_output_to_kitti_objects(pred)
-        # visualizer.visualize(psuedo_pointcloud, objects)
+        # visualizer.visualize(psuedo_pointcloud, objects)      
         visualizer.visualize_bev(psuedo_pointcloud, objects)
         visualizer.show()
   
