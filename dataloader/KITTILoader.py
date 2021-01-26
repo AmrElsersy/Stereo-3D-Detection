@@ -79,3 +79,5 @@ class myImageFloder(data.Dataset):
 
     def __len__(self):
         return len(self.left)
+
+

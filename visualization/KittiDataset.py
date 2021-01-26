@@ -9,21 +9,23 @@ from KittiUtils import *
 
 
 class KittiDataset(Dataset):
-    def __init__(self, root="/home/amrelsersy/KITTI", transform = None):
+    def __init__(self, root="/home/amrelsersy/KITTI", transform = None, stereo_mode=False):
         self.root = root
-        
+        self.stereo_mode = stereo_mode
+
         self.rootPointclouds = os.path.join(self.root, "velodyne")
         self.rootImages = os.path.join(self.root, "image_2")
         self.rootAnnotations = os.path.join(self.root, "label_2")
         self.rootCalibration = os.path.join(self.root, "calib")
 
-        self.imagesNames = sorted(os.listdir(self.rootImages))
-        self.pointCloudNames = sorted(os.listdir(self.rootPointclouds))
-        self.annotationNames = sorted(os.listdir(self.rootAnnotations))
+        self.imagesNames      = sorted(os.listdir(self.rootImages))
+        self.pointCloudNames  = sorted(os.listdir(self.rootPointclouds))
+        self.annotationNames  = sorted(os.listdir(self.rootAnnotations))
         self.calibrationNames = sorted(os.listdir(self.rootCalibration))
 
-        # - Camera:   x: right,   y: down,  z: forward
-        # - Velodyne: x: forward, y: left,  z: up
+        if self.stereo_mode:
+            self.rootRightImages = os.path.join(self.root, "image_3")
+            self.rightImagesNames = sorted(os.listdir(self.rootRightImages))
         
     def __getitem__(self, index):
         imagePath = os.path.join(self.rootImages, self.imagesNames[index])
@@ -31,15 +33,17 @@ class KittiDataset(Dataset):
         annotationPath = os.path.join(self.rootAnnotations, self.annotationNames[index])
         calibrationPath = os.path.join(self.rootCalibration, self.calibrationNames[index])
 
-
         image = self.read_image_cv2(imagePath)
         pointcloud = self.read_pointcloud_bin(pointcloudPath)
         labels = self.read_labels_annotations(annotationPath)
-        # calibrations = self.read_calibrations(calibrationPath)
-        # calibrations = self.convert_to_kitti_calib(calibrations)
+        labels = self.convert_to_kitti_objects(labels)
         calibrations = KittiCalibration(calib_path=calibrationPath)
 
-        labels = self.convert_to_kitti_objects(labels)
+        if self.stereo_mode:
+            rightImagesPath = os.path.join(self.rootRightImages, self.rightImagesNames[index])
+            rightImage = self.read_image_cv2(rightImagesPath)
+
+            return image, rightImage, labels, calibrationPath
 
         return image, pointcloud, labels, calibrations
 
@@ -121,25 +125,6 @@ class KittiDataset(Dataset):
             labels.append(label)
 
         return labels
-
-    def read_calibrations(self, path):
-        calibrationFile = open(path, "r")
-        calibrationLines = calibrationFile.read().splitlines()
-
-        calibrations = [line.split(" ") for line in calibrationLines]
-
-        calib_dict = {}
-
-        for calib in calibrations:
-            # remove the ":" at last
-            calib_name = calib[0][:-1] 
-            # convert the rest of the line to float ... then convert the list to np array
-            calib_dict[calib_name] = np.array( [ float(c) for c in calib[1:] ] )
-
-        return calib_dict
-
-    def convert_to_kitti_calib(self, calib_dict):
-        return KittiCalibration(calib_dict)
 
     def convert_to_kitti_objects(self, labels):
         """
