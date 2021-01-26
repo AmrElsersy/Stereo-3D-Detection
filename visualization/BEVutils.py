@@ -1,5 +1,5 @@
 import numpy as np
-from visualization.KittiUtils import *
+from KittiUtils import *
 
 '''
 LIDAR 
