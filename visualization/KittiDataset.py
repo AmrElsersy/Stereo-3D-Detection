@@ -55,8 +55,6 @@ class KittiDataset(Dataset):
         pointCloud = np.fromfile(path, dtype=np.float32)
         # reshape to get each point
         pointCloud = pointCloud.reshape(-1, 4)
-        # we don't need reflectivity (4th dim in point)
-        pointCloud = pointCloud[:,:3]
 
         return pointCloud
 
