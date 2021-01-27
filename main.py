@@ -104,10 +104,9 @@ def main():
         calib = KittiCalibration(calib_path)
 
         psuedo_pointcloud = stereo_model.predict(imgL, imgR, calib_path)
-        print(psuedo_pointcloud.shape)
         pred = pointpillars.predict(psuedo_pointcloud)
-
         objects = model_output_to_kitti_objects(pred)
+
         visualizer.visualize_scene_2D(psuedo_pointcloud, imgL, objects, calib=calib)
         # visualizer.visualize_scene_3D(psuedo_pointcloud, objects, labels, calib)      
         # visualizer.visualize_scene_bev(psuedo_pointcloud, objects, calib=calib)
@@ -129,8 +128,7 @@ def main_pseudo(model):
         pred = model.predict(pointcloud)
         objects = model_output_to_kitti_objects(pred)
 
-        # cv2.imshow("image", image)      
-        visualizer.visualize_scene_2D(pointcloud, image, objects, calib)
+        visualizer.visualize_scene_2D(pointcloud, image, objects, calib=calib)
         # visualizer.visualize_scene_bev(pointcloud, objects)
         # visualizer.visualize_scene_3D(pointcloud, objects)
         # visualizer.visualize_scene_image(image, objects, calib)
@@ -147,8 +145,10 @@ def main_lidar(model):
         pred = model.predict(pointcloud)
 
         objects = model_output_to_kitti_objects(pred)
+        visualizer.visualize_scene_2D(pointcloud, image, objects, calib=calib)
+        
         # visualizer.visualize_scene_3D(pointcloud, objects, labels, calib)      
-        visualizer.visualize_scene_bev(pointcloud, objects, calib=calib)
+        # visualizer.visualize_scene_bev(pointcloud, objects, calib=calib)
         # visualizer.visualize_scene_image(image, objects, calib)
 
 class PointcloudPreprocessing(DatasetTemplate):

@@ -13,6 +13,9 @@ class KittiVisualizer:
         self.figure = mlab.figure(bgcolor=(0,0,0), fgcolor=(1,1,1), size=(1280, 720))
         # mlab.close()
         self.__scene_2D_mode = False
+        self.scene_2D_width = 750
+        self.ground_truth_color = (0,1,0) # green
+        self.thickness = 3
 
     def show(self):
         mlab.show(stop=True)
@@ -53,7 +56,7 @@ class KittiVisualizer:
         self.__scene_2D_mode = False
 
         # all will have the same width, just map the height to the same ratio to have the same image
-        scene_width = 700        
+        scene_width = self.scene_2D_width        
         image_h, image_w = _image.shape[:2]
         bev_h, bev_w = _bev.shape[:2]
 
@@ -64,7 +67,6 @@ class KittiVisualizer:
 
         _bev   = cv2.resize(_bev,   (scene_width, new_bev_height) )
         _image = cv2.resize(_image, (scene_width, new_image_height) )
-
 
         image_and_bev = np.zeros((new_image_height + new_bev_height, scene_width, 3), dtype=np.uint8)
         print(_image.shape, _bev.shape, image_and_bev.shape)
@@ -86,13 +88,15 @@ class KittiVisualizer:
         # 3D Boxes of model output
         for obj in objects:
             color = self.__get_box_color(obj.label)
+            color = [c * 255 for c in color]
             self.__draw_bev_box3d(BEV, obj.bbox_3d, color, calib)
 
         # # 3D Boxes of dataset labels 
         if labels is not None:
             labels = BEVutils.clip_3d_boxes(labels, calib)
             for obj in labels:
-                self.__draw_bev_box3d(BEV, obj.bbox_3d, (1,0,0), calib)
+                color = [c * 255 for c in self.ground_truth_color]
+                self.__draw_bev_box3d(BEV, obj.bbox_3d, color, calib)
 
         if self.__scene_2D_mode:
             return BEV 
@@ -146,16 +150,15 @@ class KittiVisualizer:
         c1 = BEVutils.corner_to_bev_coord(corners[1])
         c2 = BEVutils.corner_to_bev_coord(corners[2])
         c3 = BEVutils.corner_to_bev_coord(corners[3])
-
-        cv2.line(bev, (c0[0], c0[1]), (c1[0], c1[1]), color, 1)
-        cv2.line(bev, (c0[0], c0[1]), (c2[0], c2[1]), color, 1)
-        cv2.line(bev, (c3[0], c3[1]), (c1[0], c1[1]), color, 1)
-        cv2.line(bev, (c3[0], c3[1]), (c2[0], c2[1]), color, 1)
+        
+        cv2.line(bev, (c0[0], c0[1]), (c1[0], c1[1]), color, self.thickness)
+        cv2.line(bev, (c0[0], c0[1]), (c2[0], c2[1]), color, self.thickness)
+        cv2.line(bev, (c3[0], c3[1]), (c1[0], c1[1]), color, self.thickness)
+        cv2.line(bev, (c3[0], c3[1]), (c2[0], c2[1]), color, self.thickness)
 
     def __bev_to_colored_bev(self, bev):
         intensity_map = bev[:,:,0] * 255
         height_map = bev[:,:,1]
-        np.set_printoptions(threshold=np.inf)
 
         minZ = BEVutils.boundary["minZ"]
         maxZ = BEVutils.boundary["maxZ"]
@@ -165,7 +168,7 @@ class KittiVisualizer:
         empty_points_indices = np.where(intensity_map == 0)
         height_map[empty_points_indices] = 0
 
-        BEV = np.dstack((height_map, height_map, intensity_map))
+        BEV = np.dstack((intensity_map, intensity_map, intensity_map))
         return BEV
 
     def __draw_axes(self):
@@ -314,8 +317,8 @@ class KittiVisualizer:
             class_id = class_name_to_label(class_id)
 
         colors = [
-            (0,1,0),
             (0,0,1),
+            (1,0,0),
             (0,1,1),
         ]
 
