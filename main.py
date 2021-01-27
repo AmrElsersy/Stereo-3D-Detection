@@ -68,6 +68,8 @@ def parse_config():
     parser.add_argument('--data_path', type=str, default=Path.joinpath(Path.home(), "Stereo-3D-Detection/path-to-kitti") )
     parser.add_argument('--ckpt', type=str, default=paper.model, help='specify the pretrained model')
     parser.add_argument('--ext', type=str, default='.bin', help='specify the extension of your point cloud data file')
+    parser.add_argument('--lidar_only', action='store_true')
+    parser.add_argument('--psuedo', action='store_true')
     args = parser.parse_args()
     cfg_from_yaml_file(args.cfg_file, cfg)
 
@@ -76,12 +78,10 @@ def parse_config():
 def main():
     args, cfg = parse_config()
     cudnn.benchmark = True
-
     # test_left_img, test_right_img, test_left_disp = ls.testloader(args.data_path)
     # stereoLoader = torch.utils.data.DataLoader(
     #     DA.myImageFloder(test_left_img, test_right_img, test_left_disp, False),
     #     batch_size=args.test_bsize, shuffle=False, num_workers=4, drop_last=False)
-
 
     KITTI = KittiDataset('/home/amrelsersy/SFA3D/dataset/kitti/testing', stereo_mode=True)
     # stereoLoader = torch.utils.data.DataLoader(KITTI, 1, shuffle=False, num_workers=4, drop_last=False)
@@ -91,19 +91,65 @@ def main():
 
     visualizer = KittiVisualizer()
 
+    if args.lidar_only:
+        main_lidar(pointpillars)
+        return
+    if args.psuedo :
+        main_pseudo(pointpillars)
+        return
+
     # for imgL, imgR, _ in stereoLoader:
-    for i in range(5,100):
+    for i in range(8,100):
         imgL, imgR, labels, calib_path = KITTI[i]
         calib = KittiCalibration(calib_path)
 
         psuedo_pointcloud = stereo_model.predict(imgL, imgR, calib_path)
+        print(psuedo_pointcloud.shape)
         pred = pointpillars.predict(psuedo_pointcloud)
 
         objects = model_output_to_kitti_objects(pred)
-        # visualizer.visualize_scene_2D(psuedo_pointcloud, imgL, objects, calib=calib)
+        visualizer.visualize_scene_2D(psuedo_pointcloud, imgL, objects, calib=calib)
         # visualizer.visualize_scene_3D(psuedo_pointcloud, objects, labels, calib)      
         # visualizer.visualize_scene_bev(psuedo_pointcloud, objects, calib=calib)
         # visualizer.visualize_scene_image(imgL, objects, calib)
+
+def main_pseudo(model):
+    visualizer = KittiVisualizer()
+    KITTI = KittiDataset("/home/amrelsersy/SFA3D/dataset/kitti/testing")
+    root = "/home/amrelsersy/SFA3D/dataset/kitti/testing/pseudo_SDN"
+    paths = os.listdir(root)
+
+    for path in paths:
+        path = root+"/"+path 
+        pointcloud = KITTI.read_pointcloud_bin(path)
+        image = KITTI.read_image_cv2(path.replace("pseudo_SDN","image_2").replace("bin", "png"))
+        calib = KittiCalibration(path.replace("pseudo_SDN","calib").replace("bin", "txt"))
+        print(pointcloud.shape, image.shape)
+
+        pred = model.predict(pointcloud)
+        objects = model_output_to_kitti_objects(pred)
+
+        # cv2.imshow("image", image)      
+        visualizer.visualize_scene_2D(pointcloud, image, objects, calib)
+        # visualizer.visualize_scene_bev(pointcloud, objects)
+        # visualizer.visualize_scene_3D(pointcloud, objects)
+        # visualizer.visualize_scene_image(image, objects, calib)
+
+def main_lidar(model):
+    print("========== LIDAR only =============")
+    visualizer = KittiVisualizer()
+    KITTI = KittiDataset('/home/amrelsersy/SFA3D/dataset/kitti/testing')
+
+    for i in range(8, 100):
+        image, pointcloud, labels, calib = KITTI[i]
+        print(pointcloud.shape)
+
+        pred = model.predict(pointcloud)
+
+        objects = model_output_to_kitti_objects(pred)
+        # visualizer.visualize_scene_3D(pointcloud, objects, labels, calib)      
+        visualizer.visualize_scene_bev(pointcloud, objects, calib=calib)
+        # visualizer.visualize_scene_image(image, objects, calib)
 
 class PointcloudPreprocessing(DatasetTemplate):
     def __init__(self, dataset_cfg, class_names, training=True, root_path=None, logger=None):
@@ -118,7 +164,6 @@ class PointcloudPreprocessing(DatasetTemplate):
         }
         data_dict = self.prepare_data(data_dict=input_dict)
         return data_dict
-
 
 class PointCloud_3D_Detection:
     def __init__(self, args, cfg):

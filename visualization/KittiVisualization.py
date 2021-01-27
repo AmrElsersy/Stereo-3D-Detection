@@ -10,7 +10,7 @@ from mayavi import mlab
 
 class KittiVisualizer:
     def __init__(self):
-        # self.figure = mlab.figure(bgcolor=(0,0,0), fgcolor=(1,1,1), size=(1280, 720))
+        self.figure = mlab.figure(bgcolor=(0,0,0), fgcolor=(1,1,1), size=(1280, 720))
         # mlab.close()
         self.__scene_2D_mode = False
 
@@ -46,14 +46,30 @@ class KittiVisualizer:
         self.show()
 
     def visualize_scene_2D(self, pointcloud, image, objects, labels=None, calib=None):
-        
+        # read BEV & image
         self.__scene_2D_mode = True
         _image = self.visualize_scene_image(image, objects, calib)
         _bev   = self.visualize_scene_bev(pointcloud, objects, labels, calib)
         self.__scene_2D_mode = False
+
+        # all will have the same width, just map the height to the same ratio to have the same image
+        scene_width = 700        
+        image_h, image_w = _image.shape[:2]
+        bev_h, bev_w = _bev.shape[:2]
+
         print(_image.shape, _bev.shape)
-        _bev = np.resize(_bev, _image.shape)
-        image_and_bev = np.concatenate((_image, _bev), axis=0)
+
+        new_image_height = int(image_h * scene_width / image_w)
+        new_bev_height = int(bev_h * scene_width / bev_w)
+
+        _bev   = cv2.resize(_bev,   (scene_width, new_bev_height) )
+        _image = cv2.resize(_image, (scene_width, new_image_height) )
+
+
+        image_and_bev = np.zeros((new_image_height + new_bev_height, scene_width, 3), dtype=np.uint8)
+        print(_image.shape, _bev.shape, image_and_bev.shape)
+        image_and_bev[:new_image_height, :, :] = _image
+        image_and_bev[new_image_height:, :, :] = _bev
         cv2.imshow("scene 2D", image_and_bev)
 
         print("========= Press n to visualize next example ==========")
@@ -222,7 +238,13 @@ class KittiVisualizer:
         corners = np.concatenate((top_corners,bottom_corners), axis=0)
 
         # 3x3 Rotation Matrix along z 
-        R = calib.rotz(angle)
+        cosa = cos(angle)
+        sina = sin(angle)
+        R = np.array([
+            [cosa, -sina, 0],
+            [sina, cosa, 0],
+            [0,    0,    1]
+        ])
 
         # Translate the box to origin to perform rotation
         center = np.array([x+w/2, y+l/2, z-h/2])

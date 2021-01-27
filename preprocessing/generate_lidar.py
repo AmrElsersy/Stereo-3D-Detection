@@ -4,7 +4,7 @@ import os
 import numpy as np
 import scipy.misc as ssc
 
-import kitti_util
+from .kitti_util import Calibration
 
 
 def project_disp_to_points(calib, disp, max_high):
@@ -57,7 +57,7 @@ if __name__ == '__main__':
     for fn in disps:
         predix = fn[:-4]
         calib_file = '{}/{}.txt'.format(args.calib_dir, predix)
-        calib = kitti_util.Calibration(calib_file)
+        calib = Calibration(calib_file)
         # disp_map = ssc.imread(args.disparity_dir + '/' + fn) / 256.
         if fn[-3:] == 'png':
             disp_map = ssc.imread(args.disparity_dir + '/' + fn)

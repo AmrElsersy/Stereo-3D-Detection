@@ -215,7 +215,9 @@ def class_name_to_label(classname):
         'Pedestrian': 1,
         'Person_sitting': 1,
         'Cyclist': 2,
-        'Misc' : 0
+        
+        'Misc' : 0,
+        'Tram' : 0
     }
     return class_to_label[classname]
 
