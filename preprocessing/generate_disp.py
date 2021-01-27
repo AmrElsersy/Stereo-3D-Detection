@@ -1,10 +1,11 @@
+import numpy as np
+import imageio
 import argparse
 import os
 import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import kitti_util
-import numpy as np
-import scipy.misc as ssc
+# import scipy.misc as ssc
 
 
 def generate_dispariy_from_velo(pc_velo, height, width, calib):
@@ -25,8 +26,7 @@ def generate_dispariy_from_velo(pc_velo, height, width, calib):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Generate Disparity')
-    parser.add_argument('--data_path', type=str, default='~/Kitti/object/training/')
-    parser.add_argument('--split_file', type=str, default='~/Kitti/object/train.txt')
+    parser.add_argument('--data_path', type=str, default='../Kitti/training/')
     args = parser.parse_args()
 
     assert os.path.isdir(args.data_path)
@@ -45,20 +45,15 @@ if __name__ == '__main__':
     lidar_files = [x for x in os.listdir(lidar_dir) if x[-3:] == 'bin']
     lidar_files = sorted(lidar_files)
 
-    assert os.path.isfile(args.split_file)
-    with open(args.split_file, 'r') as f:
-        file_names = [x.strip() for x in f.readlines()]
-
     for fn in lidar_files:
         predix = fn[:-4]
-        if predix not in file_names:
-            continue
+
         calib_file = '{}/{}.txt'.format(calib_dir, predix)
         calib = kitti_util.Calibration(calib_file)
         # load point cloud
         lidar = np.fromfile(lidar_dir + '/' + fn, dtype=np.float32).reshape((-1, 4))[:, :3]
         image_file = '{}/{}.png'.format(image_dir, predix)
-        image = ssc.imread(image_file)
+        image = imageio.imread(image_file)
         height, width = image.shape[:2]
         depth_map = generate_dispariy_from_velo(lidar, height, width, calib)
         np.save(depth_dir + '/' + predix, depth_map)
