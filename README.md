@@ -11,13 +11,15 @@ This repository containts a real time **3D depth estmiation** using stereo camer
 
 ## Installation
 
+NOTE: this yml file is compatible with linux only, nearly will support windows
+
 1. you must install CUDA local on your system environment, follow this [link](https://developer.nvidia.com/Cuda-downloads)
 2. you must instakk cuDNN local in your system environment, follow this [link](https://docs.nvidia.com/deeplearning/cudnn/install-guide/index.html)
 3. you should build a specific environment so we recommend to install [anaconda](https://docs.anaconda.com/anaconda/install/)
 4. Install the dependencies for demos and visualizaiotn, we make a [yml](env.yml) file which contains all the required packages
 	
    - Download the yml file on your hard disk
-   - Open the file and change the name in the first line for your environment, i have PCDET name for me
+   - Open the file and change the name in the first line for your environment, i have S3D name for me
 
      <img src="images/env_name.png">
 

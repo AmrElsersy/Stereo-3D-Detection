@@ -1,8 +1,8 @@
 import numpy as np
 from math import sin, cos, radians
-from KittiDataset import KittiDataset
-from KittiUtils import *
-import BEVutils as BEVutils
+from visualization.KittiDataset import KittiDataset
+from visualization.KittiUtils import *
+import visualization.BEVutils as BEVutils
 import cv2
 
 from torch import tensor

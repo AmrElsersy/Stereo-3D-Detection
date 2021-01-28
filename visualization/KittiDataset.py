@@ -5,7 +5,7 @@ from torch.utils.data import Dataset
 import numpy as np
 import cv2
 
-from KittiUtils import *
+from visualization.KittiUtils import *
 
 
 class KittiDataset(Dataset):
@@ -153,8 +153,3 @@ class KittiDataset(Dataset):
 
         return kitti_labels
 
-
-# KITTI = KittiDataset('/home/ayman/FOE-Linux/Graduation_Project/KITTI/training')
-# _, pointcloud, label, calib = KITTI[1]
-# print(pointcloud.shape)
-# print(label)
