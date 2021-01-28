@@ -1,6 +1,5 @@
 import argparse
 import torch.backends.cudnn as cudnn
-from pathlib import Path
 from configs.configrations import *
 from pcdet.config import cfg, cfg_from_yaml_file
 from visualization.KittiDataset import KittiDataset
@@ -28,7 +27,7 @@ def parse_config():
     parser.add_argument('--max_disparity', type=int, default=192)
     parser.add_argument('--maxdisplist', type=int, nargs='+', default=[12, 3, 3])
     parser.add_argument('--datatype', default='2015',help='datapath')
-    parser.add_argument('--datapath', default=None, help='datapath')
+    parser.add_argument('--datapath', default='data/kitti/training', help='datapath')
     parser.add_argument('--epochs', type=int, default=300,help='number of epochs to train')
     parser.add_argument('--train_bsize', type=int, default=6,help='batch size for training (default: 6)')
     parser.add_argument('--test_bsize', type=int, default=8,help='batch size for testing (default: 8)')
@@ -49,11 +48,12 @@ def parse_config():
     parser.add_argument('--evaluate', action='store_true')
     parser.add_argument('--max_high', type=int, default=1)
     parser.add_argument('--cfg_file', type=str, default=paper.cfg,help='specify the config for demo')
-    parser.add_argument('--data_path', type=str, default=Path.joinpath(Path.home(), "Stereo-3D-Detection/path-to-kitti") )
+    parser.add_argument('--data_path', type=str, default='data/kitti/training')
     parser.add_argument('--ckpt', type=str, default=paper.model, help='specify the pretrained model')
     parser.add_argument('--ext', type=str, default='.bin', help='specify the extension of your point cloud data file')
     parser.add_argument('--lidar_only', action='store_true')
     parser.add_argument('--psuedo', action='store_true')
+    parser.add_argument('--index', type=int, default=0, help='index of an example in the dataset')
     args = parser.parse_args()
     cfg_from_yaml_file(args.cfg_file, cfg)
 
@@ -79,7 +79,7 @@ def main():
 
     # for imgL, imgR, _ in stereoLoader:
     # for i in range(8,100):
-    imgL, imgR, labels, calib_path = KITTI[0]
+    imgL, imgR, labels, calib_path = KITTI[args.index]
     calib = KittiCalibration(calib_path)
 
     psuedo_pointcloud = stereo_model.predict(imgL, imgR, calib_path)

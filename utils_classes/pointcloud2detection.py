@@ -24,13 +24,13 @@ def predict_pseudo_lidar(model):
         # visualizer.visualize_scene_image(image, objects, calib)
 
 
-def predict_lidar(model):
+def predict_lidar(model, index):
     print("========== LIDAR only =============")
     visualizer = KittiVisualizer()
     KITTI = KittiDataset('data/kitti/training')
 
     # for i in range(8, 100):
-    image, pointcloud, labels, calib = KITTI[0]
+    image, pointcloud, labels, calib = KITTI[index]
     print(pointcloud.shape)
 
     pred = model.predict(pointcloud)

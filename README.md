@@ -11,7 +11,7 @@ This repository containts a real time **3D depth estmiation** using stereo camer
 
 ## Installation
 
-NOTE: this yml file is compatible with linux only, nearly will support windows
+NOTE: this installlation is compatible with linux only, nearly will support windows
 
 1. you must install CUDA local on your system environment, follow this [link](https://developer.nvidia.com/Cuda-downloads)
 2. you must instakk cuDNN local in your system environment, follow this [link](https://docs.nvidia.com/deeplearning/cudnn/install-guide/index.html)
@@ -53,6 +53,8 @@ NOTE: this yml file is compatible with linux only, nearly will support windows
 
 ## Dataset Preparation
 
+You need to make data directory first and construct dataset as following
+
 ```
 Stereo-3D-Detection
 ├── data
@@ -69,9 +71,50 @@ Stereo-3D-Detection
 ├── .
 ```
 
+- link for [planes](https://drive.google.com/file/d/1d5mq0RXRnvHPVeKx6Q612z0YRO1t2wAp/view?usp=sharing)
+
+
+## Checkpoints Preparation
+
+You can download all checkpoints from this [README.md](https://github.com/open-mmlab/OpenPCDet)
+
+```
+Stereo-3D-Detection
+├── configs
+│   ├── cfgs
+│   │   │── dataset_configs
+│   │   │── kitti_models
+│   │   │── nuscenes_models
+│   │   │── waymo_models
+│   ├── checkpoint
+│   │   │── 3D_Detection
+│   │   │   ├──pointpillar_7728.pth & pv_rcnn_8369.pth & ... etc
+│   │   │── kitti2012_ck
+│   │   │── kitti2015_ck
+│   │   │── sceneflow
+├── pcdet
+├── configs
+├── utils
+├── .
+├── .
+├── .
+```
+
+NOTE: keep its file name
+
 
 ## Demo
 
+- To go from stereo to 3D object detection
+
 ```shell script
-python main.py
+python full_demo.py --index 0
+```
+
+- index is the corresponing to which sample in the dataset, default is 0
+
+- To go from point cloud to 3D object detection
+
+```shell script
+python pointcloud_demo.py
 ```
