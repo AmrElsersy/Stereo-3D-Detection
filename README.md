@@ -34,6 +34,7 @@ NOTE: this installlation is compatible with linux only, nearly will support wind
 	 ```
    - Then activate your environment using `conda activate ${env_name}`
    - `cd AnyNet/models/spn_t1/ && bash make.sh`
+   - `pip install --no-binary opencv-python opencv-python`
 
 5. you need to install [spconv](https://github.com/traveller59/spconv) in your environment
 	

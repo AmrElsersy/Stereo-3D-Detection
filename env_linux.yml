@@ -41,7 +41,6 @@ dependencies:
     - networkx==2.5
     - numba==0.52.0
     - numpy==1.19.5
-    - opencv-python==4.5.1.48
     - pillow==8.1.0
     - protobuf==3.14.0
     - pyface==7.2.0
