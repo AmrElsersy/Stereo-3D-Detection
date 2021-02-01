@@ -9,7 +9,7 @@ from visualization.KittiUtils import *
 
 
 class KittiDataset(Dataset):
-    def __init__(self, root="/home/amrelsersy/KITTI", transform = None, stereo_mode=False):
+    def __init__(self, root="/home/ayman/FOE-Linux/Graduation_Project/KITTI", transform = None, stereo_mode=False):
         self.root = root
         self.stereo_mode = stereo_mode
 
