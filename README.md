@@ -33,6 +33,8 @@ NOTE: this installlation is compatible with linux only, nearly will support wind
 	 conda env create -f env.yml
 	 ```
    - Then activate your environment using `conda activate ${env_name}`
+   - `cd AnyNet/models/spn_t1/ && bash make.sh`
+   - `pip install --no-binary opencv-python opencv-python`
 
 5. you need to install [spconv](https://github.com/traveller59/spconv) in your environment
 	
@@ -69,6 +71,10 @@ Stereo-3D-Detection
 ├── .
 ├── .
 ├── .
+```
+- run this command to generate fata infos
+```python
+python -m pcdet.datasets.kitti.kitti_dataset create_kitti_infos configs/cfgs/dataset_configs/kitti_dataset.yaml
 ```
 
 - link for [planes](https://drive.google.com/file/d/1d5mq0RXRnvHPVeKx6Q612z0YRO1t2wAp/view?usp=sharing)
