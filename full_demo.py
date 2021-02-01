@@ -2,7 +2,7 @@ import argparse
 import torch.backends.cudnn as cudnn
 from configs.configrations import *
 from pcdet.config import cfg, cfg_from_yaml_file
-from visualization.KittiDataset import KittiDataset
+from visualization.KittiDataset import KittiDataset, KittiVideo
 from visualization.KittiVisualization import KittiVisualizer
 from visualization.KittiUtils import *
 from utils_classes.stereo_depth_estimation import Stereo_Depth_Estimation
@@ -63,12 +63,12 @@ def main():
     args, cfg = parse_config()
     cudnn.benchmark = True
 
-    KITTI = KittiDataset('../KITTI/training', stereo_mode=False)
+    # KITTI = KittiDataset('../KITTI/training', stereo_mode=False)
 
     # stereo_model = Stereo_Depth_Estimation(args, cfg)
     pointpillars = PointCloud_3D_Detection(args, cfg)
 
-    visualizer = KittiVisualizer()
+    visualizer = KittiVisualizer(scene_2D_mode=True)
 
     if args.lidar_only:
         predict_lidar(pointpillars)
@@ -78,19 +78,30 @@ def main():
         return
 
     # for imgL, imgR, _ in stereoLoader:
-    for i in range(8,100):
+    # for i in range(8,100):
     # imgL, imgR, labels, calib_path = KITTI[args.index]
-        imgL, pointcloud, labels, calib = KITTI[i]
-        # calib = KittiCalibration(calib_path)
+    #     imgL, pointcloud, labels, calib = KITTI[i]
+    #     # calib = KittiCalibration(calib_path)
 
-        # psuedo_pointcloud = stereo_model.predict(imgL, imgR, calib_path)
-        pred = pointpillars.predict(pointcloud)
-        objects = model_output_to_kitti_objects(pred)
+    #     # psuedo_pointcloud = stereo_model.predict(imgL, imgR, calib_path)
+    #     pred = pointpillars.predict(pointcloud)
+    #     objects = model_output_to_kitti_objects(pred)
 
     # visualizer.visualize_scene_2D(psuedo_pointcloud, image, objects, calib=calib)
     # visualizer.visualize_scene_3D(psuedo_pointcloud, objects, labels, calib)
     # visualizer.visualize_scene_bev(psuedo_pointcloud, objects, calib=calib)
-        visualizer.visualize_scene_image(imgL, objects, calib)
+        # visualizer.visualize_scene_image(imgL, objects, calib)
+
+    # KITTI Video
+    VIDEO_ROOT_PATH = '/home/ayman/FOE-Linux/Graduation_Project/KITTI/2011_09_26_drive_0001'
+
+    dataset = KittiVideo(
+            img_dir=os.path.join(VIDEO_ROOT_PATH, "2011_09_26_drive_0001_sync/2011_09_26/image_02/data"),
+            lidar_dir=os.path.join(VIDEO_ROOT_PATH, "2011_09_26_drive_0001_sync/2011_09_26/velodyne_points/data"),
+            calib_dir=os.path.join(VIDEO_ROOT_PATH, "2011_09_26_calib/2011_09_26")
+        )
+
+    visualizer.visualize_video(pointpillars, dataset, fps=15)
 
 
 if __name__ == '__main__':

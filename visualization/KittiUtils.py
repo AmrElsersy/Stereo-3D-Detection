@@ -83,7 +83,9 @@ class KittiCalibration:
                 # Avoiding empty line exception
                 if len(line) == 0:
                     continue
-                try:
+                # The only non-float values in these files are dates, which
+                # we don't care about anyway
+                try: 
                     mat_[line[0][:-1]] = np.array(line[1:], dtype=np.float32)
                 except ValueError:
                     continue

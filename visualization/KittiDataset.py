@@ -153,3 +153,42 @@ class KittiDataset(Dataset):
 
         return kitti_labels
 
+
+class KittiVideo:
+    """ Load data for KITTI videos """
+
+    def __init__(self, img_dir, lidar_dir, calib_dir):
+        self.calib = KittiCalibration(calib_path=calib_dir, from_video=True)
+        self.img_dir = img_dir
+        self.lidar_dir = lidar_dir
+        self.img_filenames = sorted(
+            [os.path.join(img_dir, filename) for filename in os.listdir(img_dir)]
+        )
+        self.lidar_filenames = sorted(
+            [os.path.join(lidar_dir, filename) for filename in os.listdir(lidar_dir)]
+        )
+
+        assert(len(self.img_filenames) == len(self.lidar_filenames))
+        self.num_samples = len(self.img_filenames)
+
+    def __len__(self):
+        return self.num_samples
+
+    def __getitem__(self, index):
+        return self.__get_image(index), self.__get_lidar(index), self.__get_calibration()
+
+    def __get_image(self, index):
+        assert index < self.num_samples
+        img_filename = self.img_filenames[index]
+        return cv2.imread(img_filename)
+    
+    def __get_lidar(self, index):
+        assert index < self.num_samples
+        lidar_filename = self.lidar_filenames[index]
+
+        scan = np.fromfile(lidar_filename, dtype=np.float32)
+        scan = scan.reshape((-1, 4))
+        return scan
+
+    def __get_calibration(self):
+        return self.calib
