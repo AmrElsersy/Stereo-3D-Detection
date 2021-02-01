@@ -9,13 +9,13 @@ from utils_classes.stereo_depth_estimation import Stereo_Depth_Estimation
 from utils_classes.pointcloud_3d_detection import PointCloud_3D_Detection
 from utils_classes.pointcloud2detection import predict_lidar, predict_pseudo_lidar
 
-pvrcnn = PVRCNN()
+# pvrcnn = PVRCNN()
 pointpillars = PointPillars()
-second = Second()
-pointrcnn = PointRCNN()
-pointrcnn_iou = PointRCNNIoU()
-partfree = PartFree()
-partanchor = PartAnchor()
+# second = Second()
+# pointrcnn = PointRCNN()
+# pointrcnn_iou = PointRCNNIoU()
+# partfree = PartFree()
+# partanchor = PartAnchor()
 paper = pointpillars
 
 
@@ -63,9 +63,9 @@ def main():
     args, cfg = parse_config()
     cudnn.benchmark = True
 
-    KITTI = KittiDataset('data/kitti/training', stereo_mode=True)
+    KITTI = KittiDataset('../KITTI/training', stereo_mode=False)
 
-    stereo_model = Stereo_Depth_Estimation(args, cfg)
+    # stereo_model = Stereo_Depth_Estimation(args, cfg)
     pointpillars = PointCloud_3D_Detection(args, cfg)
 
     visualizer = KittiVisualizer()
@@ -78,18 +78,19 @@ def main():
         return
 
     # for imgL, imgR, _ in stereoLoader:
-    # for i in range(8,100):
-    imgL, imgR, labels, calib_path = KITTI[args.index]
-    calib = KittiCalibration(calib_path)
+    for i in range(8,100):
+    # imgL, imgR, labels, calib_path = KITTI[args.index]
+        imgL, pointcloud, labels, calib = KITTI[i]
+        # calib = KittiCalibration(calib_path)
 
-    psuedo_pointcloud = stereo_model.predict(imgL, imgR, calib_path)
-    pred = pointpillars.predict(psuedo_pointcloud)
-    objects = model_output_to_kitti_objects(pred)
+        # psuedo_pointcloud = stereo_model.predict(imgL, imgR, calib_path)
+        pred = pointpillars.predict(pointcloud)
+        objects = model_output_to_kitti_objects(pred)
 
-    visualizer.visualize_scene_2D(psuedo_pointcloud, imgL, objects, calib=calib)
+    # visualizer.visualize_scene_2D(psuedo_pointcloud, image, objects, calib=calib)
     # visualizer.visualize_scene_3D(psuedo_pointcloud, objects, labels, calib)
     # visualizer.visualize_scene_bev(psuedo_pointcloud, objects, calib=calib)
-    # visualizer.visualize_scene_image(imgL, objects, calib)
+        visualizer.visualize_scene_image(imgL, objects, calib)
 
 
 if __name__ == '__main__':

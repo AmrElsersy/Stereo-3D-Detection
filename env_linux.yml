@@ -1,4 +1,4 @@
-name: S3D
+name: obj_det
 channels:
   - anaconda
   - defaults
@@ -65,4 +65,4 @@ dependencies:
     - typing-extensions==3.7.4.3
     - vtk==9.0.1
     - zipp==3.4.0
-prefix: /home/ahmedmoamen/anaconda3/envs/S3D
+prefix: /home/ayman/anaconda3/envs/obj_det
