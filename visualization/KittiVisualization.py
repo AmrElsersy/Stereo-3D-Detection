@@ -333,21 +333,6 @@ class KittiVisualizer:
         return pointcloud
 
 
-    def visualize_video(self, model, kitti_dataset=None, fps=30.0):
-        assert kitti_dataset is not None
-
-        height, width, channels = kitti_dataset[0][0].shape    
-        outVideo = cv2.VideoWriter('demo_video.mp4', cv2.VideoWriter_fourcc(*'MP4V'), fps, (width, height))
-
-        for i in range(len(kitti_dataset)):
-            imgL, pointcloud, calib = kitti_dataset[i]
-            pred = model.predict(pointcloud)
-            objects = model_output_to_kitti_objects(pred)
-
-            img_ = self.visualize_scene_image(imgL, objects, calib)
-            outVideo.write(img_)
-
-
 # KITTI = KittiDataset('/home/amrelsersy/SFA3D/dataset/kitti/testing')
 # image, pointcloud, labels, calib = KITTI[10]
 # visualizer = KittiVisualizer()

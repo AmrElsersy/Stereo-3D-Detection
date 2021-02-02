@@ -2,26 +2,19 @@ import argparse
 import torch.backends.cudnn as cudnn
 from configs.configrations import *
 from pcdet.config import cfg, cfg_from_yaml_file
-from visualization.KittiDataset import KittiDataset
-from visualization.KittiVisualization import KittiVisualizer
-from visualization.KittiUtils import *
-from utils_classes.stereo_depth_estimation import Stereo_Depth_Estimation
-from utils_classes.pointcloud_3d_detection import PointCloud_3D_Detection
-from utils_classes.pointcloud2detection import predict_lidar, predict_pseudo_lidar
 
-# pvrcnn = PVRCNN()
+from visualization.KittiDataset import KittiVideo
+from visualization.KittiUtils import *
+from visualization.KittiVisualization import KittiVisualizer
+from utils_classes.pointcloud_3d_detection import PointCloud_3D_Detection
+import time
+import cv2
+
 pointpillars = PointPillars()
-# second = Second()
-# pointrcnn = PointRCNN()
-# pointrcnn_iou = PointRCNNIoU()
-# partfree = PartFree()
-# partanchor = PartAnchor()
 paper = pointpillars
 
-
 def parse_config():
-
-    parser = argparse.ArgumentParser(description='Anynet fintune on KITTI')
+    parser = argparse.ArgumentParser(description='KITTI Demo Video')
     parser.add_argument('--maxdisp', type=int, default=192,help='maxium disparity')
     parser.add_argument('--loss_weights', type=float, nargs='+', default=[0.25, 0.5, 1., 1.])
     parser.add_argument('--max_disparity', type=int, default=192)
@@ -50,47 +43,53 @@ def parse_config():
     parser.add_argument('--cfg_file', type=str, default=paper.cfg,help='specify the config for demo')
     parser.add_argument('--data_path', type=str, default='data/kitti/training')
     parser.add_argument('--ckpt', type=str, default=paper.model, help='specify the pretrained model')
-    parser.add_argument('--ext', type=str, default='.bin', help='specify the extension of your point cloud data file')
-    parser.add_argument('--lidar_only', action='store_true')
-    parser.add_argument('--psuedo', action='store_true')
-    parser.add_argument('--index', type=int, default=0, help='index of an example in the dataset')
+
     args = parser.parse_args()
     cfg_from_yaml_file(args.cfg_file, cfg)
 
     return args, cfg
 
+
 def main():
+
     args, cfg = parse_config()
     cudnn.benchmark = True
-
-    KITTI = KittiDataset('../KITTI/training', stereo_mode=False)
-
-    # stereo_model = Stereo_Depth_Estimation(args, cfg)
     pointpillars = PointCloud_3D_Detection(args, cfg)
-
     visualizer = KittiVisualizer(scene_2D_mode=True)
 
-    if args.lidar_only:
-        predict_lidar(pointpillars)
-        return
-    if args.psuedo :
-        predict_pseudo_lidar(pointpillars)
-        return
+    # KITTI Video
+    VIDEO_ROOT_PATH = '/home/ayman/FOE-Linux/Graduation_Project/KITTI/2011_09_26_drive_0001'
 
-    # for imgL, imgR, _ in stereoLoader:
-    # for i in range(8,100):
-    # imgL, imgR, labels, calib_path = KITTI[args.index]
-    #     imgL, pointcloud, labels, calib = KITTI[i]
-    #     # calib = KittiCalibration(calib_path)
+    dataset = KittiVideo(
+            img_dir=os.path.join(VIDEO_ROOT_PATH, "2011_09_26_drive_0001_sync/2011_09_26/image_02/data"),
+            lidar_dir=os.path.join(VIDEO_ROOT_PATH, "2011_09_26_drive_0001_sync/2011_09_26/velodyne_points/data"),
+            calib_dir=os.path.join(VIDEO_ROOT_PATH, "2011_09_26_calib/2011_09_26")
+        )
 
-    #     # psuedo_pointcloud = stereo_model.predict(imgL, imgR, calib_path)
-    #     pred = pointpillars.predict(pointcloud)
-    #     objects = model_output_to_kitti_objects(pred)
 
-    # visualizer.visualize_scene_2D(psuedo_pointcloud, image, objects, calib=calib)
-    # visualizer.visualize_scene_3D(psuedo_pointcloud, objects, labels, calib)
-    # visualizer.visualize_scene_bev(psuedo_pointcloud, objects, calib=calib)
-    # visualizer.visualize_scene_image(imgL, objects, calib)
+    img_list = []
+    avg_time = 0.
+    for i in range(len(dataset)):
+        imgL, pointcloud, calib = dataset[i]
+        # Prediction
+        t = time.time()
+        pred = pointpillars.predict(pointcloud)
+        avg_time += (time.time() - t)
+
+        objects = model_output_to_kitti_objects(pred)
+        img_ = visualizer.visualize_scene_image(imgL, objects, calib)
+        img_list.append(img_)
+
+    height, width, channels = dataset[0][0].shape
+    avg_time = avg_time / len(dataset)
+    FPS = 1 / avg_time     
+    print("Samples Average Time",avg_time)
+    print("FPS", FPS)
+    outVideo = cv2.VideoWriter('demo_video_.mp4', cv2.VideoWriter_fourcc(*'MP4V'), FPS, (width, height))
+
+    for img in img_list:
+        outVideo.write(img)
 
 if __name__ == '__main__':
     main()
+
