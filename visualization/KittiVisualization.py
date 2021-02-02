@@ -15,6 +15,7 @@ class KittiVisualizer:
         self.scene_2D_width = 750
         self.ground_truth_color = (0,1,0) # green
         self.thickness = 3
+        self.user_press =None
         
     def visualize_scene_3D(self, pointcloud, objects, labels=None, calib=None):
         """
@@ -74,6 +75,40 @@ class KittiVisualizer:
         cv2.imshow("scene 2D", image_and_bev)
         self.__show_2D()
 
+
+    def visualize_stereo_scene(self, imgL, disp, pointcloud):
+        self.__scene_2D_mode = True
+        bev   = self.visualize_scene_bev(pointcloud, [])
+        self.__scene_2D_mode = False
+
+        scene_width = self.scene_2D_width        
+        imgL = cv2.cvtColor(imgL, cv2.COLOR_BGR2GRAY)
+        bev = bev[:,:,0]
+        
+        img_h, img_w = imgL.shape[:2]
+        bev_h, bev_w = bev.shape[:2]
+        disp_h, disp_w = disp.shape[:2]
+
+        new_img_h  = int(img_h  * scene_width / img_w)
+        new_disp_h = int(disp_h * scene_width / disp_w)
+        new_bev_h  = int(bev_h * 2/3) 
+
+        bev   = cv2.resize(bev,  (scene_width, new_bev_h) )
+        image = cv2.resize(imgL, (scene_width, new_img_h) )
+        disp  = cv2.resize(disp, (scene_width, new_disp_h))
+
+        scene_height_img = new_img_h + new_disp_h
+        scene = np.zeros((new_bev_h + new_disp_h + new_img_h, scene_width), dtype=np.uint8)
+
+        print(bev.shape, image.shape, disp.shape, "total = ", scene.shape)
+        scene[:new_disp_h, :] = disp
+        scene[new_disp_h: scene_height_img, :] = image
+        scene[scene_height_img:, :] = bev
+
+        cv2.imshow("disparity_scene", scene)
+        self.__show_2D()
+
+
     def visualize_scene_bev(self, pointcloud, objects, labels=None, calib=None):
         BEV = BEVutils.pointcloud_to_bev(pointcloud)
         BEV = self.__bev_to_colored_bev(BEV)
@@ -124,7 +159,7 @@ class KittiVisualizer:
             return self.current_image 
 
         cv2.imshow('Image',self.current_image)
-        self.__show_2D()
+        self.__show_2D()        
 
     def __show_3D(self):
         mlab.show(stop=True)

@@ -7,20 +7,11 @@ from visualization.KittiVisualization import KittiVisualizer
 from visualization.KittiUtils import *
 from utils_classes.stereo_depth_estimation import Stereo_Depth_Estimation
 from utils_classes.pointcloud_3d_detection import PointCloud_3D_Detection
-from utils_classes.pointcloud2detection import predict_lidar, predict_pseudo_lidar
 
-# pvrcnn = PVRCNN()
-# second = Second()
-# pointrcnn = PointRCNN()
-# pointrcnn_iou = PointRCNNIoU()
-# partfree = PartFree()
-# partanchor = PartAnchor()
 pointpillars = PointPillars()
 paper = pointpillars
 
-
 def parse_config():
-
     parser = argparse.ArgumentParser(description='Anynet fintune on KITTI')
     parser.add_argument('--maxdisp', type=int, default=192,help='maxium disparity')
     parser.add_argument('--loss_weights', type=float, nargs='+', default=[0.25, 0.5, 1., 1.])
@@ -51,8 +42,7 @@ def parse_config():
     parser.add_argument('--data_path', type=str, default='data/kitti/training')
     parser.add_argument('--ckpt', type=str, default=paper.model, help='specify the pretrained model')
     parser.add_argument('--ext', type=str, default='.bin', help='specify the extension of your point cloud data file')
-    parser.add_argument('--lidar_only', action='store_true')
-    parser.add_argument('--psuedo', action='store_true')
+    parser.add_argument('--pseudo', action='store_true')
     parser.add_argument('--index', type=int, default=0, help='index of an example in the dataset')
     args = parser.parse_args()
     cfg_from_yaml_file(args.cfg_file, cfg)
@@ -69,13 +59,6 @@ def main():
     pointpillars = PointCloud_3D_Detection(args, cfg)
 
     visualizer = KittiVisualizer()
-
-    # if args.lidar_only:
-    #     predict_lidar(pointpillars)
-    #     return
-    # if args.psuedo :
-    #     predict_pseudo_lidar(pointpillars)
-    #     return
 
     for i in range(args.index, len(KITTI)):
         imgL, imgR, labels, calib = KITTI[i]
