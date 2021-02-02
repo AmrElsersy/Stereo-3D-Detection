@@ -37,15 +37,15 @@ class KittiDataset(Dataset):
         pointcloud = self.read_pointcloud_bin(pointcloudPath)
         labels = self.read_labels_annotations(annotationPath)
         labels = self.convert_to_kitti_objects(labels)
-        calibrations = KittiCalibration(calib_path=calibrationPath)
+        calib = KittiCalibration(calib_path=calibrationPath)
 
         if self.stereo_mode:
             rightImagesPath = os.path.join(self.rootRightImages, self.rightImagesNames[index])
             rightImage = self.read_image_cv2(rightImagesPath)
 
-            return image, rightImage, labels, calibrationPath
+            return image, rightImage, labels, calib
 
-        return image, pointcloud, labels, calibrations
+        return image, pointcloud, labels, calib
 
     def __len__(self):
         return len(self.pointCloudNames)

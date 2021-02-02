@@ -291,6 +291,3 @@ def model_output_to_kitti_objects(pred_dict):
         kitti_objects.append(kitti_object)
 
     return kitti_objects
-
-# VIDEO_CALIB_PATH = '/home/ayman/FOE-Linux/Graduation_Project/KITTI/2011_09_26_drive_0001/2011_09_26_calib/2011_09_26'
-# obj = KittiCalibration(calib_path='/home/ayman/FOE-Linux/Graduation_Project/KITTI/vis_samples/calib/006936.txt', from_video=False)

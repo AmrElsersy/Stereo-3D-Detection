@@ -42,7 +42,7 @@ def pointcloud_to_bev(pointcloud):
     pointcloud = clip_pointcloud(pointcloud)
 
     # sort by z ... to get the maximum z when using unique 
-    # (as unique get the first unique elemnt so we attatch it with max value)
+    # (as unique function gets the first unique elemnt so we attatch it with max value)
     z_indices = np.argsort(pointcloud[:,2])
     pointcloud = pointcloud[z_indices]
 
@@ -53,7 +53,7 @@ def pointcloud_to_bev(pointcloud):
 
     height_map    = np.zeros((MAP_HEIGHT, MAP_WIDTH)) # max z
     intensity_map = np.zeros((MAP_HEIGHT, MAP_WIDTH)) # intensity (contains reflectivity or 1 if not supported)
-    density_map   = np.zeros((MAP_HEIGHT, MAP_WIDTH)) # normalization (not yet implemented)
+    density_map   = np.zeros((MAP_HEIGHT, MAP_WIDTH)) # density of the mapped 3D points to a the pixel
 
     # shape = (n_points, 1)
     x_bev = np.int_((BEV_HEIGHT)  - pointcloud[:, 0] * descretization_x )
@@ -72,7 +72,11 @@ def pointcloud_to_bev(pointcloud):
     # intensity_map[x_bev_unique, y_bev_unique] = pointcloud[x_indices, 3]
     intensity_map[xy_bev_unique[:,0], xy_bev_unique[:,1]] = 1
 
+    # points are sorted by z, so unique indices (first found indices) is the max z
     height_map[xy_bev_unique[:,0], xy_bev_unique[:,1]] = z_bev[indices]
+
+    # density of points in each pixel
+    density_map[xy_bev_unique[:,0], xy_bev_unique[:,1]] = np.minimum(1, np.log(counts + 1)/np.log(64) )
 
     # stack the BEV channels along 3rd axis
     BEV = np.dstack((intensity_map, height_map, density_map))
