@@ -1,0 +1,4 @@
+python train.py --gpu_idx 0 --pretrained_path ../checkpoints/fpn_resnet_18/Model_fpn_resnet_18_epoch_10.pth --batch_size 2
+
+python train.py --gpu_idx 0 --resume_path ../checkpoints/fpn_resnet_18/Model_fpn_resnet_18_epoch_10.pth --batch_size 2
+
