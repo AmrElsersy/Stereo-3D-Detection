@@ -246,11 +246,13 @@ class KittiCalibration:
 # ================================================
 def class_name_to_label(classname):
     class_to_label = {
-        'Car': 0,
-        'Van': 0,
-        'Truck': 0,
-        'Pedestrian': 1,
-        'Person_sitting': 1,
+        'Pedestrian': 0,
+        'Person_sitting': 0,
+
+        'Car': 1,
+        'Van': 1,
+        'Truck': 1,
+
         'Cyclist': 2,
         
         'Misc' : 0,
@@ -259,7 +261,7 @@ def class_name_to_label(classname):
     return class_to_label[classname]
 
 def label_to_class_name(label):
-    class_list = ["Car", "Pedestrian", "Cyclist"]
+    class_list = ["Pedestrian", "Car", "Cyclist"]
     return class_list[label]
 
 def model_output_to_kitti_objects(pred_dict):
@@ -289,5 +291,16 @@ def model_output_to_kitti_objects(pred_dict):
         kitti_object = KittiObject(bbox, label_id)
         kitti_object.score = score
         kitti_objects.append(kitti_object)
+
+    return kitti_objects
+
+
+def SFA3D_output_to_kitti_objects(detections):
+    kitti_objects = []
+
+    # for cls_id in detections.item():
+    #     for detection in detections[cls_id]:
+
+        
 
     return kitti_objects

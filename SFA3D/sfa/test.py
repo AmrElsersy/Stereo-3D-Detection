@@ -141,6 +141,8 @@ if __name__ == '__main__':
             t2 = time_synchronized()
 
             detections = detections[0]  # only first batch
+
+            print(detections)
             # Draw prediction in the image
             bev_map = (bev_maps.squeeze().permute(1, 2, 0).numpy() * 255).astype(np.uint8)
             bev_map = cv2.resize(bev_map, (cnf.BEV_WIDTH, cnf.BEV_HEIGHT))

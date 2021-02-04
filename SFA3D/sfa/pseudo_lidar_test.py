@@ -157,7 +157,6 @@ def parse_test_configs():
 
 def complex_yolo(pointcloud):
     pointcloud = get_filtered_lidar(pointcloud, cnf.boundary)
-    print(pointcloud[:,3])
     bev_maps = makeBEVMap(pointcloud, cnf.boundary)
     bev_maps = torch.from_numpy(bev_maps)
     bev_maps = torch.unsqueeze(bev_maps, 0)
