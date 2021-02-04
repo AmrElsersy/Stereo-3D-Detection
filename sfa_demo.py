@@ -8,6 +8,7 @@ from visualization.KittiVisualization import KittiVisualizer
 from visualization.KittiUtils import *
 
 from utils_classes.SFA3D import SFA3D
+from utils_classes.stereo_depth_estimation import Stereo_Depth_Estimation
 
 def parse_test_configs():
     parser = argparse.ArgumentParser(description='Testing config for the Implementation')
@@ -22,7 +23,7 @@ def parse_test_configs():
     parser.add_argument('--batch_size', type=int, default=1, help='mini-batch size (default: 4)')
     parser.add_argument('--peak_thresh', type=float, default=0.2)
     parser.add_argument('--save_test_output', action='store_true', help='If true, the output image of the testing phase will be saved')
-    parser.add_argument('--SDN', action='store_true', help="Psuedo LIDAR from SDN Depth Estimation")
+    parser.add_argument('--stereo', action='store_true', help="Run SFA3D on anynet stereo model pseduo lidar")
     parser.add_argument('--index', type=int, default=0, help="start index in dataset")
     configs = edict(vars(parser.parse_args()))
     configs.pin_memory = True
@@ -62,73 +63,49 @@ def parse_test_configs():
     
     return configs, args
 
+from full_demo import parse_config
 
 def main():
     cfg, args = parse_test_configs()
+    stereo_args, _ = parse_config()
     cudnn.benchmark = True
 
-    KITTI = KittiDataset(os.path.join(cfg.dataset_dir, "testing"))
+    dataset_root = os.path.join(cfg.dataset_dir, "testing")
+    KITTI = KittiDataset(dataset_root)
+    KITTI_stereo = KittiDataset(dataset_root, stereo_mode=True)    
+
     sfa_model = SFA3D(cfg) 
+    anynet_model = Stereo_Depth_Estimation(stereo_args,None)
+
     visualizer = KittiVisualizer()
 
-    for i in range(args.index, len(KITTI)):
-        image, pointcloud, labels, calib = KITTI[i]
-        detections = sfa_model.predict(pointcloud)
-        print(detections)
 
-        time.sleep(2)
-        # objects = SFA3D_output_to_kitti_objects(detections)
+    if args.stereo:
+        for i in range(args.index, len(KITTI_stereo)):
+            imgL, imgR, _, calib = KITTI_stereo[i]
 
-        # visualizer.visualize_scene_2D(pointcloud, image, objects, calib=calib)
-        # if visualizer.user_press == 27:
-        #     cv2.destroyAllWindows()
-        #     break
+            pointcloud = anynet_model.predict(imgL, imgR, calib.calib_path)
+
+            detections = sfa_model.predict(pointcloud)
+            objects = SFA3D_output_to_kitti_objects(detections)
+
+            visualizer.visualize_scene_2D(pointcloud, imgL, objects, calib=calib)
+            if visualizer.user_press == 27:
+                cv2.destroyAllWindows()
+                break
+
+    else:
+        for i in range(args.index, len(KITTI)):
+            image, pointcloud, labels, calib = KITTI[i]
+
+            detections = sfa_model.predict(pointcloud)
+            objects = SFA3D_output_to_kitti_objects(detections)
+
+            visualizer.visualize_scene_2D(pointcloud, image, objects, calib=calib)
+            if visualizer.user_press == 27:
+                cv2.destroyAllWindows()
+                break
 
 if __name__ == '__main__':
     main()
-
-
-if __name__ == '__ray2__':
-    configs, args = parse_test_configs()
-
-
-    # ============================= Sersy Edit =======================================
-    stereo_model = Stereo_Depth_Estimation(stereo_args,None)
-
-    dataset_root = os.path.join(configs.dataset_dir, 'testing')
-    print(configs.dataset_dir)
-    KITTI_stereo = KittiDataset(dataset_root, stereo_mode=True)    
-    KITTI = KittiDataset(dataset_root, stereo_mode=False)   
-
-    winname = "image"
-
-    # SDN pseudo
-    if args.SDN:
-        n = len(KITTI)
-        for i in range(int(n/2), n):
-            image, pointcloud, labels, calib = KITTI[i]
-
-            complex_yolo(pointcloud)
-        
-            cv2.namedWindow(winname)
-            cv2.moveWindow(winname, 800,300)
-            cv2.imshow(winname, image)
-            if cv2.waitKey(0) == 27:
-                break
-            cv2.destroyAllWindows()
-
-    # Stereo psuedo
-    else:        
-        for i in range(len(KITTI_stereo)):
-            imgL, imgR, _, calib = KITTI_stereo[i]
-
-            pointcloud = stereo_model.predict(imgL, imgR, calib.calib_path)
-            complex_yolo(pointcloud)
-
-            cv2.namedWindow(winname)
-            cv2.moveWindow(winname, 800,300)
-            cv2.imshow(winname, imgL)
-            if cv2.waitKey(0) == 27:
-                break
-            cv2.destroyAllWindows()
 

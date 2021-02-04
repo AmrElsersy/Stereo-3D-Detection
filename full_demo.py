@@ -44,6 +44,7 @@ def parse_config():
     parser.add_argument('--ext', type=str, default='.bin', help='specify the extension of your point cloud data file')
     parser.add_argument('--pseudo', action='store_true')
     parser.add_argument('--index', type=int, default=0, help='index of an example in the dataset')
+    parser.add_argument('--stereo', action='store_true', help="Run SFA3D on anynet stereo model pseduo lidar")
     args = parser.parse_args()
     cfg_from_yaml_file(args.cfg_file, cfg)
 

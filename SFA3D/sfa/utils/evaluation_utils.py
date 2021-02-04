@@ -178,6 +178,6 @@ def convert_det_to_real_values(detections, num_classes=3):
                 w = _w / cnf.BEV_WIDTH * cnf.bound_size_y
                 l = _l / cnf.BEV_HEIGHT * cnf.bound_size_x
 
-                kitti_dets.append([cls_id, x, y, z, _h, w, l, _yaw])
+                kitti_dets.append([cls_id, x, y, z, _h, w, l, _yaw, _score])
 
     return np.array(kitti_dets)

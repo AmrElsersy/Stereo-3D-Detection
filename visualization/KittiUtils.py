@@ -298,9 +298,18 @@ def model_output_to_kitti_objects(pred_dict):
 def SFA3D_output_to_kitti_objects(detections):
     kitti_objects = []
 
-    # for cls_id in detections.item():
-    #     for detection in detections[cls_id]:
-
+    for detection in detections:
+        cls_id, x, y, z, h, w, l, yaw, score = detection
         
+        # z output is shifted down & (l , w) are swaped
+        z += h/2
+        w, l = l, w
 
+        bbox = BBox3D(x, y, z, h, w, l, yaw)
+        bbox.coordinates = Coordinates.LIDAR
+
+        kitti_object = KittiObject(bbox, int(cls_id), score)
+        kitti_objects.append(kitti_object)
+    
     return kitti_objects
+

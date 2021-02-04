@@ -4,6 +4,7 @@ import os
 import time
 import warnings
 import numpy as np
+from pathlib import Path
 
 warnings.filterwarnings("ignore", category=UserWarning)
 
@@ -32,11 +33,9 @@ sfa_root += "SFA3D/sfa"
 sys.path.insert(0, sfa_root)
 
 from utils.misc import make_folder, time_synchronized
-from utils.evaluation_utils import decode, post_processing
+from utils.evaluation_utils import decode, post_processing, convert_det_to_real_values
+import config.kitti_config as cnf
 from utils.torch_utils import _sigmoid
-import config.kitti_config as cnf
-import config.kitti_config as cnf
-from pathlib import Path
 
 from data_process.kitti_data_utils import get_filtered_lidar
 from data_process.kitti_bev_utils import makeBEVMap
@@ -73,12 +72,11 @@ class SFA3D:
         return model
     
     def predict(self, pointcloud):
-        t1 = time_synchronized()
         # convert to bird eye view -> get heatmap output -> convert to kitti format output
         bev = self.preprocesiing(pointcloud)
+        t1 = time_synchronized()
         outputs = self.model(bev)
         detections = self.post_procesiing(outputs)
-        
         t2 = time_synchronized()
         print('\tDone testing in time: {:.1f}ms, speed {:.2f}FPS'.format((t2 - t1) * 1000,1 / (t2 - t1)))
 
@@ -99,5 +97,7 @@ class SFA3D:
         detections = decode(outputs['hm_cen'], outputs['cen_offset'], outputs['direction'], outputs['z_coor'],outputs['dim'], K=self.configs.K)
         detections = detections.cpu().detach().numpy().astype(np.float32)
         detections = post_processing(detections, self.configs.num_classes, self.configs.down_ratio, self.configs.peak_thresh)
-
+        detections = detections[0]
+        detections = convert_det_to_real_values(detections)
         return detections
+    
