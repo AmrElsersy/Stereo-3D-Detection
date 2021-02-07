@@ -10,19 +10,13 @@ from torch import tensor
 from mayavi import mlab
 
 class KittiVisualizer:
-    def __init__(self, scene_2D_mode = False):
-        self.__scene_2D_mode = scene_2D_mode
-        if scene_2D_mode == False:
-            self.figure = mlab.figure(bgcolor=(0,0,0), fgcolor=(1,1,1), size=(1280, 720))
-        # mlab.close()
-        
+    def __init__(self):
+        self.__scene_2D_mode = False
         self.scene_2D_width = 750
         self.ground_truth_color = (0,1,0) # green
         self.thickness = 3
-
-    def show(self):
-        mlab.show(stop=True)
-
+        self.user_press =None
+        
     def visualize_scene_3D(self, pointcloud, objects, labels=None, calib=None):
         """
             Visualize the Scene including Point Cloud & 3D Boxes 
@@ -33,6 +27,8 @@ class KittiVisualizer:
                 labels: list of KittiObjects represents dataset labels
                 calib: Kitti Calibration Object (must be specified if you pass boxes with cam_rect_coord)
         """
+        self.figure = mlab.figure(bgcolor=(0,0,0), fgcolor=(1,1,1), size=(1280, 720))
+
         # Point Cloud
         self.visuallize_pointcloud(pointcloud)
 
@@ -49,7 +45,7 @@ class KittiVisualizer:
             for obj in labels:
                 self.visualize_3d_bbox(obj.bbox_3d, (1,0,0), calib)
 
-        self.show()
+        self.__show_3D()
 
     def visualize_scene_2D(self, pointcloud, image, objects, labels=None, calib=None):
         # read BEV & image
@@ -63,7 +59,7 @@ class KittiVisualizer:
         image_h, image_w = _image.shape[:2]
         bev_h, bev_w = _bev.shape[:2]
 
-        print(_image.shape, _bev.shape)
+        # print(_image.shape, _bev.shape)
 
         new_image_height = int(image_h * scene_width / image_w)
         new_bev_height = int(bev_h * scene_width / bev_w)
@@ -72,14 +68,46 @@ class KittiVisualizer:
         _image = cv2.resize(_image, (scene_width, new_image_height) )
 
         image_and_bev = np.zeros((new_image_height + new_bev_height, scene_width, 3), dtype=np.uint8)
-        print(_image.shape, _bev.shape, image_and_bev.shape)
+        # print(_image.shape, _bev.shape, image_and_bev.shape)
         image_and_bev[:new_image_height, :, :] = _image
         image_and_bev[new_image_height:, :, :] = _bev
-        cv2.imshow("scene 2D", image_and_bev)
 
-        print("========= Press n to visualize next example ==========")
-        if cv2.waitKey(0) & 0xff == ord('n'):
-            cv2.destroyAllWindows()
+        cv2.imshow("scene 2D", image_and_bev)
+        self.__show_2D()
+
+
+    def visualize_stereo_scene(self, imgL, disp, pointcloud):
+        self.__scene_2D_mode = True
+        bev   = self.visualize_scene_bev(pointcloud, [])
+        self.__scene_2D_mode = False
+
+        scene_width = self.scene_2D_width        
+        imgL = cv2.cvtColor(imgL, cv2.COLOR_BGR2GRAY)
+        bev = bev[:,:,0]
+        
+        img_h, img_w = imgL.shape[:2]
+        bev_h, bev_w = bev.shape[:2]
+        disp_h, disp_w = disp.shape[:2]
+
+        new_img_h  = int(img_h  * scene_width / img_w)
+        new_disp_h = int(disp_h * scene_width / disp_w)
+        new_bev_h  = int(bev_h * 2/3) 
+
+        bev   = cv2.resize(bev,  (scene_width, new_bev_h) )
+        image = cv2.resize(imgL, (scene_width, new_img_h) )
+        disp  = cv2.resize(disp, (scene_width, new_disp_h))
+
+        scene_height_img = new_img_h + new_disp_h
+        scene = np.zeros((new_bev_h + new_disp_h + new_img_h, scene_width), dtype=np.uint8)
+
+        print(bev.shape, image.shape, disp.shape, "total = ", scene.shape)
+        scene[:new_disp_h, :] = disp
+        scene[new_disp_h: scene_height_img, :] = image
+        scene[scene_height_img:, :] = bev
+
+        cv2.imshow("disparity_scene", scene)
+        self.__show_2D()
+
 
     def visualize_scene_bev(self, pointcloud, objects, labels=None, calib=None):
         BEV = BEVutils.pointcloud_to_bev(pointcloud)
@@ -105,9 +133,7 @@ class KittiVisualizer:
             return BEV 
 
         cv2.imshow("BEV", BEV)
-        print("========= Press n to visualize next example ==========")
-        if cv2.waitKey(0) & 0xff == ord('n'):
-            cv2.destroyAllWindows()
+        self.__show_2D()
 
     def visualize_scene_image(self, image, kitti_objects, calib):
         self.current_image = image
@@ -138,9 +164,14 @@ class KittiVisualizer:
             return self.current_image 
 
         cv2.imshow('Image',self.current_image)
-        print("========= Press n to visualize next example ==========")
-        if cv2.waitKey(0) & 0xff == ord('n'):
-            cv2.destroyAllWindows()
+        self.__show_2D()        
+
+    def __show_3D(self):
+        mlab.show(stop=True)
+
+    def __show_2D(self):
+        print("**************** Press n for next example ... Press ESC to quit *****************")
+        self.user_press = cv2.waitKey(0) & 0xff      
 
     def visuallize_pointcloud(self, pointcloud):
         pointcloud = self.__to_numpy(pointcloud)
@@ -165,19 +196,19 @@ class KittiVisualizer:
         cv2.line(bev, (c3[0], c3[1]), (c2[0], c2[1]), color, self.thickness)
 
     def __bev_to_colored_bev(self, bev):
-        intensity_map = bev[:,:,0] * 255
+
+        bev = (bev * 255).astype(np.uint8)
+
+        intensity_map = bev[:,:,0]
         height_map = bev[:,:,1]
+        density_map = bev[:,:,2]
 
         minZ = BEVutils.boundary["minZ"]
         maxZ = BEVutils.boundary["maxZ"]
-        height_map = 255 - 255 * (height_map - minZ) / (maxZ - minZ) 
+        # height_map = 255 - 255 * (height_map - minZ) / (maxZ - minZ) 
+        # bev = np.dstack((intensity_map, height_map, density_map))
 
-        # make empty points black in all channels
-        empty_points_indices = np.where(intensity_map == 0)
-        height_map[empty_points_indices] = 0
-
-        BEV = np.dstack((intensity_map, intensity_map, intensity_map))
-        return BEV
+        return bev
 
     def __draw_axes(self):
         l = 4 # axis_length

@@ -24,13 +24,33 @@ class Stereo_Depth_Estimation:
         model.load_state_dict(checkpoint['state_dict'], strict=False)
         return model
 
-    def predict(self, imgL, imgR, calib_path):
+    def predict(self, imgL, imgR, calib_path, return_disparity=False):
 
         imgL, imgR = self.preprocesiing.preprocess(imgL, imgR)
-        disparity = self.stereo_to_disparity(imgL, imgR)
 
+        disparity = self.stereo_to_disparity(imgL, imgR)
+        psuedo_pointcloud = self.disparity_to_pointcloud(disparity, calib_path)
+
+        if return_disparity:
+            return disparity[-1] , psuedo_pointcloud
+
+        return psuedo_pointcloud
+
+    def stereo_to_disparity(self, imgL, imgR):
+        self.model.eval()
+
+        imgL = imgL.float().cuda()
+        imgR = imgR.float().cuda()
+
+        with torch.no_grad():
+            startTime = time.time()
+            outputs, all_time = self.model(imgL, imgR)
+            all_time = ''.join(['At Stage {}: time {:.2f} ms ~ {:.2f} FPS\n'.format(
+                x, (all_time[x] - startTime) * 1000, 1 / ((all_time[x] - startTime))) for x in range(len(all_time))])
+            return outputs
+    
+    def disparity_to_pointcloud(self, disparity, calib_path):
         # get the last disparity (best accuracy)
-        last_index = len(disparity) - 1
         output = disparity[-1]
         output = torch.squeeze(output ,1)
 
@@ -46,16 +66,3 @@ class Stereo_Depth_Estimation:
         lidar = lidar.astype(np.float32)
 
         return lidar
-
-    def stereo_to_disparity(self, imgL, imgR):
-        self.model.eval()
-
-        imgL = imgL.float().cuda()
-        imgR = imgR.float().cuda()
-
-        with torch.no_grad():
-            startTime = time.time()
-            outputs, all_time = self.model(imgL, imgR)
-            all_time = ''.join(['At Stage {}: time {:.2f} ms ~ {:.2f} FPS\n'.format(
-                x, (all_time[x] - startTime) * 1000, 1 / ((all_time[x] - startTime))) for x in range(len(all_time))])
-            return outputs

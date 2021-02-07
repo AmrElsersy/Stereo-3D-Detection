@@ -55,7 +55,7 @@ def main():
     args, cfg = parse_config()
     cudnn.benchmark = True
     pointpillars = PointCloud_3D_Detection(args, cfg)
-    visualizer = KittiVisualizer(scene_2D_mode=True)
+    visualizer = KittiVisualizer()
 
     # KITTI Video
     VIDEO_ROOT_PATH = '/home/ayman/FOE-Linux/Graduation_Project/KITTI/2011_09_26_drive_0001'

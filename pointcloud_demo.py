@@ -67,17 +67,13 @@ class DemoDataset(DatasetTemplate):
 
 def parse_config():
     parser = argparse.ArgumentParser(description='arg parser')
-    parser.add_argument('--cfg_file', type=str, default=paper.cfg,
-                        help='specify the config for demo')
-    parser.add_argument('--data_path', type=str, default='data/kitti/training/velodyne',
-                        help='specify the point cloud data file or directory')
+    parser.add_argument('--cfg_file', type=str, default=paper.cfg, help='specify the config for demo')
+    parser.add_argument('--data_path', type=str, default='../KITTI/training', help='specify the point cloud data file or directory')
     parser.add_argument('--ckpt', type=str, default=paper.model, help='specify the pretrained model')
     parser.add_argument('--ext', type=str, default='.bin', help='specify the extension of your point cloud data file')
 
     args = parser.parse_args()
-
     cfg_from_yaml_file(args.cfg_file, cfg)
-
     return args, cfg
 
 

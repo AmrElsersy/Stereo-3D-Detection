@@ -246,11 +246,13 @@ class KittiCalibration:
 # ================================================
 def class_name_to_label(classname):
     class_to_label = {
-        'Car': 0,
-        'Van': 0,
-        'Truck': 0,
-        'Pedestrian': 1,
-        'Person_sitting': 1,
+        'Pedestrian': 0,
+        'Person_sitting': 0,
+
+        'Car': 1,
+        'Van': 1,
+        'Truck': 1,
+
         'Cyclist': 2,
         
         'Misc' : 0,
@@ -259,7 +261,7 @@ def class_name_to_label(classname):
     return class_to_label[classname]
 
 def label_to_class_name(label):
-    class_list = ["Car", "Pedestrian", "Cyclist"]
+    class_list = ["Pedestrian", "Car", "Cyclist"]
     return class_list[label]
 
 def model_output_to_kitti_objects(pred_dict):
@@ -292,5 +294,22 @@ def model_output_to_kitti_objects(pred_dict):
 
     return kitti_objects
 
-# VIDEO_CALIB_PATH = '/home/ayman/FOE-Linux/Graduation_Project/KITTI/2011_09_26_drive_0001/2011_09_26_calib/2011_09_26'
-# obj = KittiCalibration(calib_path='/home/ayman/FOE-Linux/Graduation_Project/KITTI/vis_samples/calib/006936.txt', from_video=False)
+
+def SFA3D_output_to_kitti_objects(detections):
+    kitti_objects = []
+
+    for detection in detections:
+        cls_id, x, y, z, h, w, l, yaw, score = detection
+        
+        # z output is shifted down & (l , w) are swaped
+        z += h/2
+        w, l = l, w
+
+        bbox = BBox3D(x, y, z, h, w, l, yaw)
+        bbox.coordinates = Coordinates.LIDAR
+
+        kitti_object = KittiObject(bbox, int(cls_id), score)
+        kitti_objects.append(kitti_object)
+    
+    return kitti_objects
+
