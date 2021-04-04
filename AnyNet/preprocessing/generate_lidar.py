@@ -3,9 +3,16 @@ import os
 
 import numpy as np
 import scipy.misc as ssc
-
 from .kitti_util import Calibration
 
+def inverse_rigid_trans(Tr):
+    ''' Inverse a rigid body transform matrix (3x4 as [R|t])
+        [R'|-R't; 0|1]
+    '''
+    inv_Tr = np.zeros_like(Tr)  # 3x4
+    inv_Tr[0:3, 0:3] = np.transpose(Tr[0:3, 0:3])
+    inv_Tr[0:3, 3] = np.dot(-np.transpose(Tr[0:3, 0:3]), Tr[0:3, 3])
+    return inv_Tr
 
 def project_disp_to_points(calib, disp, max_high):
     disp[disp < 0] = 0
@@ -35,11 +42,11 @@ def project_depth_to_points(calib, depth, max_high):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Generate Libar')
     parser.add_argument('--calib_dir', type=str,
-                        default='~/Kitti/object/training/calib')
+                        default='../path-to-kitti-small/training/calib')
     parser.add_argument('--disparity_dir', type=str,
-                        default='~/Kitti/object/training/predicted_disparity')
+                        default='../path-to-kitti-small/training/predicted_disparity')
     parser.add_argument('--save_dir', type=str,
-                        default='~/Kitti/object/training/predicted_velodyne')
+                        default='../path-to-kitti-small/training/predicted_velodyne')
     parser.add_argument('--max_high', type=int, default=1)
     parser.add_argument('--is_depth', action='store_true')
 
@@ -66,11 +73,10 @@ if __name__ == '__main__':
         else:
             assert False
         if not args.is_depth:
-            print("is disparity")
             disp_map = (disp_map*256).astype(np.uint16)/256.
+            # print(np.min(disp_map), np.max(disp_map))
             lidar = project_disp_to_points(calib, disp_map, args.max_high)
         else:
-            print("is depth")
             disp_map = (disp_map).astype(np.float32)/256.
             lidar = project_depth_to_points(calib, disp_map, args.max_high)
         # pad 1 in the indensity dimension
