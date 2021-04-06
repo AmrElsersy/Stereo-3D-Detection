@@ -3,7 +3,9 @@ import torch.nn as nn
 import torch.nn.parallel
 import torch.utils.data
 import time
+import numpy as np
 from AnyNet.preprocessing.generate_lidar import project_disp_to_points, Calibration
+from AnyNet.preprocessing.kitti_sparsify import pto_ang_map
 from AnyNet.models.anynet import AnyNet
 from visualization.KittiUtils import *
 from utils_classes.stereo_preprocessing import StereoPreprocessing
@@ -55,14 +57,28 @@ class Stereo_Depth_Estimation:
         output = torch.squeeze(output ,1)
 
         img_cpu = np.asarray(output.cpu())
-        disp_map = np.clip(img_cpu[0, :, :], 0, 2** 16)
-
+        disp_map = img_cpu[0, :, :]
         calib = Calibration(calib_path)
+        lidar = gen_lidar(disp_map, calib)
+        sparse_points = gen_sparse_points(lidar)
+        return sparse_points
 
-        disp_map = (disp_map * 256).astype(np.uint16) / 256.
-        lidar = project_disp_to_points(calib, disp_map, self.args.max_high)
+def gen_lidar(disp_map, calib, max_high=1):
+    disp_map = (disp_map*255).astype(np.float32)/255.
+    lidar = project_disp_to_points(calib, disp_map, max_high)
+    lidar = np.concatenate([lidar, np.ones((lidar.shape[0], 1))], 1)
+    lidar = lidar.astype(np.float32)
+    return lidar
 
-        lidar = np.concatenate([lidar, np.ones((lidar.shape[0], 1))], 1)
-        lidar = lidar.astype(np.float32)
-
-        return lidar
+def gen_sparse_points(lidar, H=64, W=512, D=700, slice=1):
+    pc_velo = lidar.reshape((-1, 4))
+    valid_inds =    (pc_velo[:, 0] < 120)    & \
+                    (pc_velo[:, 0] >= 0)     & \
+                    (pc_velo[:, 1] < 50)     & \
+                    (pc_velo[:, 1] >= -50)   & \
+                    (pc_velo[:, 2] < 1.5)    & \
+                    (pc_velo[:, 2] >= -2.5)
+    pc_velo = pc_velo[valid_inds]
+    sparse_points = pto_ang_map(pc_velo, H=H, W=W, slice=slice)
+    sparse_points = sparse_points.astype(np.float32)
+    return sparse_points

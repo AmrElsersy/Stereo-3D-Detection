@@ -45,25 +45,23 @@ class Calibration(object):
 
         calibs = self.read_calib_file(calib_filepath)
         # Projection matrix from rect camera coord to image2 coord
-        self.P = calibs['P2']#P_rect_02
+        self.P = calibs['P2']
         self.P = np.reshape(self.P, [3, 4])
         # Rigid transform from Velodyne coord to reference camera coord
         self.V2C = calibs['Tr_velo_to_cam']
         self.V2C = np.reshape(self.V2C, [3, 4])
         self.C2V = inverse_rigid_trans(self.V2C)
         # Rotation from reference camera coord to rect camera coord
-        self.R0 = calibs['R0_rect'] #R_rect_00
+        self.R0 = calibs['R0_rect']
         self.R0 = np.reshape(self.R0, [3, 3])
 
         # Camera intrinsics and extrinsics
-        self.P3 = np.reshape(calibs['P3'], [3,4]) #P_rect_03
         self.c_u = self.P[0, 2]
         self.c_v = self.P[1, 2]
         self.f_u = self.P[0, 0]
         self.f_v = self.P[1, 1]
         self.b_x = self.P[0, 3] / (-self.f_u)  # relative
         self.b_y = self.P[1, 3] / (-self.f_v)
-        self.baseline = self.P3[0,3]/(-self.f_u) - self.P[0,3]/(-self.f_u)
 
     def read_calib_file(self, filepath):
         ''' Read in a calibration file and parse into a dictionary.
@@ -79,7 +77,6 @@ class Calibration(object):
                 # we don't care about anyway
                 try:
                     data[key] = np.array([float(x) for x in value.split()])
-                    #print(data)
                 except ValueError:
                     pass
 
@@ -147,8 +144,8 @@ class Calibration(object):
     # ------- 2d to 3d ---------- 
     # =========================== 
     def project_image_to_rect(self, uv_depth):
-        ''' Input:  nx3 first two channels are uv, 3rd channel
-                    is depth in rect camera coord.
+        ''' Input: nx3 first two channels are uv, 3rd channel
+                   is depth in rect camera coord.
             Output: nx3 points in rect camera coord.
         '''
         n = uv_depth.shape[0]

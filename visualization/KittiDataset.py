@@ -9,23 +9,33 @@ from visualization.KittiUtils import *
 
 
 class KittiDataset(Dataset):
-    def __init__(self, root="/home/ayman/FOE-Linux/Graduation_Project/KITTI", transform = None, stereo_mode=False):
+    def __init__(self, root="../data/kitti/testing", mode='train', transform = None, stereo_mode=False):
         self.root = root
         self.stereo_mode = stereo_mode
+        self.mode = mode
+
+        start_idx = 0
+        end_idx = -1
+        if mode == 'train':
+            end_idx = 6000
+        elif mode == 'val':
+            start_idx = 6000
+        else:
+            raise ValueError()
 
         self.rootPointclouds = os.path.join(self.root, "velodyne")
         self.rootImages = os.path.join(self.root, "image_2")
         self.rootAnnotations = os.path.join(self.root, "label_2")
         self.rootCalibration = os.path.join(self.root, "calib")
 
-        self.imagesNames      = sorted(os.listdir(self.rootImages))
-        self.pointCloudNames  = sorted(os.listdir(self.rootPointclouds))
-        self.annotationNames  = sorted(os.listdir(self.rootAnnotations))
-        self.calibrationNames = sorted(os.listdir(self.rootCalibration))
+        self.imagesNames      = sorted(os.listdir(self.rootImages)) [start_idx : end_idx]
+        self.pointCloudNames  = sorted(os.listdir(self.rootPointclouds))[start_idx : end_idx]
+        self.annotationNames  = sorted(os.listdir(self.rootAnnotations))[start_idx : end_idx]
+        self.calibrationNames = sorted(os.listdir(self.rootCalibration))[start_idx : end_idx]
 
         if self.stereo_mode:
             self.rootRightImages = os.path.join(self.root, "image_3")
-            self.rightImagesNames = sorted(os.listdir(self.rootRightImages))
+            self.rightImagesNames = sorted(os.listdir(self.rootRightImages))[start_idx : end_idx]
         
     def __getitem__(self, index):
         imagePath = os.path.join(self.rootImages, self.imagesNames[index])
@@ -48,7 +58,7 @@ class KittiDataset(Dataset):
         return image, pointcloud, labels, calib
 
     def __len__(self):
-        return len(self.pointCloudNames)
+        return len(self.annotationNames)
 
     def read_pointcloud_bin(self, path):
         # read .bin and convert to tensor

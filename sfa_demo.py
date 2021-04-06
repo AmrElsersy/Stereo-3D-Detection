@@ -71,7 +71,7 @@ def main():
     cudnn.benchmark = True
 
     dataset_root = os.path.join(cfg.dataset_dir, "testing")
-    KITTI = KittiDataset(dataset_root)
+    KITTI = KittiDataset(dataset_root, mode='val')
     KITTI_stereo = KittiDataset(dataset_root, stereo_mode=True)    
 
     sfa_model = SFA3D(cfg) 

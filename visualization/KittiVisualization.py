@@ -144,6 +144,11 @@ class KittiVisualizer:
 
             corners = self.__convert_3d_bbox_to_corners(object.bbox_3d, calib)
             proj_corners = calib.project_lidar_to_image(corners)
+            
+            isTruncated = self.filter_truncated_boxes(proj_corners)
+            if isTruncated:
+                continue
+
             color = self.__get_box_color(object.label)
             self.__draw_box_corners(proj_corners, color, VisMode.SCENE_2D)
 
@@ -362,6 +367,19 @@ class KittiVisualizer:
         if not isinstance(pointcloud, np.ndarray):
             return pointcloud.cpu().numpy()
         return pointcloud
+
+    def filter_truncated_boxes(self, box_corners=None):
+        assert box_corners is not None
+
+        for corner in box_corners:
+            x = corner[0]
+            y = corner[1]
+
+            if x < 0 or y < 0:
+                return True
+
+        return False
+
 
 
 # KITTI = KittiDataset('/home/amrelsersy/SFA3D/dataset/kitti/testing')
