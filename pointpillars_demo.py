@@ -1,13 +1,13 @@
 import argparse, cv2
 import torch.backends.cudnn as cudnn
-from full_demo import parse_config
+from full_demo import parse_config_pillars
 from visualization.KittiDataset import KittiDataset
 from visualization.KittiVisualization import KittiVisualizer
 from visualization.KittiUtils import *
 from utils_classes.pointcloud_3d_detection import PointCloud_3D_Detection
 
 def main():
-    args, cfg = parse_config()
+    args, cfg = parse_config_pillars()
     cudnn.benchmark = True
 
     KITTI = KittiDataset(args.datapath)

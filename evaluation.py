@@ -3,6 +3,7 @@ import torch.backends.cudnn as cudnn
 from easydict import EasyDict as edict
 import pathlib as Path
 import cv2
+import torch
 
 from visualization.KittiDataset import KittiDataset
 from visualization.KittiVisualization import KittiVisualizer
@@ -11,22 +12,16 @@ import visualization.BEVutils as BEVutils
 
 from utils_classes.SFA3D import SFA3D
 from utils_classes.stereo_depth_estimation import Stereo_Depth_Estimation
-
 from sfa_demo import parse_test_configs, parse_config
+
+# from utils_classes.pointcloud_3d_detection import PointCloud_3D_Detection
+# from full_demo import parse_config_pillars
 
 from scipy.spatial import ConvexHull
 from shapely.geometry import Polygon
+# from sklearn.metrics import average_precision_score, precision_score, recall_score, accuracy_score, confusion_matrix
 
 visualizer = KittiVisualizer()
-
-def compute_intersection_polygons(vertices1, vertices2):
-    poly1 = Polygon(vertices1)
-    poly2 = Polygon(vertices2)
-    return poly1.intersection(poly2).area
-    
-def poly_area(x,y):
-    """ Ref: http://stackoverflow.com/questions/24467972/calculate-area-of-polygon-given-x-y-coordinates """
-    return 0.5*np.abs(np.dot(x,np.roll(y,1))-np.dot(y,np.roll(x,1)))
 
 def box3d_iou(bbox1:BBox3D, bbox2:BBox3D, calib:KittiCalibration):
     ''' Compute 3D bounding box IoU.
@@ -38,6 +33,20 @@ def box3d_iou(bbox1:BBox3D, bbox2:BBox3D, calib:KittiCalibration):
         iou_2d: bird's eye view 2D bounding box IoU
     '''
     global visualizer
+
+    def bbox3d_to_corners(bbox3d, calib):
+        global visualizer
+        corners = visualizer.convert_3d_bbox_to_corners(bbox3d, calib)
+        return corners
+
+    def compute_intersection_polygons(vertices1, vertices2):
+        poly1 = Polygon(vertices1)
+        poly2 = Polygon(vertices2)
+        return poly1.intersection(poly2).area
+        
+    def poly_area(x,y):
+        """ Ref: http://stackoverflow.com/questions/24467972/calculate-area-of-polygon-given-x-y-coordinates """
+        return 0.5*np.abs(np.dot(x,np.roll(y,1))-np.dot(y,np.roll(x,1)))
 
     # get corners in LIDAR coord. (front x, left y, up z)
     corners1 = bbox3d_to_corners(bbox1, calib)
@@ -67,70 +76,167 @@ def box3d_iou(bbox1:BBox3D, bbox2:BBox3D, calib:KittiCalibration):
     iou = inter_vol / (vol1 + vol2 - inter_vol)
     return iou, iou_2d
 
-def bbox3d_to_corners(bbox3d, calib):
-    global visualizer
-    corners = visualizer.convert_3d_bbox_to_corners(bbox3d, calib)
-    return corners
+class EvalMode(Enum):
+    IOU_3D = 0
+    IOU_BEV = 1
+
+class Evaluation:
+    def __init__(self, iou_threshold, evaluate_class, mode):
+        self.TP = []
+        self.FP = []
+        self.total_ground_truth = 0
+
+        self.iou_threshold = iou_threshold
+        self.evaluate_class = evaluate_class
+        self.mode = mode
+
+    def max_iou_3D(self, detection:KittiObject, labels:list, calib):
+        """ 
+            Compute IOU 3D of givin bbox for all labels bboxes and get the max of them
+            Args:
+                detection: predicted KittiObject with bbox in LIDAR coord.
+                labels: list of KittiObject to calculate the IOU with all of them 
+            Return:
+                Maximum IOU of bbox wrt the labels bboxes
+                    iou_3d: 3D IOU
+                    iou_bev: BEV IOU
+                    label_idx: index of the matched label
+        """
+        max_iou_3d = 0
+        max_iou_bev = 0
+        label_idx = None
+        detected_bbox = detection.bbox_3d 
+
+        for i, label in enumerate(labels):
+            gt_bbox = label.bbox_3d
+            iou_3d, iou_bev = box3d_iou(detected_bbox, gt_bbox, calib)
+
+            if iou_3d > max_iou_3d:
+                max_iou_3d = iou_3d
+                max_iou_bev = iou_bev
+                label_idx = i
+
+        return max_iou_3d, max_iou_bev, label_idx
+
+    def evaluate_step(self, detections:list, labels:list, calib:KittiCalibration):
+        # filter classes
+        for detection in detections:
+            if detection.label != self.evaluate_class:
+                detections.remove(detection)
+
+        for label in labels:
+            if label.label != self.evaluate_class:
+                labels.remove(label)
+
+        # [0, 0, 0] in case 3 predicted boxes
+        TP = [0 for i in range(len(detections))]
+        FP = [0 for i in range(len(detections))]
+        total_gt = len(labels)
+
+        # sort the detections to take the heighst score first to remove the gt boxes with heighst score box with IOU
+        # we will remove gt boxes that is already been assigned to a detected box, so we want to have a heighst score detected box
+        detections.sort(key=lambda kitti_obj: kitti_obj.score, reverse=True)
+
+        # print(f'detections({len(detections)})', detections)
+        # print(f'labels({len(labels)})', labels)
+        # print('TP', TP)
+        # print('FP', FP, '\n')
+
+        # iou & update TP & FP
+        for i, detection in enumerate(detections):
+
+            iou_3d, iou_bev, label_idx = self.max_iou_3D(detection, labels, calib)
+            iou = iou_3d if self.mode == EvalMode.IOU_3D else iou_bev
+            
+            if iou >= self.iou_threshold:
+                TP[i] = 1
+                # remove the gt_bbox (we cannot have multiple detections on the same gt_bbox and cound them all correct)
+                del labels[label_idx]
+            else:
+                # if low iou or if not matched iou will be 0
+                FP[i] = 1
+
+            # print(f'({i}) det, ', detection)
+            # print(f'labels({len(labels)})', labels)
+            # print('TP', TP)
+            # print('FP', FP, '\n')
+
+        self.TP.extend(TP)
+        self.FP.extend(FP)
+        self.total_ground_truth += total_gt
+        # print('mAPPPP',self.mAP())
+
+    def mAP(self):
+        """
+            Compute mAP from the TP & FP lists of the evaluation class
+        """
+        TP = torch.tensor(self.TP)
+        FP = torch.tensor(self.FP)
+        TP_cumsum = torch.cumsum(TP, dim=0)
+        FP_cumsum = torch.cumsum(FP, dim=0)
+
+        # recall & precision
+        epsilon = 1e-6
+        recalls = TP_cumsum / (self.total_ground_truth + epsilon)
+        precisions = TP_cumsum / (TP_cumsum + FP_cumsum + epsilon)
+
+        # torch requirements to calculate area under curve (mAP)
+        recalls = torch.cat((torch.tensor([0]), recalls))
+        precisions = torch.cat((torch.tensor([1]), precisions))
+
+        # mAP = area under precision-recall curve
+        average_precision = torch.trapz(precisions, recalls)
+        return average_precision
 
 
-def max_iou_3D(object_iou:KittiObject, objects:list, calib):
-    """ 
-        Compute IOU 3D of givin bbox for all labels bboxes and get the max of them
-        Args:
-            object_iou: predicted KittiObject with bbox in LIDAR coord.
-            objects: list of KittiObject to calculate the IOU with all of them 
-        Return:
-            Maximum IOU of bbox wrt the labels bboxes
-    """
-    max_iou_3d = 0
-    max_iou_bev = 0
-    bbox_iou = object_iou.bbox_3d 
-    for kitti_object in objects:
-        # skip other classes
-        if kitti_object.label != object_iou.label:
-            continue
-
-        bbox = kitti_object.bbox_3d
-        iou_3d, iou_bev = box3d_iou(bbox_iou, bbox, calib)
-        if iou_3d > max_iou_3d:
-            max_iou_3d = iou_3d
-            max_iou_bev = iou_bev
-
-    return max_iou_3d, max_iou_bev
-
-    
-def main():
+def evaluate():
     cfg, args = parse_test_configs()
     stereo_args = parse_config()
     cudnn.benchmark = True
     global visualizer
 
-    dataset_root = os.path.join(cfg.dataset_dir, "training")
-    KITTI = KittiDataset(dataset_root, mode='train')
+    dataset_root = os.path.join(cfg.dataset_dir, "testing")
+    KITTI = KittiDataset(dataset_root, mode='val')
     sfa_model = SFA3D(cfg) 
+
+    # args_pillars, cfg_pillars = parse_config_pillars()
+    # pointpillars = PointCloud_3D_Detection(args, cfg)
 
     # KITTI_stereo = KittiDataset(dataset_root, stereo_mode=True)    
     # anynet_model = Stereo_Depth_Estimation(stereo_args,None)
 
+    evaluation = Evaluation(iou_threshold=0.6, evaluate_class=class_name_to_label('Car'), mode=EvalMode.IOU_3D)
     # ======================================================================
     for i in range(args.index, len(KITTI)):
         image, pointcloud, labels, calib = KITTI[i]
+
+        # SFA3D
         detections = sfa_model.predict(pointcloud)
         objects = SFA3D_output_to_kitti_objects(detections)
 
-        # IOU 
+        # # Point Pillars
+        # pred = pointpillars.predict(pointcloud)
+        # objects = model_output_to_kitti_objects(pred)
+
+        # filter score
         for obj in objects:
-            iou_3d, iou_bev = max_iou_3D(obj, labels, calib)
-            print(f'{label_to_class_name(obj.label)} iou 3d({iou_3d}) iou bev({iou_bev})')
-            print('='*30)
+            if obj.score < 0.5:
+                objects.remove(obj)
+
+        evaluation.evaluate_step(objects, labels, calib)
+        if i % 20 == 0:
+            print(f'{i}- mAP = {evaluation.mAP()}')
 
         # visualizer.visualize_scene_3D(pointcloud, objects, labels, calib)
-        visualizer.visualize_scene_2D(pointcloud, image, objects, labels, calib)
-        if visualizer.user_press == 27:
-            cv2.destroyAllWindows()
-            break
+        # visualizer.visualize_scene_2D(pointcloud, image, objects, labels, calib)
+        # if visualizer.user_press == 27:
+        #     cv2.destroyAllWindows()
+        #     break
 
+    mAP = evaluation.mAP()
+    print('='*60)
+    print(f'mAP = {mAP}')
 
 if __name__ == '__main__':
-    main()
+    evaluate()
 

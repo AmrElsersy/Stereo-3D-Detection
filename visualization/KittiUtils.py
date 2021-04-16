@@ -51,6 +51,8 @@ class KittiObject:
         self.score = score
         self.bbox_2d = bbox_2d
 
+    def __repr__(self):
+        return label_to_class_name(self.label) + '(' + str(self.score) + ')'
 
 # ================================================
 class KittiCalibration:
