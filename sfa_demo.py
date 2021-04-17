@@ -14,7 +14,7 @@ def parse_test_configs():
     parser = argparse.ArgumentParser(description='Testing config for the Implementation')
     parser.add_argument('--saved_fn', type=str, default='fpn_resnet_18', metavar='FN', help='The name using for saving logs, models,...')
     parser.add_argument('-a', '--arch', type=str, default='fpn_resnet_18', metavar='ARCH', help='The name of the model architecture')
-    parser.add_argument('--pretrained_path', type=str, default='SFA3D/checkpoints/fpn_resnet_18/Model_fpn_resnet_18_epoch_44.pth', metavar='PATH')
+    parser.add_argument('--pretrained_path', type=str, default='SFA3D/checkpoints/fpn_resnet_18/Model_fpn_resnet_18_epoch_90.pth', metavar='PATH')
     parser.add_argument('--K', type=int, default=50, help='the number of top K')
     parser.add_argument('--no_cuda', action='store_true', help='If true, cuda is not used.')
     parser.add_argument('--gpu_idx', default=0, type=int, help='GPU index to use.')
@@ -55,13 +55,10 @@ def parse_test_configs():
     configs.root_dir = ''
     configs.dataset_dir = os.path.join(configs.root_dir, 'data', 'kitti')
 
-    if configs.save_test_output:
-        configs.results_dir = os.path.join(configs.root_dir, 'results', configs.saved_fn)
-        make_folder(configs.results_dir)
-
     args = parser.parse_args()
     
     return configs, args
+
 def parse_config():
     parser = argparse.ArgumentParser(description='Anynet fintune on KITTI')
     parser.add_argument('--maxdisp', type=int, default=192,help='maxium disparity')
@@ -92,7 +89,6 @@ def parse_config():
     parser.add_argument('--ext', type=str, default='.bin', help='specify the extension of your point cloud data file')
     parser.add_argument('--pseudo', action='store_true')
     parser.add_argument('--index', type=int, default=0, help='index of an example in the dataset')
-    parser.add_argument('--stereo', action='store_true', help="Run SFA3D on anynet stereo model pseduo lidar")
     args = parser.parse_args()
 
     return args
@@ -103,8 +99,8 @@ def main():
     cudnn.benchmark = True
 
     dataset_root = os.path.join(cfg.dataset_dir, "training")
-    KITTI = KittiDataset(dataset_root, mode='train')
-    KITTI_stereo = KittiDataset(dataset_root, stereo_mode=True, mode='train')
+    KITTI = KittiDataset(dataset_root, mode='val')
+    KITTI_stereo = KittiDataset(dataset_root, stereo_mode=True, mode='val')
 
     sfa_model = SFA3D(cfg) 
     anynet_model = Stereo_Depth_Estimation(stereo_args,None)
@@ -116,9 +112,12 @@ def main():
         for i in range(args.index, len(KITTI_stereo)):
             imgL, imgR, _, calib = KITTI_stereo[i]
 
+            start = time.time()
             pointcloud = anynet_model.predict(imgL, imgR, calib.calib_path)
 
             detections = sfa_model.predict(pointcloud)
+            end = time.time()
+            print(f"Time for end to end pipeline: {1000 * (end - start)} ms")
             objects = SFA3D_output_to_kitti_objects(detections)
 
             visualizer.visualize_scene_2D(pointcloud, imgL, objects, calib=calib)
