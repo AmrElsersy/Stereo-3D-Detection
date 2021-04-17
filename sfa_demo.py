@@ -99,8 +99,8 @@ def main():
     cudnn.benchmark = True
 
     dataset_root = os.path.join(cfg.dataset_dir, "training")
-    KITTI = KittiDataset(dataset_root, mode='val')
-    KITTI_stereo = KittiDataset(dataset_root, stereo_mode=True, mode='val')
+    KITTI = KittiDataset(dataset_root, mode='train')
+    KITTI_stereo = KittiDataset(dataset_root, stereo_mode=True, mode='train')
 
     sfa_model = SFA3D(cfg) 
     anynet_model = Stereo_Depth_Estimation(stereo_args,None)
@@ -110,7 +110,7 @@ def main():
 
     if args.stereo:
         for i in range(args.index, len(KITTI_stereo)):
-            imgL, imgR, _, calib = KITTI_stereo[i]
+            imgL, imgR, labels, calib = KITTI_stereo[i]
 
             start = time.time()
             pointcloud = anynet_model.predict(imgL, imgR, calib.calib_path)
@@ -132,7 +132,7 @@ def main():
             detections = sfa_model.predict(pointcloud)
             objects = SFA3D_output_to_kitti_objects(detections)
 
-            visualizer.visualize_scene_2D(pointcloud, image, objects, calib=calib)
+            visualizer.visualize_scene_3D(pointcloud, objects, labels=labels, calib=calib)
             if visualizer.user_press == 27:
                 cv2.destroyAllWindows()
                 break

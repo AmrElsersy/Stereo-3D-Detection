@@ -43,7 +43,7 @@ class KittiVisualizer:
         # 3D Boxes of dataset labels 
         if labels is not None:
             for obj in labels:
-                self.visualize_3d_bbox(obj.bbox_3d, (1,0,0), calib)
+                self.visualize_3d_bbox(obj.bbox_3d, (1,1,0), calib)
 
         self.__show_3D()
 
@@ -361,7 +361,7 @@ class KittiVisualizer:
         colors = [
             (0,0,1),
             (1,0,0),
-            (0,1,1),
+            (0,0,1),
         ]
 
         return colors[class_id]
