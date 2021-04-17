@@ -63,13 +63,16 @@ class myImageFloder(data.Dataset):
            return left_img, right_img, dataL
         else:
            w, h = left_img.size
+           th, tw = 256, 512
 
-           left_img = left_img.crop((w-1232, h-368, w, h))
-           right_img = right_img.crop((w-1232, h-368, w, h))
-           w1, h1 = left_img.size
+           x1 = 0
+           y1 = 0
 
-           dataL = dataL.crop((w-1232, h-368, w, h))
-           dataL = np.ascontiguousarray(dataL,dtype=np.float32)/256
+           left_img = left_img.crop((x1, y1, x1 + tw, y1 + th))
+           right_img = right_img.crop((x1, y1, x1 + tw, y1 + th))
+
+           dataL = np.ascontiguousarray(dataL, dtype=np.float32)/256
+           dataL = dataL[y1:y1 + th, x1:x1 + tw]
 
            processed = preprocess.get_transform(augment=False)  
            left_img       = processed(left_img)
