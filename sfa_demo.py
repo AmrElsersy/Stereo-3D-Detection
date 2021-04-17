@@ -23,7 +23,7 @@ def parse_test_configs():
     parser.add_argument('--batch_size', type=int, default=1, help='mini-batch size (default: 4)')
     parser.add_argument('--peak_thresh', type=float, default=0.2)
     parser.add_argument('--save_test_output', action='store_true', help='If true, the output image of the testing phase will be saved')
-    parser.add_argument('--stereo', action='store_true', default=True, help="Run SFA3D on anynet stereo model pseduo lidar")
+    parser.add_argument('--stereo', action='store_true', default=False, help="Run SFA3D on anynet stereo model pseduo lidar")
     parser.add_argument('--index', type=int, default=0, help="start index in dataset")
     configs = edict(vars(parser.parse_args()))
     configs.pin_memory = True
@@ -54,10 +54,6 @@ def parse_test_configs():
     # #### set it to empty as this file is inside the root of the project ####
     configs.root_dir = ''
     configs.dataset_dir = os.path.join(configs.root_dir, 'data', 'kitti')
-
-    if configs.save_test_output:
-        configs.results_dir = os.path.join(configs.root_dir, 'results', configs.saved_fn)
-        make_folder(configs.results_dir)
 
     args = parser.parse_args()
     
@@ -93,7 +89,6 @@ def parse_config():
     parser.add_argument('--ext', type=str, default='.bin', help='specify the extension of your point cloud data file')
     parser.add_argument('--pseudo', action='store_true')
     parser.add_argument('--index', type=int, default=0, help='index of an example in the dataset')
-    parser.add_argument('--stereo', action='store_true', help="Run SFA3D on anynet stereo model pseduo lidar")
     args = parser.parse_args()
 
     return args
@@ -115,11 +110,14 @@ def main():
 
     if args.stereo:
         for i in range(args.index, len(KITTI_stereo)):
-            imgL, imgR, _, calib = KITTI_stereo[i]
+            imgL, imgR, labels, calib = KITTI_stereo[i]
 
+            start = time.time()
             pointcloud = anynet_model.predict(imgL, imgR, calib.calib_path)
 
             detections = sfa_model.predict(pointcloud)
+            end = time.time()
+            print(f"Time for end to end pipeline: {1000 * (end - start)} ms")
             objects = SFA3D_output_to_kitti_objects(detections)
 
             visualizer.visualize_scene_2D(pointcloud, imgL, objects, calib=calib)
@@ -134,7 +132,7 @@ def main():
             detections = sfa_model.predict(pointcloud)
             objects = SFA3D_output_to_kitti_objects(detections)
 
-            visualizer.visualize_scene_2D(pointcloud, image, objects, calib=calib)
+            visualizer.visualize_scene_3D(pointcloud, objects, labels=labels, calib=calib)
             if visualizer.user_press == 27:
                 cv2.destroyAllWindows()
                 break

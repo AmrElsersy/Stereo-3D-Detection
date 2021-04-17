@@ -4,6 +4,9 @@ import os
 # ================================================
 class BBox2D:
     def __init__(self, bbox):
+        """
+            2D BBox of (x,y) of top left corner
+        """
         self.x = bbox[0]
         self.y = bbox[1]
         self.width = bbox[2]
@@ -12,6 +15,9 @@ class BBox2D:
 
 class BBox3D:
     def __init__(self, x, y, z, h, w, l, rotation):
+        """
+            3D BBox with (x,y,z) of center
+        """
         self.pos = (x,y,z)
         self.dims = (h,w,l)
         self.x = x
@@ -24,6 +30,8 @@ class BBox3D:
         # default coordinates .. same as model output
         self.coordinates = Coordinates.LIDAR
 
+    def volume(self):
+        return self.height * self.width * self.length
 
 class Coordinates(Enum):
     CAM_3D_RECT = 0
@@ -43,6 +51,8 @@ class KittiObject:
         self.score = score
         self.bbox_2d = bbox_2d
 
+    def __repr__(self):
+        return label_to_class_name(self.label) + '(' + str(self.score) + ')'
 
 # ================================================
 class KittiCalibration:
@@ -58,6 +68,8 @@ class KittiCalibration:
         self.calib_matrix = {}
         if from_video:
             self.calib_matrix = self.parse_calib_from_video(calib_path)
+            self.calib_path = os.path.join(calib_path, "modified_calib_file.txt")
+            print('#################', self.calib_path)
         else:
             self.calib_matrix = self.parse_calib_files(calib_path)
 

@@ -14,7 +14,7 @@ class KittiVisualizer:
         self.__scene_2D_mode = False
         self.scene_2D_width = 750
         self.ground_truth_color = (0,1,0) # green
-        self.thickness = 3
+        self.thickness = 2
         self.user_press =None
         
     def visualize_scene_3D(self, pointcloud, objects, labels=None, calib=None):
@@ -43,7 +43,7 @@ class KittiVisualizer:
         # 3D Boxes of dataset labels 
         if labels is not None:
             for obj in labels:
-                self.visualize_3d_bbox(obj.bbox_3d, (1,0,0), calib)
+                self.visualize_3d_bbox(obj.bbox_3d, (1,1,0), calib)
 
         self.__show_3D()
 
@@ -160,11 +160,11 @@ class KittiVisualizer:
             label_point = (point[0], point[1]-20)
             self.__draw_text_2D(f"{object.label}", (point[0], point[1]))
 
-        if self.__scene_2D_mode:
-            return self.current_image 
+        # if self.__scene_2D_mode:
+        return self.current_image 
 
         cv2.imshow('Image',self.current_image)
-        self.__show_2D()        
+        # self.__show_2D()        
 
     def __show_3D(self):
         mlab.show(stop=True)
@@ -217,6 +217,9 @@ class KittiVisualizer:
         mlab.plot3d([0, 0], [0, l], [0, 0], color=(0, 1, 0), line_width=w, figure=self.figure) # y
         mlab.plot3d([0, 0], [0, 0], [0, l], color=(1, 0, 0), line_width=w, figure=self.figure) # z
 
+    def convert_3d_bbox_to_corners(self, bbox, calib):
+        return self.__convert_3d_bbox_to_corners(bbox, calib)
+        
     def __convert_3d_bbox_to_corners(self, bbox: BBox3D, calib=None):
         """
             convert BBox3D with x,y,z, width, height, depth .. to 8 corners
@@ -358,7 +361,7 @@ class KittiVisualizer:
         colors = [
             (0,0,1),
             (1,0,0),
-            (0,1,1),
+            (0,0,1),
         ]
 
         return colors[class_id]

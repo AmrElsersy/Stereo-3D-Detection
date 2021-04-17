@@ -7,6 +7,7 @@ from visualization.KittiDataset import KittiVideo
 from visualization.KittiUtils import *
 from visualization.KittiVisualization import KittiVisualizer
 from utils_classes.pointcloud_3d_detection import PointCloud_3D_Detection
+from utils_classes.stereo_depth_estimation import Stereo_Depth_Estimation
 import time
 import cv2
 
@@ -55,13 +56,16 @@ def main():
     args, cfg = parse_config()
     cudnn.benchmark = True
     pointpillars = PointCloud_3D_Detection(args, cfg)
+    stereo_model = Stereo_Depth_Estimation(args, cfg)
+
     visualizer = KittiVisualizer()
 
     # KITTI Video
     VIDEO_ROOT_PATH = '/home/ayman/FOE-Linux/Graduation_Project/KITTI/2011_09_26_drive_0001'
 
     dataset = KittiVideo(
-            img_dir=os.path.join(VIDEO_ROOT_PATH, "2011_09_26_drive_0001_sync/2011_09_26/image_02/data"),
+            imgL_dir=os.path.join(VIDEO_ROOT_PATH, "2011_09_26_drive_0001_sync/2011_09_26/image_02/data"),
+            imgR_dir=os.path.join(VIDEO_ROOT_PATH, "2011_09_26_drive_0001_sync/2011_09_26/image_03/data"),
             lidar_dir=os.path.join(VIDEO_ROOT_PATH, "2011_09_26_drive_0001_sync/2011_09_26/velodyne_points/data"),
             calib_dir=os.path.join(VIDEO_ROOT_PATH, "2011_09_26_calib/2011_09_26")
         )
@@ -70,12 +74,17 @@ def main():
     img_list = []
     avg_time = 0.
     for i in range(len(dataset)):
-        imgL, pointcloud, calib = dataset[i]
+        imgL, imgR, pointcloud, calib = dataset[i]
+
         # Prediction
         t = time.time()
-        pred = pointpillars.predict(pointcloud)
+
+        psuedo_pointcloud = stereo_model.predict(imgL, imgR, calib.calib_path)
+        pred = pointpillars.predict(psuedo_pointcloud)
+
         avg_time += (time.time() - t)
 
+        # Converting model outputs to another type for vis. purposes
         objects = model_output_to_kitti_objects(pred)
         img_ = visualizer.visualize_scene_image(imgL, objects, calib)
         img_list.append(img_)
@@ -85,8 +94,8 @@ def main():
     FPS = 1 / avg_time     
     print("Samples Average Time",avg_time)
     print("FPS", FPS)
-    outVideo = cv2.VideoWriter('demo_video_.mp4', cv2.VideoWriter_fourcc(*'MP4V'), FPS, (width, height))
-
+    outVideo = cv2.VideoWriter('demo_video_2.mp4', cv2.VideoWriter_fourcc(*'MP4V'), 15, (width, height))
+    
     for img in img_list:
         outVideo.write(img)
 
