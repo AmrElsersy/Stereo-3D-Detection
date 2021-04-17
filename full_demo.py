@@ -11,7 +11,7 @@ from utils_classes.pointcloud_3d_detection import PointCloud_3D_Detection
 pointpillars = PointPillars()
 paper = pointpillars
 
-def parse_config():
+def parse_config_pillars():
     parser = argparse.ArgumentParser(description='Anynet fintune on KITTI')
     parser.add_argument('--maxdisp', type=int, default=192,help='maxium disparity')
     parser.add_argument('--loss_weights', type=float, nargs='+', default=[0.25, 0.5, 1., 1.])
@@ -51,7 +51,7 @@ def parse_config():
     return args, cfg
 
 def main():
-    args, cfg = parse_config()
+    args, cfg = parse_config_pillars()
     cudnn.benchmark = True
 
     KITTI = KittiDataset(args.datapath, stereo_mode=True)
