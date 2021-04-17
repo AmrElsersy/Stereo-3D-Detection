@@ -69,7 +69,7 @@ def main():
 
     img_list = []
     avg_time = 0.
-    for i in range(len(dataset)):
+    for i in range(len(dataset)-80):
         imgL, pointcloud, calib = dataset[i]
         # Prediction
         t = time.time()
@@ -85,8 +85,8 @@ def main():
     FPS = 1 / avg_time     
     print("Samples Average Time",avg_time)
     print("FPS", FPS)
-    outVideo = cv2.VideoWriter('demo_video_.mp4', cv2.VideoWriter_fourcc(*'MP4V'), FPS, (width, height))
-
+    outVideo = cv2.VideoWriter('demo_video_.mp4', cv2.VideoWriter_fourcc(*'MP4V'), 10, (width, height))
+    
     for img in img_list:
         outVideo.write(img)
 
