@@ -56,6 +56,8 @@ def main():
     args, cfg = parse_config()
     cudnn.benchmark = True
     pointpillars = PointCloud_3D_Detection(args, cfg)
+    stereo_model = Stereo_Depth_Estimation(args, cfg)
+
     visualizer = KittiVisualizer()
 
     # KITTI Video
@@ -71,13 +73,18 @@ def main():
 
     img_list = []
     avg_time = 0.
-    for i in range(len(dataset)-80):
+    for i in range(len(dataset)):
         imgL, imgR, pointcloud, calib = dataset[i]
+        
         # Prediction
         t = time.time()
-        pred = pointpillars.predict(pointcloud)
+
+        psuedo_pointcloud = stereo_model.predict(imgL, imgR, calib.calib_path)
+        pred = pointpillars.predict(psuedo_pointcloud)
+
         avg_time += (time.time() - t)
 
+        # Converting model outputs to another type for vis. purposes
         objects = model_output_to_kitti_objects(pred)
         img_ = visualizer.visualize_scene_image(imgL, objects, calib)
         img_list.append(img_)
