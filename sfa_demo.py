@@ -2,6 +2,7 @@ import argparse, cv2, time
 import torch.backends.cudnn as cudnn
 from easydict import EasyDict as edict
 import pathlib as Path
+import torch
 
 from visualization.KittiDataset import KittiDataset
 from visualization.KittiVisualization import KittiVisualizer
@@ -10,11 +11,14 @@ from visualization.KittiUtils import *
 from utils_classes.SFA3D import SFA3D
 from utils_classes.stereo_depth_estimation import Stereo_Depth_Estimation
 
+torch.cuda.empty_cache()
+
 def parse_test_configs():
     parser = argparse.ArgumentParser(description='Testing config for the Implementation')
     parser.add_argument('--saved_fn', type=str, default='fpn_resnet_18', metavar='FN', help='The name using for saving logs, models,...')
     parser.add_argument('-a', '--arch', type=str, default='fpn_resnet_18', metavar='ARCH', help='The name of the model architecture')
-    parser.add_argument('--pretrained_path', type=str, default='SFA3D/checkpoints/fpn_resnet_18/Model_fpn_resnet_18_epoch_90.pth', metavar='PATH')
+    # parser.add_argument('--pretrained_path', type=str, default='SFA3D/checkpoints/fpn_resnet_18/Model_fpn_resnet_18_epoch_44.pth', metavar='PATH')
+    parser.add_argument('--pretrained_path', type=str, default='SFA3D/checkpoints/fpn_resnet_18/fpn_resnet_18_epoch_300.pth', metavar='PATH')
     parser.add_argument('--K', type=int, default=50, help='the number of top K')
     parser.add_argument('--no_cuda', action='store_true', help='If true, cuda is not used.')
     parser.add_argument('--gpu_idx', default=0, type=int, help='GPU index to use.')
@@ -98,8 +102,8 @@ def main():
     stereo_args = parse_config()
     cudnn.benchmark = True
 
-    dataset_root = os.path.join(cfg.dataset_dir, "training")
-    KITTI = KittiDataset(dataset_root, mode='train')
+    dataset_root = os.path.join(cfg.dataset_dir, "testing")
+    KITTI = KittiDataset(dataset_root, mode='val')
     KITTI_stereo = KittiDataset(dataset_root, stereo_mode=True, mode='train')
 
     sfa_model = SFA3D(cfg) 
@@ -132,7 +136,7 @@ def main():
             detections = sfa_model.predict(pointcloud)
             objects = SFA3D_output_to_kitti_objects(detections)
 
-            visualizer.visualize_scene_3D(pointcloud, objects, labels=labels, calib=calib)
+            visualizer.visualize_scene_2D(pointcloud, image, objects, calib=calib)
             if visualizer.user_press == 27:
                 cv2.destroyAllWindows()
                 break

@@ -18,7 +18,7 @@ def parse_config_pillars():
     parser.add_argument('--max_disparity', type=int, default=192)
     parser.add_argument('--maxdisplist', type=int, nargs='+', default=[12, 3, 3])
     parser.add_argument('--datatype', default='2015',help='datapath')
-    parser.add_argument('--datapath', default='../KITTI/training', help='datapath')
+    parser.add_argument('--datapath', default='data/kitti/training', help='datapath')
     parser.add_argument('--epochs', type=int, default=300,help='number of epochs to train')
     parser.add_argument('--train_bsize', type=int, default=6,help='batch size for training (default: 6)')
     parser.add_argument('--test_bsize', type=int, default=8,help='batch size for testing (default: 8)')

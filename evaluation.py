@@ -19,9 +19,10 @@ from sfa_demo import parse_test_configs, parse_config
 
 from scipy.spatial import ConvexHull
 from shapely.geometry import Polygon
-# from sklearn.metrics import average_precision_score, precision_score, recall_score, accuracy_score, confusion_matrix
 
 visualizer = KittiVisualizer()
+
+torch.cuda.empty_cache()
 
 def box3d_iou(bbox1:BBox3D, bbox2:BBox3D, calib:KittiCalibration):
     ''' Compute 3D bounding box IoU.
@@ -205,7 +206,7 @@ def evaluate():
     # KITTI_stereo = KittiDataset(dataset_root, stereo_mode=True)    
     # anynet_model = Stereo_Depth_Estimation(stereo_args,None)
 
-    evaluation = Evaluation(iou_threshold=0.6, evaluate_class=class_name_to_label('Car'), mode=EvalMode.IOU_3D)
+    evaluation = Evaluation(iou_threshold=0.7, evaluate_class=class_name_to_label('Car'), mode=EvalMode.IOU_BEV)
     # ======================================================================
     for i in range(args.index, len(KITTI)):
         image, pointcloud, labels, calib = KITTI[i]
