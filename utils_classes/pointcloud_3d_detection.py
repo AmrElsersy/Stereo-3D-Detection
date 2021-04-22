@@ -35,8 +35,7 @@ class PointCloud_3D_Detection:
             load_data_to_gpu(data_dict)
             t1 = time.time()
             pred_dicts, _ = self.model.forward(data_dict)
-            print(pred_dicts)
             t2 = time.time()
-            print("3D Model time= ", t2 - t1)
+            # print("3D Model time= ", t2 - t1)
 
             return pred_dicts
