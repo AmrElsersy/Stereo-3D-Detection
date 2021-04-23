@@ -184,7 +184,7 @@ class Evaluation:
 
 def evaluate():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--path', type=str, default='predictions.pickle', help='path of predictions pickle')
+    parser.add_argument('--path', type=str, default='predictions_sfa.pickle', help='path of predictions pickle')
     args_main = parser.parse_args()
 
     cudnn.benchmark = True
@@ -193,10 +193,10 @@ def evaluate():
     dataset_root = os.path.join('data', 'kitti', 'training')
     KITTI = KittiDataset(dataset_root, mode='val')
 
-    with open('predictions.pickle', 'rb') as f:
+    with open(args_main.path, 'rb') as f:
         predictions = pickle.load(f)
 
-    evaluation = Evaluation(iou_threshold=0.7, evaluate_class=class_name_to_label('Car'), mode=EvalMode.IOU_BEV)
+    evaluation = Evaluation(iou_threshold=0.5, evaluate_class=class_name_to_label('Car'), mode=EvalMode.IOU_BEV)
     # ======================================================================
     for i in range(len(KITTI)):
         image, pointcloud, labels, calib = KITTI[i]
@@ -210,11 +210,11 @@ def evaluate():
         # clip labels (remove bboxes outside the pointcloud boundary)
         labels = BEVutils.clip_3d_boxes(labels, calib)
 
-        # visualizer.visualize_scene_2D(pointcloud, image, objects, labels, calib=calib)
-        # # visualizer.visualize_scene_2D(pointcloud, image, objects, calib=calib)
-        # if visualizer.user_press == 27:
-        #     cv2.destroyAllWindows()
-        #     break
+        visualizer.visualize_scene_2D(pointcloud, image, objects, labels, calib=calib)
+        # visualizer.visualize_scene_2D(pointcloud, image, objects, calib=calib)
+        if visualizer.user_press == 27:
+            cv2.destroyAllWindows()
+            break
 
 
         evaluation.evaluate_step(objects, labels, calib)
