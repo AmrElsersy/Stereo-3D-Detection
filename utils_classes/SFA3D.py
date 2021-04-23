@@ -78,7 +78,7 @@ class SFA3D:
         outputs = self.model(bev)
         detections = self.post_procesiing(outputs)
         t2 = time_synchronized()
-        print('\tDone testing in time: {:.1f}ms, speed {:.2f}FPS'.format((t2 - t1) * 1000,1 / (t2 - t1)))
+        # print('\tDone testing in time: {:.1f}ms, speed {:.2f}FPS'.format((t2 - t1) * 1000,1 / (t2 - t1)))
 
         return detections
 

@@ -2,6 +2,7 @@ import pickle
 import argparse
 import torch.backends.cudnn as cudnn
 import torch
+import cv2
 
 from visualization.KittiDataset import KittiDataset
 from visualization.KittiVisualization import KittiVisualizer
@@ -10,7 +11,8 @@ import visualization.BEVutils as BEVutils
 
 from utils_classes.SFA3D import SFA3D
 from sfa_demo import parse_test_configs, parse_config
-# from full_demo import parse_config_pillars
+from utils_classes.pointcloud_3d_detection import PointCloud_3D_Detection
+from full_demo import parse_config_pillars
 torch.cuda.empty_cache()
 
 def save_predictions():
@@ -18,7 +20,7 @@ def save_predictions():
     visualizer = KittiVisualizer()
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model', choices=['sfa', 'pillars'], default='sfa', help='choose model to save its outputs')
+    parser.add_argument('--model', choices=['sfa', 'pillars'], default='pillars', help='choose model to save its outputs')
     args_main = parser.parse_args()
     
     # dataset
@@ -31,8 +33,8 @@ def save_predictions():
         cfg, args = parse_test_configs()
         model = SFA3D(cfg)
     else:
-        args_pillars, cfg_pillars = parse_config_pillars()
-        model = PointCloud_3D_Detection(args_pillars, cfg_pillars)
+        args, cfg = parse_config_pillars()
+        model = PointCloud_3D_Detection(args, cfg)
 
     # pickle save list
     predictions = []

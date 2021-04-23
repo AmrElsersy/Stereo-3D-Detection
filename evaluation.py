@@ -184,7 +184,7 @@ class Evaluation:
 
 def evaluate():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--path', type=str, default='predictions_sfa.pickle', help='path of predictions pickle')
+    parser.add_argument('--path', type=str, default='predictions_pillars.pickle', help='path of predictions pickle')
     args_main = parser.parse_args()
 
     cudnn.benchmark = True
