@@ -11,18 +11,10 @@ from visualization.KittiVisualization import KittiVisualizer
 from visualization.KittiUtils import *
 import visualization.BEVutils as BEVutils
 
-from utils_classes.SFA3D import SFA3D
-from utils_classes.stereo_depth_estimation import Stereo_Depth_Estimation
-from sfa_demo import parse_test_configs, parse_config
-
-from utils_classes.pointcloud_3d_detection import PointCloud_3D_Detection
-from full_demo import parse_config_pillars
-
 from scipy.spatial import ConvexHull
 from shapely.geometry import Polygon
 
 visualizer = KittiVisualizer()
-
 torch.cuda.empty_cache()
 
 def box3d_iou(bbox1:BBox3D, bbox2:BBox3D, calib:KittiCalibration):
@@ -190,12 +182,11 @@ class Evaluation:
         average_precision = torch.trapz(precisions, recalls)
         return average_precision
 
-def evaluate_pickle():
-    cfg, args = parse_test_configs()
+def evaluate():
     cudnn.benchmark = True
     global visualizer
 
-    dataset_root = os.path.join(cfg.dataset_dir, "training")
+    dataset_root = os.path.join('data', 'kitti', 'training')
     KITTI = KittiDataset(dataset_root, mode='val')
 
     with open('predictions.pickle', 'rb') as f:
@@ -206,7 +197,7 @@ def evaluate_pickle():
 
     evaluation = Evaluation(iou_threshold=0.5, evaluate_class=class_name_to_label('Car'), mode=EvalMode.IOU_3D)
     # ======================================================================
-    for i in range(args.index, len(KITTI)):
+    for i in range(len(KITTI)):
         image, pointcloud, labels, calib = KITTI[i]
         objects = objects_val[i]
 
@@ -215,67 +206,19 @@ def evaluate_pickle():
             if obj.score < 0.5:
                 objects.remove(obj)
 
-        evaluation.evaluate_step(objects, labels, calib)
-        if i % 20 == 0:
-            print(f'{i}- mAP = {evaluation.mAP()}')
+        visualizer.visualize_scene_2D(pointcloud, image, objects, labels, calib=calib)
+        if visualizer.user_press == 27:
+            cv2.destroyAllWindows()
+            break
 
-    mAP = evaluation.mAP()
-    print('='*60)
-    print(f'mAP = {mAP}')
-
-
-def evaluate():
-    cfg, args = parse_test_configs()
-    # stereo_args = parse_config()
-    cudnn.benchmark = True
-    global visualizer
-
-    dataset_root = os.path.join(cfg.dataset_dir, "training")
-    KITTI = KittiDataset(dataset_root, mode='val')
-    # sfa_model = SFA3D(cfg)
-
-    args_pillars, cfg_pillars = parse_config_pillars()
-    pointpillars = PointCloud_3D_Detection(args_pillars, cfg_pillars)
-
-    # KITTI_stereo = KittiDataset(dataset_root, stereo_mode=True)    
-    # anynet_model = Stereo_Depth_Estimation(stereo_args,None)
-
-    evaluation = Evaluation(iou_threshold=0.5, evaluate_class=class_name_to_label('Car'), mode=EvalMode.IOU_3D)
-    # ======================================================================
-    # preds_val = []
-    # objects_val = []
-    for i in range(args.index, len(KITTI)):
-        image, pointcloud, labels, calib = KITTI[i]
-
-        # SFA3D
-        # detections = sfa_model.predict(pointcloud)
-        # objects = SFA3D_output_to_kitti_objects(detections)
-
-        # # Point Pillars
-        pred = pointpillars.predict(pointcloud)
-        objects = model_output_to_kitti_objects(pred)
-
-        # preds_val.append(pred)
-        # objects_val.append(objects)
-
-        # filter score
-        for obj in objects:
-            if obj.score < 0.5:
-                objects.remove(obj)
 
         evaluation.evaluate_step(objects, labels, calib)
         if i % 20 == 0:
             print(f'{i}- mAP = {evaluation.mAP()}')
 
-    mAP = evaluation.mAP()
     print('='*60)
-    print(f'mAP = {mAP}')
+    print(f'mAP = {evaluation.mAP()}')
 
-    # with open('objects.pickle', 'wb') as f:
-    #     pickle.dump(objects_val, f)
-    # with open('predictions.pickle', 'wb') as f:
-    #     pickle.dump(preds_val, f)
 
 if __name__ == '__main__':
-    evaluate_pickle()
-
+    evaluate()
