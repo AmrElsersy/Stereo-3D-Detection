@@ -196,7 +196,7 @@ def evaluate():
     with open('predictions.pickle', 'rb') as f:
         predictions = pickle.load(f)
 
-    evaluation = Evaluation(iou_threshold=0.5, evaluate_class=class_name_to_label('Car'), mode=EvalMode.IOU_3D)
+    evaluation = Evaluation(iou_threshold=0.7, evaluate_class=class_name_to_label('Car'), mode=EvalMode.IOU_BEV)
     # ======================================================================
     for i in range(len(KITTI)):
         image, pointcloud, labels, calib = KITTI[i]
@@ -207,11 +207,14 @@ def evaluate():
             if obj.score < 0.5:
                 objects.remove(obj)
 
+        # clip labels (remove bboxes outside the pointcloud boundary)
+        labels = BEVutils.clip_3d_boxes(labels, calib)
+
         # visualizer.visualize_scene_2D(pointcloud, image, objects, labels, calib=calib)
-        visualizer.visualize_scene_2D(pointcloud, image, objects, calib=calib)
-        if visualizer.user_press == 27:
-            cv2.destroyAllWindows()
-            break
+        # # visualizer.visualize_scene_2D(pointcloud, image, objects, calib=calib)
+        # if visualizer.user_press == 27:
+        #     cv2.destroyAllWindows()
+        #     break
 
 
         evaluation.evaluate_step(objects, labels, calib)

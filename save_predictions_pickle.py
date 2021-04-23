@@ -18,7 +18,7 @@ def save_predictions():
     visualizer = KittiVisualizer()
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model', choices=['sfa', 'pointpillars'], default='sfa', help='choose model to save its outputs')
+    parser.add_argument('--model', choices=['sfa', 'pillars'], default='sfa', help='choose model to save its outputs')
     args_main = parser.parse_args()
     
     # dataset
@@ -58,7 +58,7 @@ def save_predictions():
         #     cv2.destroyAllWindows()
         #     break
 
-    with open('predictions.pickle', 'wb') as f:
+    with open('predictions_' + args_main.model + '.pickle', 'wb') as f:
         pickle.dump(predictions, f)
 
 if __name__ == '__main__':
