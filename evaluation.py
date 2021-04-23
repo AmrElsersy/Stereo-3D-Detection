@@ -183,6 +183,10 @@ class Evaluation:
         return average_precision
 
 def evaluate():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--path', type=str, default='predictions.pickle', help='path of predictions pickle')
+    args_main = parser.parse_args()
+
     cudnn.benchmark = True
     global visualizer
 
@@ -190,23 +194,21 @@ def evaluate():
     KITTI = KittiDataset(dataset_root, mode='val')
 
     with open('predictions.pickle', 'rb') as f:
-        preds_val = pickle.load(f)
-
-    with open('objects.pickle', 'rb') as f:
-        objects_val = pickle.load(f)
+        predictions = pickle.load(f)
 
     evaluation = Evaluation(iou_threshold=0.5, evaluate_class=class_name_to_label('Car'), mode=EvalMode.IOU_3D)
     # ======================================================================
     for i in range(len(KITTI)):
         image, pointcloud, labels, calib = KITTI[i]
-        objects = objects_val[i]
+        objects = predictions[i]
 
         # filter score
         for obj in objects:
             if obj.score < 0.5:
                 objects.remove(obj)
 
-        visualizer.visualize_scene_2D(pointcloud, image, objects, labels, calib=calib)
+        # visualizer.visualize_scene_2D(pointcloud, image, objects, labels, calib=calib)
+        visualizer.visualize_scene_2D(pointcloud, image, objects, calib=calib)
         if visualizer.user_press == 27:
             cv2.destroyAllWindows()
             break

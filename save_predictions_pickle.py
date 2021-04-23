@@ -1,5 +1,7 @@
 import pickle
 import argparse
+import torch.backends.cudnn as cudnn
+import torch
 
 from visualization.KittiDataset import KittiDataset
 from visualization.KittiVisualization import KittiVisualizer
@@ -8,19 +10,19 @@ import visualization.BEVutils as BEVutils
 
 from utils_classes.SFA3D import SFA3D
 from sfa_demo import parse_test_configs, parse_config
-from full_demo import parse_config_pillars
-
+# from full_demo import parse_config_pillars
+torch.cuda.empty_cache()
 
 def save_predictions():
     cudnn.benchmark = True
-    global visualizer
+    visualizer = KittiVisualizer()
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--model', choices=['sfa', 'pointpillars'], default='sfa', help='choose model to save its outputs')
     args_main = parser.parse_args()
     
     # dataset
-    dataset_root = os.path.join(cfg.dataset_dir, "training")
+    dataset_root = os.path.join('data', 'kitti', "training")
     KITTI = KittiDataset(dataset_root, mode='val')
 
     # model
@@ -33,24 +35,31 @@ def save_predictions():
         model = PointCloud_3D_Detection(args_pillars, cfg_pillars)
 
     # pickle save list
-    objects_val = []
+    predictions = []
 
     for i in range(args.index, len(KITTI)):
         image, pointcloud, labels, calib = KITTI[i]
 
+        # predictions
+        torch.cuda.empty_cache()
         pred = model.predict(pointcloud)
 
-        # labels
+        # kitti objects
         objects = None
-        if args.model == 'sfa':
+        if args_main.model == 'sfa':
             objects = SFA3D_output_to_kitti_objects(pred)
         else:
             objects = model_output_to_kitti_objects(pred)
 
-        objects_val.append(objects)
+        predictions.append(objects)
+        print(i)
+        # visualizer.visualize_scene_2D(pointcloud, image, objects, labels, calib=calib)
+        # if visualizer.user_press == 27:
+        #     cv2.destroyAllWindows()
+        #     break
 
-    with open('objects.pickle', 'wb') as f:
-        pickle.dump(objects_val, f)
+    with open('predictions.pickle', 'wb') as f:
+        pickle.dump(predictions, f)
 
 if __name__ == '__main__':
     save_predictions()
