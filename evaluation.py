@@ -184,13 +184,8 @@ class Evaluation:
 
 def evaluate():
     parser = argparse.ArgumentParser()
-<<<<<<< HEAD
     parser.add_argument('--mode', type=str, choices=['sfa', 'pillars'], default='sfa', help='path of predictions pickle')
     args = parser.parse_args()
-=======
-    parser.add_argument('--path', type=str, default='predictions_pillars.pickle', help='path of predictions pickle')
-    args_main = parser.parse_args()
->>>>>>> fbc0dea5dece4fcd17d1929b80537a1b7878bec3
 
     cudnn.benchmark = True
     global visualizer
@@ -198,7 +193,7 @@ def evaluate():
     dataset_root = os.path.join('data', 'kitti', 'training')
     KITTI = KittiDataset(dataset_root, mode='val')
 
-    path = 'predictions_sfa.pickle' if mode == 'sfa' else 'predictions_pillars.pickle'
+    path = 'predictions_sfa.pickle' if args.mode == 'sfa' else 'predictions_pillars.pickle'
     with open(path, 'rb') as f:
         predictions = pickle.load(f)
 
@@ -208,20 +203,20 @@ def evaluate():
         image, pointcloud, labels, calib = KITTI[i]
         objects = predictions[i]
 
+        # filter score
+        for obj in objects:
+            if obj.score < 0.3:
+                objects.remove(obj)
+
         if args.mode == 'pillars':
             for obj in objects:
                 obj.label = pillars_labels_to_sfa_labels(obj.label)
 
-        # filter score
-        for obj in objects:
-            if obj.score < 0.5:
-                objects.remove(obj)
-
         # clip labels (remove bboxes outside the pointcloud boundary)
         labels = BEVutils.clip_3d_boxes(labels, calib)
 
-        visualizer.visualize_scene_2D(pointcloud, image, objects, labels, calib=calib)
-        # visualizer.visualize_scene_2D(pointcloud, image, objects, calib=calib)
+        # visualizer.visualize_scene_2D(pointcloud, image, objects, labels, calib=calib)
+        visualizer.visualize_scene_2D(pointcloud, image, objects, calib=calib)
         if visualizer.user_press == 27:
             cv2.destroyAllWindows()
             break
