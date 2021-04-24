@@ -276,6 +276,14 @@ def label_to_class_name(label):
     class_list = ["Pedestrian", "Car", "Cyclist"]
     return class_list[label]
 
+def pillars_labels_to_sfa_labels(label):
+    if label == 0:
+        return 1
+    elif label == 1:
+        return 0
+    elif label == 2:
+        return 2
+
 def model_output_to_kitti_objects(pred_dict):
     kitti_objects = []
     
