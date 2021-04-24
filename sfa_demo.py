@@ -18,7 +18,7 @@ def parse_test_configs():
     parser.add_argument('--saved_fn', type=str, default='fpn_resnet_18', metavar='FN', help='The name using for saving logs, models,...')
     parser.add_argument('-a', '--arch', type=str, default='fpn_resnet_18', metavar='ARCH', help='The name of the model architecture')
     # parser.add_argument('--pretrained_path', type=str, default='SFA3D/checkpoints/fpn_resnet_18/Model_fpn_resnet_18_epoch_44.pth', metavar='PATH')
-    parser.add_argument('--pretrained_path', type=str, default='SFA3D/checkpoints/fpn_resnet_18/fpn_resnet_18_epoch_300.pth', metavar='PATH')
+    parser.add_argument('--pretrained_path', type=str, default='SFA3D/checkpoints/fpn_resnet_18/Model_fpn_resnet_18_epoch_90.pth', metavar='PATH')
     parser.add_argument('--K', type=int, default=50, help='the number of top K')
     parser.add_argument('--no_cuda', action='store_true', help='If true, cuda is not used.')
     parser.add_argument('--gpu_idx', default=0, type=int, help='GPU index to use.')
@@ -27,7 +27,7 @@ def parse_test_configs():
     parser.add_argument('--batch_size', type=int, default=1, help='mini-batch size (default: 4)')
     parser.add_argument('--peak_thresh', type=float, default=0.2)
     parser.add_argument('--save_test_output', action='store_true', help='If true, the output image of the testing phase will be saved')
-    parser.add_argument('--stereo', action='store_true', default=False, help="Run SFA3D on anynet stereo model pseduo lidar")
+    parser.add_argument('--stereo', action='store_true', default=True, help="Run SFA3D on anynet stereo model pseduo lidar")
     parser.add_argument('--index', type=int, default=0, help="start index in dataset")
     configs = edict(vars(parser.parse_args()))
     configs.pin_memory = True
@@ -102,8 +102,8 @@ def main():
     stereo_args = parse_config()
     cudnn.benchmark = True
 
-    dataset_root = os.path.join(cfg.dataset_dir, "testing")
-    KITTI = KittiDataset(dataset_root, mode='val')
+    dataset_root = os.path.join(cfg.dataset_dir, "training")
+    KITTI = KittiDataset(dataset_root, mode='train')
     KITTI_stereo = KittiDataset(dataset_root, stereo_mode=True, mode='train')
 
     sfa_model = SFA3D(cfg) 
