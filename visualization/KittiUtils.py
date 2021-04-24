@@ -52,7 +52,7 @@ class KittiObject:
         self.bbox_2d = bbox_2d
 
     def __repr__(self):
-        return label_to_class_name(self.label) + '(' + str(self.score) + ')'
+        return label_to_class_name(self.label) + '(' + str(round(self.score,2)) + ')' + '[' + str(self.label) + '] '
 
 # ================================================
 class KittiCalibration:
@@ -251,10 +251,6 @@ class KittiCalibration:
         return points_3d_velodyne.T
 
 
-
-
-
-
 # ================================================
 def class_name_to_label(classname):
     class_to_label = {
@@ -307,7 +303,8 @@ def model_output_to_kitti_objects(pred_dict):
         score = scores[i]
         # label index is shifted in model output
         label_id = labels[i] - 1
-
+        
+        bbox.coordinates = Coordinates.LIDAR
         kitti_object = KittiObject(bbox, label_id)
         kitti_object.score = score
         kitti_objects.append(kitti_object)

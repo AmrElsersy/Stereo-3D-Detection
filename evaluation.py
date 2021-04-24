@@ -114,13 +114,17 @@ class Evaluation:
 
     def evaluate_step(self, detections:list, labels:list, calib:KittiCalibration):
         # filter classes
+        filter_detections = []
         for detection in detections:
-            if detection.label != self.evaluate_class:
-                detections.remove(detection)
+            if detection.label == self.evaluate_class:
+                filter_detections.append(detection)
+        detections = filter_detections
 
+        filter_labels = []
         for label in labels:
-            if label.label != self.evaluate_class:
-                labels.remove(label)
+            if label.label == self.evaluate_class:
+                filter_labels.append(label)
+        labels = filter_labels
 
         # [0, 0, 0] in case 3 predicted boxes
         TP = [0 for i in range(len(detections))]
@@ -197,7 +201,7 @@ def evaluate():
     with open(path, 'rb') as f:
         predictions = pickle.load(f)
 
-    evaluation = Evaluation(iou_threshold=0.5, evaluate_class=class_name_to_label('Car'), mode=EvalMode.IOU_BEV)
+    evaluation = Evaluation(iou_threshold=0.7, evaluate_class=class_name_to_label('Car'), mode=EvalMode.IOU_BEV)
     # ======================================================================
     for i in range(len(KITTI)):
         image, pointcloud, labels, calib = KITTI[i]
@@ -205,7 +209,7 @@ def evaluate():
 
         # filter score
         for obj in objects:
-            if obj.score < 0.3:
+            if obj.score < 0.7:
                 objects.remove(obj)
 
         if args.mode == 'pillars':
@@ -213,18 +217,20 @@ def evaluate():
                 obj.label = pillars_labels_to_sfa_labels(obj.label)
 
         # clip labels (remove bboxes outside the pointcloud boundary)
+        objects = BEVutils.clip_3d_boxes(objects, calib)
         labels = BEVutils.clip_3d_boxes(labels, calib)
-
-        # visualizer.visualize_scene_2D(pointcloud, image, objects, labels, calib=calib)
-        visualizer.visualize_scene_2D(pointcloud, image, objects, calib=calib)
-        if visualizer.user_press == 27:
-            cv2.destroyAllWindows()
-            break
 
 
         evaluation.evaluate_step(objects, labels, calib)
-        if i % 20 == 0:
-            print(f'{i}- mAP = {evaluation.mAP()}')
+        # if i % 20 == 0:
+        #     print(f'{i}- mAP = {evaluation.mAP()}')
+
+        # visualizer.visualize_scene_2D(pointcloud, image, objects, labels, calib=calib)
+        # visualizer.visualize_scene_2D(pointcloud, image, objects, calib=calib)
+        # if visualizer.user_press == 27:
+        #     cv2.destroyAllWindows()
+        #     break
+
 
     print('='*60)
     print(f'mAP = {evaluation.mAP()}')
