@@ -46,6 +46,7 @@ class Stereo_Depth_Estimation:
             image = output3.cpu()
             img_cpu = np.asarray(image)
             disp_map = img_cpu[0, :, :]
+            disp_map = (disp_map*255).astype(np.float32)/255.
             return disp_map
     
     def disparity_to_pointcloud(self, disp_map, calib_path):
@@ -55,14 +56,13 @@ class Stereo_Depth_Estimation:
         sparse_points = self.gen_sparse_points(lidar)
         return sparse_points
 
-    def gen_lidar(disp_map, calib, max_high=1):
-        disp_map = (disp_map*255).astype(np.float32)/255.
+    def gen_lidar(self, disp_map, calib, max_high=1):
         lidar = project_disp_to_points(calib, disp_map, max_high)
         lidar = np.concatenate([lidar, np.ones((lidar.shape[0], 1))], 1)
         lidar = lidar.astype(np.float32)
         return lidar
 
-    def gen_sparse_points(lidar, H=64, W=512, D=700, slice=1):
+    def gen_sparse_points(self, lidar, H=64, W=512, D=700, slice=1):
         pc_velo = lidar.reshape((-1, 4))
         valid_inds =    (pc_velo[:, 0] < 120)    & \
                         (pc_velo[:, 0] >= 0)     & \

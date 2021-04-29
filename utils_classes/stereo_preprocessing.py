@@ -22,10 +22,10 @@ class StereoPreprocessing:
         self.loader = loader
 
     def preprocess(self, left_img, right_img):
-        left_img = left_img.convert('RGB')
-        right_img = right_img.convert('RGB')
-        # left_img = Image.fromarray(np.uint8(left_img)).convert('RGB')
-        # right_img = Image.fromarray(np.uint8(right_img)).convert('RGB')
+        # left_img = left_img.convert('RGB')
+        # right_img = right_img.convert('RGB')
+        left_img = Image.fromarray(np.uint8(left_img)).convert('RGB')
+        right_img = Image.fromarray(np.uint8(right_img)).convert('RGB')
         w, h = left_img.size
 
         left_img = left_img.crop((w - 1200, h - 352, w, h))
@@ -36,4 +36,6 @@ class StereoPreprocessing:
         left_img = processed(left_img)
         right_img = processed(right_img)
 
+        left_img = left_img.clone().detach().reshape(1, *left_img.size())
+        right_img = right_img.clone().detach().reshape(1, *right_img.size())
         return left_img, right_img
