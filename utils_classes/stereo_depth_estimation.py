@@ -12,9 +12,8 @@ from utils_classes.stereo_preprocessing import StereoPreprocessing
 
 # ========================= Stereo =========================
 class Stereo_Depth_Estimation:
-    def __init__(self, args, cfg):
+    def __init__(self, args):
         self.args = args
-        self.cfg = cfg
 
         self.model = self.load_model()
         self.preprocesiing = StereoPreprocessing()
@@ -46,9 +45,7 @@ class Stereo_Depth_Estimation:
 
         with torch.no_grad():
             startTime = time.time()
-            outputs, all_time = self.model(imgL, imgR)
-            all_time = ''.join(['At Stage {}: time {:.2f} ms ~ {:.2f} FPS\n'.format(
-                x, (all_time[x] - startTime) * 1000, 1 / ((all_time[x] - startTime))) for x in range(len(all_time))])
+            outputs = self.model(imgL, imgR)
             return outputs
     
     def disparity_to_pointcloud(self, disparity, calib_path):
