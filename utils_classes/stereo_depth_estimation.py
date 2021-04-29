@@ -50,9 +50,10 @@ class Stereo_Depth_Estimation:
             return disp_map
     
     def disparity_to_pointcloud(self, disp_map, calib_path):
-        # get the last disparity (best accuracy)
         calib = Calibration(calib_path)
+        # Disparity to point cloud convertor
         lidar = self.gen_lidar(disp_map, calib)
+        # Sparsify point cloud convertor
         sparse_points = self.gen_sparse_points(lidar)
         return sparse_points
 

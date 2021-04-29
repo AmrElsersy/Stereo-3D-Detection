@@ -96,8 +96,8 @@ def main():
     cudnn.benchmark = True
 
     dataset_root = os.path.join(cfg.dataset_dir, "training")
-    KITTI = KittiDataset(dataset_root, mode='train')
-    KITTI_stereo = KittiDataset(dataset_root, stereo_mode=True, mode='train')
+    KITTI = KittiDataset(dataset_root, mode='val')
+    KITTI_stereo = KittiDataset(dataset_root, stereo_mode=True, mode='val')
 
     sfa_model = SFA3D(cfg) 
     anynet_model = Stereo_Depth_Estimation(args)
