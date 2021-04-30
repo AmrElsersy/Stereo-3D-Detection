@@ -9,7 +9,8 @@ from visualization.KittiUtils import *
 import visualization.BEVutils as BEVutils
 
 from utils_classes.SFA3D import SFA3D
-from sfa_demo import parse_test_configs, parse_config
+from sfa_demo import parse_test_configs 
+# from sfa_demo import parse_config
 # from full_demo import parse_config_pillars
 torch.cuda.empty_cache()
 
@@ -28,7 +29,7 @@ def save_predictions():
     # model
     model = None
     if args_main.model == 'sfa':
-        cfg, args = parse_test_configs()
+        cfg, args = parse_test_configs(parser)
         model = SFA3D(cfg)
     else:
         args_pillars, cfg_pillars = parse_config_pillars()

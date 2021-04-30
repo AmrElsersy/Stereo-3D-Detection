@@ -201,16 +201,16 @@ def evaluate():
     with open(path, 'rb') as f:
         predictions = pickle.load(f)
 
-    evaluation = Evaluation(iou_threshold=0.5, evaluate_class=class_name_to_label('Car'), mode=EvalMode.IOU_BEV)
+    evaluation = Evaluation(iou_threshold=0.7, evaluate_class=class_name_to_label('Car'), mode=EvalMode.IOU_3D)
     # ======================================================================
     for i in range(len(KITTI)):
         image, pointcloud, labels, calib = KITTI[i]
         objects = predictions[i]
 
-        # filter score
-        for obj in objects:
-            if obj.score < 0.5:
-                objects.remove(obj)
+        # # filter score
+        # for obj in objects:
+        #     if obj.score < 0.5:
+        #         objects.remove(obj)
 
         if args.mode == 'pillars':
             for obj in objects:

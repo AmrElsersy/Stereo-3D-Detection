@@ -70,10 +70,12 @@ class KittiDataset(Dataset):
 
     def __getitem__(self, index):
         if self.is_test:
-            return self.load_img_with_targets_bev(index)
-            # return self.load_img_only(index)
-        elif self.bev_loading:
-            return self.load_img_with_targets_bev(index)
+            # print(1, self.bev_loading )
+            # return self.load_img_with_targets_bev(index)
+            return self.load_img_only(index)
+        # elif self.bev_loading:
+        #     # print(2, self.bev_loading )
+        #     return self.load_img_with_targets_bev(index)
         else:
             return self.load_img_with_targets(index)
 
@@ -129,8 +131,20 @@ class KittiDataset(Dataset):
         if has_labels:
             labels[:, 1:] = transformation.camera_to_lidar_box(labels[:, 1:], calib.V2C, calib.R0, calib.P2)
 
-        path = '../../data/kitti/training/bev' + f'/{index}'
+
+        # print(index, sample_id)
+        path = '../../data/kitti/training/bev' + f'/{sample_id}'
         bev_map = torch.load(path)
+
+        # bev = (bev_map.squeeze().permute(1, 2, 0).numpy() * 255).astype(np.uint8)
+        # bev = cv2.resize(bev, (608, 608))
+        # # bev = draw_predictions(bev, labels.copy(), configs.num_classes)
+        # bev = cv2.rotate(bev, cv2.ROTATE_180)
+
+        # print(bev.shape)
+        # cv2.imshow('ray2', bev)
+        # cv2.waitKey(0)
+
 
         hflipped = False
         if np.random.random() < self.hflip_prob:
@@ -139,7 +153,6 @@ class KittiDataset(Dataset):
             bev_map = torch.flip(bev_map, [-1])
 
         targets = self.build_targets(labels, hflipped)
-        targets = [targets]
 
         metadatas = {
             'img_path': img_path,
@@ -171,7 +184,7 @@ class KittiDataset(Dataset):
 
         bev_map = makeBEVMap(lidarData, cnf.boundary)
         bev_map = torch.from_numpy(bev_map)
-
+        # print(index, sample_id)
         hflipped = False
         if np.random.random() < self.hflip_prob:
             hflipped = True

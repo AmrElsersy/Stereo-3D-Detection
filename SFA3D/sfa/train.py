@@ -40,6 +40,11 @@ from utils.logger import Logger
 from config.train_config import parse_train_configs
 from losses.losses import Compute_Loss
 
+
+from utils.evaluation_utils import decode, post_processing, draw_predictions, convert_det_to_real_values
+from utils.torch_utils import _sigmoid
+import cv2
+
 torch.cuda.empty_cache()
 def main():
     configs = parse_train_configs()
@@ -172,10 +177,10 @@ def main_worker(gpu_idx, configs):
             model_state_dict, utils_state_dict = get_saved_state(model, optimizer, lr_scheduler, epoch, configs)
             save_checkpoint(configs.checkpoints_dir, configs.saved_fn, model_state_dict, utils_state_dict, epoch)
 
-        # if not configs.step_lr_in_epoch:
-        #     lr_scheduler.step()
-        #     if tb_writer is not None:
-        #         tb_writer.add_scalar('LR', lr_scheduler.get_lr()[0], epoch)
+        if not configs.step_lr_in_epoch:
+            lr_scheduler.step()
+            if tb_writer is not None:
+                tb_writer.add_scalar('LR', lr_scheduler.get_lr()[0], epoch)
 
     if tb_writer is not None:
         tb_writer.close()
@@ -188,6 +193,8 @@ def cleanup():
 
 
 def train_one_epoch(train_dataloader, model, optimizer, lr_scheduler, epoch, configs, logger, tb_writer):
+    torch.cuda.empty_cache()
+
     batch_time = AverageMeter('Time', ':6.3f')
     data_time = AverageMeter('Data', ':6.3f')
     losses = AverageMeter('Loss', ':.4e')
@@ -203,12 +210,41 @@ def train_one_epoch(train_dataloader, model, optimizer, lr_scheduler, epoch, con
     for batch_idx, batch_data in enumerate(tqdm(train_dataloader)):
         data_time.update(time.time() - start_time)
         metadatas, imgs, targets = batch_data
+
         batch_size = imgs.size(0)
         global_step = num_iters_per_epoch * (epoch - 1) + batch_idx + 1
         for k in targets.keys():
             targets[k] = targets[k].to(configs.device, non_blocking=True)
         imgs = imgs.to(configs.device, non_blocking=True).float()
+
+        torch.cuda.empty_cache()
         outputs = model(imgs)
+
+        # # ==================
+        # outputs['hm_cen'] = _sigmoid(outputs['hm_cen'])
+        # outputs['cen_offset'] = _sigmoid(outputs['cen_offset'])
+        # # detections size (batch_size, K, 10)
+        # detections = decode(outputs['hm_cen'], outputs['cen_offset'], outputs['direction'], outputs['z_coor'],
+        #                     outputs['dim'], K=configs.K)
+        # detections = detections.detach().cpu().numpy().astype(np.float32)
+        # # detections = post_processing(detections, configs.num_classes, configs.down_ratio, configs.peak_thresh)
+        # # t2 = time_synchronized()
+
+        # detections = detections[0]  # only first batch
+
+        # print(detections)
+        # # Draw prediction in the image
+        # bev_map = (imgs.squeeze().permute(1, 2, 0).numpy() * 255).astype(np.uint8)
+        # bev_map = cv2.resize(bev_map, (608, 608))
+        # # bev_map = draw_predictions(bev_map, detections.copy(), configs.num_classes)
+
+        # # Rotate the bev_map
+        # bev_map = cv2.rotate(bev_map, cv2.ROTATE_180)
+
+        # cv2.imshow('rr', bev_map)        
+        # # ==================
+
+
         total_loss, loss_stats = criterion(outputs, targets)
         # For torch.nn.DataParallel case
         if (not configs.distributed) and (configs.gpu_idx is None):
@@ -223,10 +259,10 @@ def train_one_epoch(train_dataloader, model, optimizer, lr_scheduler, epoch, con
 
             # ######################### Sersy #########################################
             # Adjust learning rate
-            # if configs.step_lr_in_epoch:
-            #     lr_scheduler.step()
-            #     if tb_writer is not None:
-            #         tb_writer.add_scalar('LR', lr_scheduler.get_lr()[0], global_step)
+            if configs.step_lr_in_epoch:
+                lr_scheduler.step()
+                if tb_writer is not None:
+                    tb_writer.add_scalar('LR', lr_scheduler.get_lr()[0], global_step)
 
         if configs.distributed:
             reduced_loss = reduce_tensor(total_loss.data, configs.world_size)

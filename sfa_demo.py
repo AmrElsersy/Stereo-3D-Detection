@@ -13,11 +13,12 @@ from utils_classes.stereo_depth_estimation import Stereo_Depth_Estimation
 
 torch.cuda.empty_cache()
 
-def parse_test_configs():
-    parser = argparse.ArgumentParser(description='Testing config for the Implementation')
+def parse_test_configs(parser = None):
+    if not parser:
+        parser = argparse.ArgumentParser(description='Testing config for the Implementation')
     parser.add_argument('--saved_fn', type=str, default='fpn_resnet_18', metavar='FN', help='The name using for saving logs, models,...')
     parser.add_argument('-a', '--arch', type=str, default='fpn_resnet_18', metavar='ARCH', help='The name of the model architecture')
-    parser.add_argument('--pretrained_path', type=str, default='SFA3D/checkpoints/fpn_resnet_18/Model_fpn_resnet_18_epoch_44.pth', metavar='PATH')
+    parser.add_argument('--pretrained_path', type=str, default='SFA3D/checkpoints/fpn_resnet_18/Model_fpn_resnet_18_epoch_5.pth', metavar='PATH')
     # parser.add_argument('--pretrained_path', type=str, default='configs/checkpoint/fpn_resnet_18/Model_fpn_resnet_18_epoch_90.pth', metavar='PATH')
     parser.add_argument('--K', type=int, default=50, help='the number of top K')
     parser.add_argument('--no_cuda', action='store_true', help='If true, cuda is not used.')
@@ -132,7 +133,7 @@ def main():
             detections = sfa_model.predict(pointcloud)
             objects = SFA3D_output_to_kitti_objects(detections)
 
-            visualizer.visualize_scene_2D(pointcloud, image, labels, calib=calib)
+            visualizer.visualize_scene_2D(pointcloud, image, objects, calib=calib)
             if visualizer.user_press == 27:
                 cv2.destroyAllWindows()
                 break
