@@ -31,7 +31,7 @@ import config.kitti_config as cnf
 
 
 class KittiDataset(Dataset):
-    def __init__(self, configs, mode='train', lidar_aug=None, hflip_prob=None, num_samples=None):
+    def __init__(self, configs, mode='train', lidar_aug=None, hflip_prob=None, num_samples=None, bev_saving = False, bev_loading = False):
         self.dataset_dir = configs.dataset_dir
         self.input_size = configs.input_size
         self.hm_size = configs.hm_size
@@ -42,28 +42,38 @@ class KittiDataset(Dataset):
         assert mode in ['train', 'val', 'test'], 'Invalid mode: {}'.format(mode)
         self.mode = mode
         self.is_test = (self.mode == 'test')
-        sub_folder = 'testing' if self.is_test else 'training'
+        # sub_folder = 'testing' if self.is_test else 'training'
+
+        # ============= Sersy ==============
+        sub_folder = 'training' if self.is_test else 'training'
 
         self.lidar_aug = lidar_aug
         self.hflip_prob = hflip_prob
 
+        if bev_saving:
+            self.dataset_dir = '../' + self.dataset_dir
         self.image_dir = os.path.join(self.dataset_dir, sub_folder, "image_2")
         self.lidar_dir = os.path.join(self.dataset_dir, sub_folder, "velodyne")
         self.calib_dir = os.path.join(self.dataset_dir, sub_folder, "calib")
         self.label_dir = os.path.join(self.dataset_dir, sub_folder, "label_2")
-        split_txt_path = os.path.join(self.dataset_dir, 'ImageSets', '{}.txt'.format(mode))
+        split_txt_path = os.path.join(self.dataset_dir, 'ImageSets', '{}.txt'.format(mode)) 
         self.sample_id_list = [int(x.strip()) for x in open(split_txt_path).readlines()]
 
         if num_samples is not None:
             self.sample_id_list = self.sample_id_list[:num_samples]
         self.num_samples = len(self.sample_id_list)
 
+        self.bev_loading = bev_loading
+
     def __len__(self):
         return len(self.sample_id_list)
 
     def __getitem__(self, index):
         if self.is_test:
-            return self.load_img_only(index)
+            return self.load_img_with_targets_bev(index)
+            # return self.load_img_only(index)
+        elif self.bev_loading:
+            return self.load_img_with_targets_bev(index)
         else:
             return self.load_img_with_targets(index)
 
@@ -81,6 +91,68 @@ class KittiDataset(Dataset):
         }
 
         return metadatas, bev_map, img_rgb
+
+# =================================================================================
+
+    def save_bev(self, index):
+        """Load images and targets for the training and validation phase"""
+        sample_id = int(self.sample_id_list[index])
+        img_path = os.path.join(self.image_dir, '{:06d}.png'.format(sample_id))
+        lidarData = self.get_lidar(sample_id)
+        calib = self.get_calib(sample_id)
+        labels, has_labels = self.get_label(sample_id)
+        if has_labels:
+            labels[:, 1:] = transformation.camera_to_lidar_box(labels[:, 1:], calib.V2C, calib.R0, calib.P2)
+
+        if self.lidar_aug:
+            lidarData, labels[:, 1:] = self.lidar_aug(lidarData, labels[:, 1:])
+
+        lidarData, labels = get_filtered_lidar(lidarData, cnf.boundary, labels)
+
+        bev_map = makeBEVMap(lidarData, cnf.boundary)
+        bev_map = torch.from_numpy(bev_map)
+
+        save_path = '../../../data/kitti/training/bev' + f'/{str(index)}'
+        torch.save(bev_map, save_path)
+        return save_path, bev_map
+
+# =================================================================================
+
+    def load_img_with_targets_bev(self, index):
+        """Load images and targets for the training and validation phase"""
+        sample_id = int(self.sample_id_list[index])
+        img_path = os.path.join(self.image_dir, '{:06d}.png'.format(sample_id))
+        img_path, img_rgb = self.get_image(sample_id)
+
+        calib = self.get_calib(sample_id)
+        labels, has_labels = self.get_label(sample_id)
+        if has_labels:
+            labels[:, 1:] = transformation.camera_to_lidar_box(labels[:, 1:], calib.V2C, calib.R0, calib.P2)
+
+        path = '../../data/kitti/training/bev' + f'/{index}'
+        bev_map = torch.load(path)
+        print(bev_map.shape)
+        hflipped = False
+        if np.random.random() < self.hflip_prob:
+            hflipped = True
+            # C, H, W
+            bev_map = torch.flip(bev_map, [-1])
+
+        targets = self.build_targets(labels, hflipped)
+        targets = [targets]
+
+        metadatas = {
+            'img_path': img_path,
+            'hflipped': hflipped
+        }
+        if self.is_test:
+            return metadatas, bev_map, img_rgb
+            
+        return metadatas, bev_map, targets
+
+# ============================ End ================================================
+
+
 
     def load_img_with_targets(self, index):
         """Load images and targets for the training and validation phase"""
