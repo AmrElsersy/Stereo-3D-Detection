@@ -1,6 +1,6 @@
-from AnyNet.dataloader import preprocess
 import random
 import numpy as np
+from . import preprocess
 import torch
 import torch.utils.data as data
 from PIL import Image
@@ -17,15 +17,20 @@ def is_image_file(filename):
 def default_loader(path):
     return Image.open(path).convert('RGB')
 
-class StereoPreprocessing:
-    def __init__(self, loader=default_loader):
+class myImageFloder(data.Dataset):
+    def __init__(self, left, right, loader=default_loader):
+
+        self.left = left
+        self.right = right
         self.loader = loader
 
-    def preprocess(self, left_img, right_img):
-        # left_img = left_img.convert('RGB')
-        # right_img = right_img.convert('RGB')
-        left_img = Image.fromarray(np.uint8(left_img)).convert('RGB')
-        right_img = Image.fromarray(np.uint8(right_img)).convert('RGB')
+    def __getitem__(self, index):
+        left = self.left[index]
+        right = self.right[index]
+
+        left_img = self.loader(left)
+        right_img = self.loader(right)
+
         w, h = left_img.size
 
         left_img = left_img.crop((w - 1200, h - 352, w, h))
@@ -36,6 +41,7 @@ class StereoPreprocessing:
         left_img = processed(left_img)
         right_img = processed(right_img)
 
-        left_img = left_img.clone().detach().reshape(1, *left_img.size())
-        right_img = right_img.clone().detach().reshape(1, *right_img.size())
         return left_img, right_img
+
+    def __len__(self):
+        return len(self.left)

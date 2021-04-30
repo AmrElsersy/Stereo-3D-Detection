@@ -17,9 +17,9 @@ def is_image_file(filename):
 
 
 def dataloader(filepath, log, split_file):
-    left_fold = 'colored_0/'
-    right_fold = 'colored_1/'
-    disp_noc = 'disp_occ/'
+    left_fold = 'image_2/'
+    right_fold = 'image_3/'
+    disp_noc = 'disp_occ_0/'
 
     image = [img for img in os.listdir(filepath + left_fold) if img.find('_10') > -1]
     if split_file is None:

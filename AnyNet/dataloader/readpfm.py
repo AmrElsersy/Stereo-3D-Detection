@@ -2,7 +2,6 @@ import re
 import numpy as np
 import sys
 
-
 def readPFM(file):
     file = open(file, 'rb')
 
@@ -40,3 +39,9 @@ def readPFM(file):
     data = np.flipud(data)
     file.close()
     return data, scale
+
+
+data, scale = readPFM(
+    'D:/Tracks/CS4/graduation project/Datasets/Sceneflow-sample/FlyingThings3D/disparity/0008.pfm')
+print(np.max(data), np.min(data))
+print(scale)

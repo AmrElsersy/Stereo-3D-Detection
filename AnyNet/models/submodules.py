@@ -20,6 +20,7 @@ class unetUp(nn.Module):
         super(unetUp, self).__init__()
         self.in_size = in_size
         self.out_size = out_size
+        self.is_deconv = is_deconv
         if is_deconv:
             self.up = nn.Sequential(
                 nn.BatchNorm2d(in_size),
@@ -27,7 +28,7 @@ class unetUp(nn.Module):
                 nn.ConvTranspose2d(in_size, out_size, kernel_size=2, stride=2, padding=0)
             )
         else:
-            self.up = nn.UpsamplingBilinear2d(scale_factor=2)
+            # self.up = nn.UpsamplingBilinear2d(scale_factor=2)
             in_size = int(in_size * 1.5)
 
         self.conv = nn.Sequential(
@@ -36,7 +37,10 @@ class unetUp(nn.Module):
         )
 
     def forward(self, inputs1, inputs2):
-        outputs2 = self.up(inputs2)
+        if self.is_deconv:
+            outputs2 = self.up(inputs2)
+        else:
+            outputs2 = F.interpolate(inputs2, scale_factor=2, mode='bilinear', align_corners=False)
         buttom, right = inputs1.size(2)%2, inputs1.size(3)%2
         outputs2 = F.pad(outputs2, (0, -right, 0, -buttom))
         return self.conv(torch.cat([inputs1, outputs2], 1))
