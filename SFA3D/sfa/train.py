@@ -40,7 +40,7 @@ from utils.logger import Logger
 from config.train_config import parse_train_configs
 from losses.losses import Compute_Loss
 
-
+torch.cuda.empty_cache()
 def main():
     configs = parse_train_configs()
 

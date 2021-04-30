@@ -18,7 +18,7 @@ def parse_test_configs():
     parser.add_argument('--saved_fn', type=str, default='fpn_resnet_18', metavar='FN', help='The name using for saving logs, models,...')
     parser.add_argument('-a', '--arch', type=str, default='fpn_resnet_18', metavar='ARCH', help='The name of the model architecture')
     # parser.add_argument('--pretrained_path', type=str, default='SFA3D/checkpoints/fpn_resnet_18/Model_fpn_resnet_18_epoch_44.pth', metavar='PATH')
-    parser.add_argument('--pretrained_path', type=str, default='SFA3D/checkpoints/fpn_resnet_18/Model_fpn_resnet_18_epoch_90.pth', metavar='PATH')
+    parser.add_argument('--pretrained_path', type=str, default='SFA3D/checkpoints/fpn_resnet_18/Model_fpn_resnet_18_epoch_10.pth', metavar='PATH')
     parser.add_argument('--K', type=int, default=50, help='the number of top K')
     parser.add_argument('--no_cuda', action='store_true', help='If true, cuda is not used.')
     parser.add_argument('--gpu_idx', default=0, type=int, help='GPU index to use.')
@@ -27,7 +27,7 @@ def parse_test_configs():
     parser.add_argument('--batch_size', type=int, default=1, help='mini-batch size (default: 4)')
     parser.add_argument('--peak_thresh', type=float, default=0.2)
     parser.add_argument('--save_test_output', action='store_true', help='If true, the output image of the testing phase will be saved')
-    parser.add_argument('--stereo', action='store_true', default=True, help="Run SFA3D on anynet stereo model pseduo lidar")
+    parser.add_argument('--stereo', action='store_true', default=False, help="Run SFA3D on anynet stereo model pseduo lidar")
     parser.add_argument('--index', type=int, default=0, help="start index in dataset")
     configs = edict(vars(parser.parse_args()))
     configs.pin_memory = True
@@ -119,6 +119,8 @@ def main():
             start = time.time()
             pointcloud = anynet_model.predict(imgL, imgR, calib.calib_path)
 
+            
+            torch.cuda.empty_cache()
             detections = sfa_model.predict(pointcloud)
             end = time.time()
             print(f"Time for end to end pipeline: {1000 * (end - start)} ms")
@@ -133,10 +135,11 @@ def main():
         for i in range(args.index, len(KITTI)):
             image, pointcloud, labels, calib = KITTI[i]
 
+            torch.cuda.empty_cache()
             detections = sfa_model.predict(pointcloud)
             objects = SFA3D_output_to_kitti_objects(detections)
 
-            visualizer.visualize_scene_2D(pointcloud, image, objects, calib=calib)
+            visualizer.visualize_scene_2D(pointcloud, image, labels, calib=calib)
             if visualizer.user_press == 27:
                 cv2.destroyAllWindows()
                 break
