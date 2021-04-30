@@ -63,12 +63,13 @@ def get_configs():
 
 
 def save_bev_tensors(dataset):
-    for i in range(10):
+    start = 3000
+    samples = 6000
+    for i in range(start, samples):
         path, bev = dataset.save_bev(i)
 
-        print(bev.shape)
-        print(path)
-        print('')
+        if i % 10 == 0:
+            print(path)
 
 def test(dataset):
     print('test')

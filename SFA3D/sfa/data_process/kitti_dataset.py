@@ -131,7 +131,7 @@ class KittiDataset(Dataset):
 
         path = '../../data/kitti/training/bev' + f'/{index}'
         bev_map = torch.load(path)
-        print(bev_map.shape)
+
         hflipped = False
         if np.random.random() < self.hflip_prob:
             hflipped = True
@@ -147,7 +147,7 @@ class KittiDataset(Dataset):
         }
         if self.is_test:
             return metadatas, bev_map, img_rgb
-            
+
         return metadatas, bev_map, targets
 
 # ============================ End ================================================

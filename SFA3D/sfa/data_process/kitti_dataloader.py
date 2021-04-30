@@ -31,8 +31,12 @@ def create_train_dataloader(configs):
         Random_Rotation(limit_angle=np.pi / 4, p=1.0),
         Random_Scaling(scaling_range=(0.95, 1.05), p=1.0),
     ], p=0.66)
+    # train_dataset = KittiDataset(configs, mode='train', lidar_aug=train_lidar_aug, hflip_prob=configs.hflip_prob,
+    #                              num_samples=configs.num_samples)
     train_dataset = KittiDataset(configs, mode='train', lidar_aug=train_lidar_aug, hflip_prob=configs.hflip_prob,
-                                 num_samples=configs.num_samples)
+                                 num_samples=configs.num_samples, bev_loading=True)
+
+
     train_sampler = None
     if configs.distributed:
         train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset)
