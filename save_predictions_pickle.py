@@ -20,6 +20,7 @@ def save_predictions():
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--model', choices=['sfa', 'pillars'], default='sfa', help='choose model to save its outputs')
+    parser.add_argument('--path', type=str, default='', help='name of the pickle file to be saved')
     args_main = parser.parse_args()
     
     # dataset
@@ -53,13 +54,22 @@ def save_predictions():
             objects = model_output_to_kitti_objects(pred)
 
         predictions.append(objects)
-        print(i)
+        if i % 200 == 0:
+            print(i)
+
         # visualizer.visualize_scene_2D(pointcloud, image, objects, labels, calib=calib)
         # if visualizer.user_press == 27:
         #     cv2.destroyAllWindows()
         #     break
 
-    with open('predictions_' + args_main.model + '.pickle', 'wb') as f:
+    path = args.path
+
+    if path:           
+        path = 'predictions_' + path
+    else:
+        path = 'predictions_' + args_main.model
+    
+    with open(path + '.pickle', 'wb') as f:
         pickle.dump(predictions, f)
 
 if __name__ == '__main__':
