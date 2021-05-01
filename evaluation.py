@@ -225,10 +225,10 @@ def evaluate(args, evaluation, enable_filter = False):
 
         # visualizer.visualize_scene_2D(pointcloud, image, objects, calib=calib)
 
-        # visualizer.visualize_scene_2D(pointcloud, image, objects, labels, calib=calib)
-        # if visualizer.user_press == 27:
-        #     cv2.destroyAllWindows()
-        #     break
+        visualizer.visualize_scene_2D(pointcloud, image, objects, labels, calib=calib)
+        if visualizer.user_press == 27:
+            cv2.destroyAllWindows()
+            break
 
     mAP = evaluation.mAP()
     print('='*60)

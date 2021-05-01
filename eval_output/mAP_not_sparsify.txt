@@ -1,0 +1,10 @@
+mAP = 0.34560078382492065, Car, IOU = 0.5, 3D, no filter
+mAP = 0.11451611667871475, Car, IOU = 0.7, 3D, no filter
+mAP = 0.38945791125297546, Car, IOU = 0.5, BEV, no filter
+mAP = 0.20565006136894226, Car, IOU = 0.7, BEV, no filter
+
+mAP = 0.337830513715744, Car, IOU = 0.5, 3D, filter = 0.3
+mAP = 0.11591805517673492, Car, IOU = 0.7, 3D, filter = 0.3
+mAP = 0.37728968262672424, Car, IOU = 0.5, BEV, filter = 0.3
+mAP = 0.2041846215724945, Car, IOU = 0.7, BEV, filter = 0.3
+
