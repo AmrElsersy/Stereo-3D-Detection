@@ -239,8 +239,8 @@ def evaluate(args, evaluation, enable_filter = False):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--mode', type=str, choices=['sfa', 'pillars'], default='sfa', help='path of predictions pickle')
-    parser.add_argument('--path', type=str, default='predictions_sfa.pickle', help='path of loading 3D bboxes predicitons')
-    parser.add_argument('--save_path', type=str, default='mAP.txt', help='file path to save the evaluation results')
+    parser.add_argument('--path', type=str, default='predictions/Sparse.pickle', help='path of loading 3D bboxes predicitons')
+    parser.add_argument('--save_path', type=str, default='eval_mAP/Sparse.txt', help='file path to save the evaluation results')
     args = parser.parse_args()
 
     evaluations = [
@@ -268,8 +268,7 @@ if __name__ == '__main__':
             print(mAP_string)
             mAP_strings.append(mAP_string)
             
-
-    file = open(args.save_path, 'w')
+    file = open(os.path.join('eval_mAP', args.save_path), 'w')
     one_mAP_string = '\n'.join([string for string in mAP_strings])
     file.write(one_mAP_string)
     file.close()

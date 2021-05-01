@@ -65,9 +65,9 @@ def save_predictions():
     path = args.path
 
     if path:           
-        path = 'predictions_' + path
+        path = 'predictions/' + path
     else:
-        path = 'predictions_' + args_main.model
+        path = 'predictions/' + args_main.model
     
     with open(path + '.pickle', 'wb') as f:
         pickle.dump(predictions, f)
