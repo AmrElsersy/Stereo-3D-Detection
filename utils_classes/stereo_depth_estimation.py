@@ -26,10 +26,15 @@ class Stereo_Depth_Estimation:
 
     def predict(self, imgL, imgR, calib_path, return_disparity=False):
 
+        start = time.time()
         imgL, imgR = self.preprocesiing.preprocess(imgL, imgR)
+        end = time.time()
+        print(f"Time for pre-processing: {1000 * (end - start)} ms")
 
-        disparity = self.stereo_to_disparity(imgL, imgR)
+        disparity, start = self.stereo_to_disparity(imgL, imgR)
         psuedo_pointcloud = self.disparity_to_pointcloud(disparity, calib_path)
+        end = time.time()
+        print(f"Time for post processing: {1000 * (end - start)} ms")
 
         if return_disparity:
             return disparity, psuedo_pointcloud
@@ -40,14 +45,17 @@ class Stereo_Depth_Estimation:
         imgL = imgL.float().cuda()
         imgR = imgR.float().cuda()
         with torch.no_grad():
-            start_time = time.time()
+            start = time.time()
             outputs = self.model(imgL, imgR)
-            output3 = torch.squeeze(outputs[3], 1)
+            end = time.time()
+            print(f"Time for stereo: {1000 * (end - start)} ms")
+            start = time.time()
+            output3 = torch.squeeze(outputs[-1], 1)
             image = output3.cpu()
             img_cpu = np.asarray(image)
             disp_map = img_cpu[0, :, :]
-            disp_map = (disp_map*255).astype(np.float32)/255.
-            return disp_map
+            disp_map = (disp_map).astype(np.float32)
+            return disp_map, start
     
     def disparity_to_pointcloud(self, disp_map, calib_path):
         calib = Calibration(calib_path)

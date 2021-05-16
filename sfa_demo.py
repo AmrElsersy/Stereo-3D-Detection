@@ -18,8 +18,8 @@ def parse_test_configs(parser = None):
         parser = argparse.ArgumentParser(description='Testing config for the Implementation')
     parser.add_argument('--saved_fn', type=str, default='fpn_resnet_18', metavar='FN', help='The name using for saving logs, models,...')
     parser.add_argument('-a', '--arch', type=str, default='fpn_resnet_18', metavar='ARCH', help='The name of the model architecture')
-    parser.add_argument('--pretrained_path', type=str, default='SFA3D/checkpoints/fpn_resnet_18/Model_fpn_resnet_18_epoch_44.pth', metavar='PATH')
-    # parser.add_argument('--pretrained_path', type=str, default='configs/checkpoint/fpn_resnet_18/Model_fpn_resnet_18_epoch_90.pth', metavar='PATH')
+    # parser.add_argument('--pretrained_path', type=str, default='SFA3D/checkpoints/fpn_resnet_18/Model_fpn_resnet_18_epoch_44.pth', metavar='PATH')
+    parser.add_argument('--pretrained_path', type=str, default='configs/checkpoint/fpn_resnet_18/Model_fpn_resnet_18_epoch_90.pth', metavar='PATH')
     parser.add_argument('--K', type=int, default=50, help='the number of top K')
     parser.add_argument('--no_cuda', action='store_true', help='If true, cuda is not used.')
     parser.add_argument('--gpu_idx', default=0, type=int, help='GPU index to use.')
@@ -42,9 +42,9 @@ def parse_test_configs(parser = None):
     parser.add_argument('--save_path', type=str, default='results/pseudoLidar/',help='the path of saving checkpoints and log')
     parser.add_argument('--resume', type=str, default=None,help='resume path')
     parser.add_argument('--lr', type=float, default=5e-4,help='learning rate')
-    parser.add_argument('--with_spn', action='store_true', help='with spn network or not')
+    parser.add_argument('--with_spn', action='store_true', default=True, help='with spn network or not')
     parser.add_argument('--print_freq', type=int, default=5, help='print frequence')
-    parser.add_argument('--init_channels', type=int, default=1, help='initial channels for 2d feature extractor')
+    parser.add_argument('--init_channels', type=int, default=1, help='in    itial channels for 2d feature extractor')
     parser.add_argument('--nblocks', type=int, default=2, help='number of layers in each stage')
     parser.add_argument('--channels_3d', type=int, default=4, help='number of initial channels 3d feature extractor ')
     parser.add_argument('--layers_3d', type=int, default=4, help='number of initial layers in 3d network')
@@ -100,23 +100,23 @@ def main():
     KITTI = KittiDataset(dataset_root, mode='val')
     KITTI_stereo = KittiDataset(dataset_root, stereo_mode=True, mode='val')
 
-    sfa_model = SFA3D(cfg) 
+    sfa_model = SFA3D(cfg)
     anynet_model = Stereo_Depth_Estimation(args)
 
     visualizer = KittiVisualizer()
 
 
-    if args.stereo:
+    if True:
         for i in range(args.index, len(KITTI_stereo)):
             imgL, imgR, labels, calib = KITTI_stereo[i]
+            torch.cuda.empty_cache()
 
             start = time.time()
             pointcloud = anynet_model.predict(imgL, imgR, calib.calib_path)
-
-            
-            torch.cuda.empty_cache()
+            start_1 = time.time()
             detections = sfa_model.predict(pointcloud)
             end = time.time()
+            print(f"Time for SFA: {1000 * (end - start_1)} ms")
             print(f"Time for end to end pipeline: {1000 * (end - start)} ms")
             objects = SFA3D_output_to_kitti_objects(detections)
 
@@ -124,7 +124,6 @@ def main():
             if visualizer.user_press == 27:
                 cv2.destroyAllWindows()
                 break
-
     else:
         for i in range(args.index, len(KITTI)):
             image, pointcloud, labels, calib = KITTI[i]
