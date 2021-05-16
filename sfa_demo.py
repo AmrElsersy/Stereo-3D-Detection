@@ -105,8 +105,7 @@ def main():
 
     visualizer = KittiVisualizer()
 
-
-    if True:
+    if args.stereo:
         for i in range(args.index, len(KITTI_stereo)):
             imgL, imgR, labels, calib = KITTI_stereo[i]
             torch.cuda.empty_cache()
