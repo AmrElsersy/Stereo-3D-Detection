@@ -86,8 +86,9 @@ def parse_test_configs(parser = None):
 
     # #### set it to empty as this file is inside the root of the project ####
     configs.root_dir = ''
-    configs.dataset_dir = os.path.join(configs.root_dir, 'data', 'kitti')
-
+    # configs.dataset_dir = os.path.join(configs.root_dir, 'data', 'kitti')
+    configs.dataset_dir = '/home/ayman/FOE-Linux/Graduation_Project/KITTI/testing/image_2'
+    
     args = parser.parse_args()
     
     return configs, args
