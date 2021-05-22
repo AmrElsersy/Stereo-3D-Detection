@@ -72,16 +72,16 @@ Stereo-3D-Detection
 
 - To go from stereo to 3D object detection
 ```shell script
-python stereo_demo.py
+python sfa_demo.py
 ```
 Note: you can navigate between images by pressing any key, and to exit press ESC
 
 - To generate demo video, be sure you adjusted the path in `sfa_demo.py` then run:
 ```shell script
-python stereo_demo.py --generate_video
+python sfa_demo.py --generate_video
 ```
 
 - To generate predictions pickle file, then run:
 ```shell script
-python stereo_demo.py --generate_pickle
+python sfa_demo.py --generate_pickle
 ```
