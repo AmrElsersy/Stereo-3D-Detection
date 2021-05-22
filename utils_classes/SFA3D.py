@@ -20,11 +20,8 @@ from PIL import Image
 
 from Models.SFA.utils.misc import make_folder, time_synchronized
 from Models.SFA.utils.evaluation_utils import decode, post_processing, convert_det_to_real_values
-import Models.SFA.config.kitti_config as cnf
 from Models.SFA.utils.torch_utils import _sigmoid
 
-from Models.SFA.data_process.kitti_data_utils import get_filtered_lidar
-from Models.SFA.data_process.kitti_bev_utils import makeBEVMap
 import Models.SFA.models.fpn_resnet as fpn_resnet
 
 
@@ -53,24 +50,15 @@ class SFA3D:
         model.eval()
         return model
     
-    def predict(self, pointcloud):
+    def predict(self, bev):
         # convert to bird eye view -> get heatmap output -> convert to kitti format output
-        bev = self.preprocesiing(pointcloud)
-        t1 = time_synchronized()
+        start = time_synchronized()
         outputs = self.model(bev)
         detections = self.post_procesiing(outputs)
-        t2 = time_synchronized()
-        # print('\tDone testing in time: {:.1f}ms, speed {:.2f}FPS'.format((t2 - t1) * 1000,1 / (t2 - t1)))
-
+        end = time_synchronized()
+        
+        print(f"Time for SFA: {1000 * (end - start)} ms")
         return detections
-
-    def preprocesiing(self, pointcloud):
-        pointcloud = get_filtered_lidar(pointcloud, cnf.boundary)
-        bev = makeBEVMap(pointcloud, cnf.boundary)
-        bev = torch.from_numpy(bev)
-        bev = torch.unsqueeze(bev, 0)
-        bev = bev.to(self.configs.device, non_blocking=True).float()
-        return bev
 
     def post_procesiing(self, outputs):
         outputs['hm_cen'] = _sigmoid(outputs['hm_cen'])

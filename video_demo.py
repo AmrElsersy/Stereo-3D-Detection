@@ -22,7 +22,7 @@ def parse_test_configs(parser = None):
     parser.add_argument('--saved_fn', type=str, default='fpn_resnet_18', metavar='FN', help='The name using for saving logs, models,...')
     parser.add_argument('-a', '--arch', type=str, default='fpn_resnet_18', metavar='ARCH', help='The name of the model architecture')
     # parser.add_argument('--pretrained_path', type=str, default='SFA3D/checkpoints/fpn_resnet_18/Model_fpn_resnet_18_epoch_90.pth', metavar='PATH')
-    parser.add_argument('--pretrained_path', type=str, default='checkpoints/sfa.pth', metavar='PATH')
+    parser.add_argument('--pretrained_sfa', type=str, default='checkpoints/sfa.pth', metavar='PATH')
     parser.add_argument('--K', type=int, default=50, help='the number of top K')
     parser.add_argument('--no_cuda', action='store_true', help='If true, cuda is not used.')
     parser.add_argument('--gpu_idx', default=0, type=int, help='GPU index to use.')
@@ -54,7 +54,7 @@ def parse_test_configs(parser = None):
     parser.add_argument('--growth_rate', type=int, nargs='+', default=[4,1,1], help='growth rate in the 3d network')
     parser.add_argument('--spn_init_channels', type=int, default=8, help='initial channels for spnet')
     parser.add_argument('--start_epoch_for_spn', type=int, default=121)
-    parser.add_argument('--pretrained', type=str, default='checkpoints/anynet.tar',help='pretrained model path')
+    parser.add_argument('--pretrained_anynet', type=str, default='checkpoints/anynet.tar',help='pretrained model path')
     parser.add_argument('--split_file', type=str, default=None)
     parser.add_argument('--evaluate', action='store_true')
     parser.add_argument('--max_high', type=int, default=1)
@@ -97,7 +97,7 @@ def main():
     cfg, args = parse_test_configs()
     cudnn.benchmark = True
     model_3D = SFA3D(cfg)
-    stereo_model = Stereo_Depth_Estimation(args)
+    stereo_model = Stereo_Depth_Estimation(args, cfg)
 
     visualizer = KittiVisualizer()
 
@@ -135,7 +135,7 @@ def main():
     FPS = 1 / avg_time     
     print("Samples Average Time",avg_time)
     print("FPS", FPS)
-    outVideo = cv2.VideoWriter('end-to-end_demo.mp4', cv2.VideoWriter_fourcc(*'MP4V'), 15, (width, height))
+    outVideo = cv2.VideoWriter('results/end-to-end_demo.mp4', cv2.VideoWriter_fourcc(*'MP4V'), 15, (width, height))
     
     for img in img_list:
         outVideo.write(img)

@@ -1,21 +1,36 @@
+from Models.SFA import config
 import torch
 import torch.nn as nn
 import torch.nn.parallel
-import torch.utils.data
+import torch.utils.data as data
 import time
 import numpy as np
+from PIL import Image
+
 from Models.AnyNet.preprocessing.generate_lidar import project_disp_to_points, Calibration
 from Models.AnyNet.preprocessing.kitti_sparsify import pto_ang_map
+from Models.AnyNet.dataloader import preprocess
 from Models.AnyNet.models.anynet import AnyNet
+
+import Models.SFA.config.kitti_config as cnf
+from Models.SFA.data_process.kitti_data_utils import get_filtered_lidar
+from Models.SFA.data_process.kitti_bev_utils import makeBEVMap
+from Models.SFA.utils.misc import  time_synchronized
+
 from visualization.KittiUtils import *
-from utils_classes.stereo_preprocessing import StereoPreprocessing
+
+def default_loader(path):
+    return Image.open(path).convert('RGB')
 
 # ========================= Stereo =========================
 class Stereo_Depth_Estimation:
-    def __init__(self, args):
+    def __init__(self, args, cfgs, loader=default_loader):
         self.args = args
         self.model = self.load_model()
-        self.preprocesiing = StereoPreprocessing()
+        self.loader = loader
+        self.configs = cfgs
+        self.calib_path = None
+        self.calib = None
 
     def load_model(self):
         model = AnyNet(self.args)
@@ -23,50 +38,73 @@ class Stereo_Depth_Estimation:
         checkpoint = torch.load(self.args.pretrained_anynet)
         model.load_state_dict(checkpoint['state_dict'], strict=False)
         return model
+    
+    def preprocess(self, left_img, right_img):
+        # left_img = left_img.convert('RGB')
+        # right_img = right_img.convert('RGB')
+        left_img = Image.fromarray(np.uint8(left_img)).convert('RGB')
+        right_img = Image.fromarray(np.uint8(right_img)).convert('RGB')
+        w, h = left_img.size
 
-    def predict(self, imgL, imgR, calib_path, return_disparity=False):
+        left_img = left_img.crop((w - 1200, h - 352, w, h))
+        right_img = right_img.crop((w - 1200, h - 352, w, h))
 
-        start = time.time()
-        imgL, imgR = self.preprocesiing.preprocess(imgL, imgR)
-        end = time.time()
+        processed = preprocess.get_transform(augment=False)
+        left_img = processed(left_img)
+        right_img = processed(right_img)
+
+        left_img = left_img.clone().detach().reshape(1, *left_img.size())
+        right_img = right_img.clone().detach().reshape(1, *right_img.size())
+        return left_img, right_img
+
+    def predict(self, imgL, imgR, calib_path):
+
+        start = time_synchronized()
+        imgL, imgR = self.preprocess(imgL, imgR)
+        end = time_synchronized()
         print(f"Time for pre-processing: {1000 * (end - start)} ms")
 
-        disparity, start = self.stereo_to_disparity(imgL, imgR)
-        psuedo_pointcloud = self.disparity_to_pointcloud(disparity, calib_path)
-        end = time.time()
+        start = time_synchronized()
+        disparity = self.stereo_to_disparity(imgL, imgR)
+        end = time_synchronized()
+        print(f"Time for stereo: {1000 * (end - start)} ms")
+
+        start = time_synchronized()
+        psuedo_pointcloud = self.disparity_to_BEV(disparity, calib_path)
+        end = time_synchronized()
         print(f"Time for post processing: {1000 * (end - start)} ms")
-
-        if return_disparity:
-            return disparity, psuedo_pointcloud
-
+        
         return psuedo_pointcloud
 
     def stereo_to_disparity(self, imgL, imgR):
         imgL = imgL.float().cuda()
         imgR = imgR.float().cuda()
         with torch.no_grad():
-            start = time.time()
             outputs = self.model(imgL, imgR)
-            end = time.time()
-            print(f"Time for stereo: {1000 * (end - start)} ms")
-            start = time.time()
-            output3 = torch.squeeze(outputs[-1], 1)
-            image = output3.cpu()
-            img_cpu = np.asarray(image)
-            disp_map = img_cpu[0, :, :]
-            disp_map = (disp_map).astype(np.float32)
-            return disp_map, start
+            disp_map = torch.squeeze(outputs[-1], 1)
+            return disp_map
     
-    def disparity_to_pointcloud(self, disp_map, calib_path):
-        calib = Calibration(calib_path)
+    def disparity_to_BEV(self, disp_map, calib_path):
+        disp_map = disp_map.cpu().numpy()
+        disp_map = disp_map[0].astype(np.float32)
+
+        if not calib_path == self.calib_path:
+            self.calib = Calibration(calib_path)
         # Disparity to point cloud convertor
-        lidar = self.gen_lidar(disp_map, calib)
+        lidar = self.gen_lidar(disp_map)
         # Sparsify point cloud convertor
         sparse_points = self.gen_sparse_points(lidar)
-        return sparse_points
 
-    def gen_lidar(self, disp_map, calib, max_high=1):
-        lidar = project_disp_to_points(calib, disp_map, max_high)
+        filtered = get_filtered_lidar(sparse_points, cnf.boundary)
+        
+        bev = makeBEVMap(filtered, cnf.boundary)
+        bev = torch.from_numpy(bev)
+        bev = torch.unsqueeze(bev, 0)
+        bev = bev.to(self.configs.device, non_blocking=True).float()
+        return bev
+
+    def gen_lidar(self, disp_map, max_high=1):
+        lidar = project_disp_to_points(self.calib, disp_map, max_high)
         lidar = lidar.astype(np.float32)
         return lidar
 
@@ -81,3 +119,5 @@ class Stereo_Depth_Estimation:
         sparse_points = pto_ang_map(pc_velo, H=H, W=W, slice=slice)
         sparse_points = sparse_points.astype(np.float32)
         return sparse_points
+
+    
