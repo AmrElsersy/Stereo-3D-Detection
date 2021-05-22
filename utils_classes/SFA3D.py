@@ -56,7 +56,6 @@ class SFA3D:
         outputs = self.model(bev)
         detections = self.post_procesiing(outputs)
         end = time_synchronized()
-        
         print(f"Time for SFA: {1000 * (end - start)} ms")
         return detections
 

@@ -100,7 +100,7 @@ def main():
     KITTI_stereo = KittiDataset(dataset_root, stereo_mode=True, mode='val')
 
     sfa_model = SFA3D(cfg)
-    anynet_model = Stereo_Depth_Estimation(args)
+    anynet_model = Stereo_Depth_Estimation(args, cfg)
 
     visualizer = KittiVisualizer()
 
@@ -109,28 +109,11 @@ def main():
             imgL, imgR, labels, calib = KITTI_stereo[i]
             torch.cuda.empty_cache()
 
-            start = time.time()
             pointcloud = anynet_model.predict(imgL, imgR, calib.calib_path)
-            start_1 = time.time()
-            detections = sfa_model.predict(pointcloud)
-            end = time.time()
-            print(f"Time for SFA: {1000 * (end - start_1)} ms")
-            print(f"Time for end to end pipeline: {1000 * (end - start)} ms")
-            objects = SFA3D_output_to_kitti_objects(detections)
-
-            visualizer.visualize_scene_2D(pointcloud, imgL, objects, calib=calib)
-            if visualizer.user_press == 27:
-                cv2.destroyAllWindows()
-                break
-    else:
-        for i in range(args.index, len(KITTI)):
-            image, pointcloud, labels, calib = KITTI[i]
-
-            torch.cuda.empty_cache()
             detections = sfa_model.predict(pointcloud)
             objects = SFA3D_output_to_kitti_objects(detections)
 
-            visualizer.visualize_scene_2D(pointcloud, image, objects, calib=calib)
+            visualizer.visualize_scene_image(imgL, objects, calib=calib, scene_2D_mode=False)
             if visualizer.user_press == 27:
                 cv2.destroyAllWindows()
                 break

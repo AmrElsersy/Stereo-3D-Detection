@@ -1,4 +1,3 @@
-from Models.SFA import config
 import torch
 import torch.nn as nn
 import torch.nn.parallel
@@ -15,7 +14,6 @@ from Models.AnyNet.models.anynet import AnyNet
 import Models.SFA.config.kitti_config as cnf
 from Models.SFA.data_process.kitti_data_utils import get_filtered_lidar
 from Models.SFA.data_process.kitti_bev_utils import makeBEVMap
-from Models.SFA.utils.misc import  time_synchronized
 
 from visualization.KittiUtils import *
 
@@ -59,19 +57,19 @@ class Stereo_Depth_Estimation:
 
     def predict(self, imgL, imgR, calib_path):
 
-        start = time_synchronized()
+        start = time.time()
         imgL, imgR = self.preprocess(imgL, imgR)
-        end = time_synchronized()
+        end = time.time()
         print(f"Time for pre-processing: {1000 * (end - start)} ms")
 
-        start = time_synchronized()
+        start = time.time()
         disparity = self.stereo_to_disparity(imgL, imgR)
-        end = time_synchronized()
+        end = time.time()
         print(f"Time for stereo: {1000 * (end - start)} ms")
 
-        start = time_synchronized()
+        start = time.time()
         psuedo_pointcloud = self.disparity_to_BEV(disparity, calib_path)
-        end = time_synchronized()
+        end = time.time()
         print(f"Time for post processing: {1000 * (end - start)} ms")
         
         return psuedo_pointcloud
@@ -104,8 +102,7 @@ class Stereo_Depth_Estimation:
         return bev
 
     def gen_lidar(self, disp_map, max_high=1):
-        lidar = project_disp_to_points(self.calib, disp_map, max_high)
-        lidar = lidar.astype(np.float32)
+        lidar = project_disp_to_points(self.calib, disp_map, max_high).astype(np.float32)
         return lidar
 
     def gen_sparse_points(self, pc_velo, H=64, W=512, D=700, slice=1):
@@ -116,8 +113,7 @@ class Stereo_Depth_Estimation:
                         (pc_velo[:, 2] < 1.5)    & \
                         (pc_velo[:, 2] >= -2.5)
         pc_velo = pc_velo[valid_inds]
-        sparse_points = pto_ang_map(pc_velo, H=H, W=W, slice=slice)
-        sparse_points = sparse_points.astype(np.float32)
+        sparse_points = pto_ang_map(pc_velo, H=H, W=W, slice=slice).astype(np.float32)
         return sparse_points
 
     

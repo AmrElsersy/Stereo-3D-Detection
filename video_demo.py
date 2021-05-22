@@ -105,9 +105,9 @@ def main():
     VIDEO_ROOT_PATH = 'data/demo'
 
     dataset = KittiVideo(
-            imgL_dir=os.path.join(VIDEO_ROOT_PATH, "2011_09_26_0001/image_02/data"),
-            imgR_dir=os.path.join(VIDEO_ROOT_PATH, "2011_09_26_0001/image_03/data"),
-            lidar_dir=os.path.join(VIDEO_ROOT_PATH, "2011_09_26_0001/velodyne_points/data"),
+            imgL_dir=os.path.join(VIDEO_ROOT_PATH, "2011_09_26_0106/image_02/data"),
+            imgR_dir=os.path.join(VIDEO_ROOT_PATH, "2011_09_26_0106/image_03/data"),
+            lidar_dir=os.path.join(VIDEO_ROOT_PATH, "2011_09_26_0106/velodyne_points/data"),
             calib_dir=os.path.join(VIDEO_ROOT_PATH, "calib/2011_09_26")
         )
 
