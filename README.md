@@ -1,8 +1,10 @@
 [![Made withPython](https://img.shields.io/badge/Made%20with-python-407eaf?style=for-the-badge&logo=python)](https://www.python.org/)
 [![Made withPytorch](https://img.shields.io/badge/Made%20with-pytorch-ee4c2c?style=for-the-badge&logo=pytorch)](https://www.pytorch.org/)
 [![Made withCuda](https://img.shields.io/badge/Made%20with-cuda-76b900?style=for-the-badge&logo=nvidia)](https://developer.nvidia.com/cuda-downloads)
-[![Made withAnaconda](https://img.shields.io/badge/Made%20with-anaconda-43b049?style=for-the-badge&logo=anaconda)](https://www.anaconda.com/)
-
+[![Made withAnaconda](https://img.shields.io/badge/Made%20with-anaconda-43b049?style=for-the-badge&logo=anaconda)](https://www.anaconda.com/) <br>
+![Supports_windows](https://img.shields.io/badge/windows-0078D6?style=for-the-badge&logo=windows)
+![Supports_linux](https://img.shields.io/badge/linux-white?style=for-the-badge&logo=linux)
+![Supports_macos](https://img.shields.io/badge/macos-black?style=for-the-badge&logo=macos)
 
 # 3D Detection Stereo Based
 
