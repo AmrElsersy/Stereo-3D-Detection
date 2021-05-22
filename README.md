@@ -21,11 +21,11 @@ NOTE: this installlation is compatible with linux only, nearly will support wind
    - Download the yml file on your hard disk
    - Open the file and change the name in the first line for your environment, i have S3D name for me
 
-     <img src="images/env_name.png">
+     <img src="Extras/images/env_name.png">
 
    - In the same file at the last line change it to your path tp install the environment then save the file
 
-	 <img src="images/env_path.png">
+	 <img src="Extras/images/env_path.png">
 
    - `CD` to the path that you have downloaded the file and open terminal and run this command
 
