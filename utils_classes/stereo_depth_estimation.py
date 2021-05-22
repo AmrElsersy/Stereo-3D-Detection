@@ -4,9 +4,9 @@ import torch.nn.parallel
 import torch.utils.data
 import time
 import numpy as np
-from AnyNet.preprocessing.generate_lidar import project_disp_to_points, Calibration
-from AnyNet.preprocessing.kitti_sparsify import pto_ang_map
-from AnyNet.models.anynet import AnyNet
+from Models.AnyNet.preprocessing.generate_lidar import project_disp_to_points, Calibration
+from Models.AnyNet.preprocessing.kitti_sparsify import pto_ang_map
+from Models.AnyNet.models.anynet import AnyNet
 from visualization.KittiUtils import *
 from utils_classes.stereo_preprocessing import StereoPreprocessing
 

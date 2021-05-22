@@ -18,32 +18,14 @@ import torch.utils.data
 import torch.nn.functional as F
 from PIL import Image
 
-project_root = sys.path[0]
+from Models.SFA.utils.misc import make_folder, time_synchronized
+from Models.SFA.utils.evaluation_utils import decode, post_processing, convert_det_to_real_values
+import Models.SFA.config.kitti_config as cnf
+from Models.SFA.utils.torch_utils import _sigmoid
 
-# ============== import SFA3D only here =====================
-# get the current path (of SFA3D.py) & remove the last 2 subfolders (/utils_classes_SFA3D.py)
-current_path = __file__
-current_path = current_path.split('/')[:-2]
-# get the SFA3D package path 
-sfa_root = ""
-for sub_path in current_path:
-    sfa_root += sub_path + '/'
-sfa_root += "SFA3D/sfa"
-# insert to the first element in sys.path to search from it first
-sys.path.insert(0, sfa_root)
-
-from utils.misc import make_folder, time_synchronized
-from utils.evaluation_utils import decode, post_processing, convert_det_to_real_values
-import config.kitti_config as cnf
-from utils.torch_utils import _sigmoid
-
-from data_process.kitti_data_utils import get_filtered_lidar
-from data_process.kitti_bev_utils import makeBEVMap
-import models.fpn_resnet as fpn_resnet
-
-# =================================================
-# first index of sys.path = project repo path
-sys.path.insert(0, project_root)
+from Models.SFA.data_process.kitti_data_utils import get_filtered_lidar
+from Models.SFA.data_process.kitti_bev_utils import makeBEVMap
+import Models.SFA.models.fpn_resnet as fpn_resnet
 
 
 class SFA3D:

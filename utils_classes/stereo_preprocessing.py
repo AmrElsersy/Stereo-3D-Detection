@@ -1,4 +1,4 @@
-from AnyNet.dataloader import preprocess
+from Models.AnyNet.dataloader import preprocess
 import random
 import numpy as np
 import torch

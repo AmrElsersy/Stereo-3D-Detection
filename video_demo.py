@@ -1,7 +1,6 @@
 import argparse
 import torch
 import torch.backends.cudnn as cudnn
-from configs.configrations import *
 from easydict import EasyDict as edict
 from utils_classes.SFA3D import SFA3D
 import pathlib as Path
@@ -23,7 +22,7 @@ def parse_test_configs(parser = None):
     parser.add_argument('--saved_fn', type=str, default='fpn_resnet_18', metavar='FN', help='The name using for saving logs, models,...')
     parser.add_argument('-a', '--arch', type=str, default='fpn_resnet_18', metavar='ARCH', help='The name of the model architecture')
     # parser.add_argument('--pretrained_path', type=str, default='SFA3D/checkpoints/fpn_resnet_18/Model_fpn_resnet_18_epoch_90.pth', metavar='PATH')
-    parser.add_argument('--pretrained_path', type=str, default='configs/checkpoint/fpn_resnet_18/Model_fpn_resnet_18_epoch_90.pth', metavar='PATH')
+    parser.add_argument('--pretrained_path', type=str, default='checkpoints/sfa.pth', metavar='PATH')
     parser.add_argument('--K', type=int, default=50, help='the number of top K')
     parser.add_argument('--no_cuda', action='store_true', help='If true, cuda is not used.')
     parser.add_argument('--gpu_idx', default=0, type=int, help='GPU index to use.')
@@ -55,7 +54,7 @@ def parse_test_configs(parser = None):
     parser.add_argument('--growth_rate', type=int, nargs='+', default=[4,1,1], help='growth rate in the 3d network')
     parser.add_argument('--spn_init_channels', type=int, default=8, help='initial channels for spnet')
     parser.add_argument('--start_epoch_for_spn', type=int, default=121)
-    parser.add_argument('--pretrained', type=str, default='configs/checkpoint/kitti2015_ck/checkpoint.tar',help='pretrained model path')
+    parser.add_argument('--pretrained', type=str, default='checkpoints/anynet.tar',help='pretrained model path')
     parser.add_argument('--split_file', type=str, default=None)
     parser.add_argument('--evaluate', action='store_true')
     parser.add_argument('--max_high', type=int, default=1)
@@ -87,10 +86,6 @@ def parse_test_configs(parser = None):
         'dim': configs.num_dim
     }
     configs.num_input_features = 4
-
-    # #### set it to empty as this file is inside the root of the project ####
-    configs.root_dir = ''
-    configs.dataset_dir = '/home/ayman/FOE-Linux/Graduation_Project/KITTI/testing/image_2'
 
     args = parser.parse_args()
     
