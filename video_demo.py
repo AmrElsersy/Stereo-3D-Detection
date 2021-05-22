@@ -3,14 +3,12 @@ import torch
 import torch.backends.cudnn as cudnn
 from configs.configrations import *
 from easydict import EasyDict as edict
-from pcdet.config import cfg, cfg_from_yaml_file
 from utils_classes.SFA3D import SFA3D
 import pathlib as Path
 
 from visualization.KittiDataset import KittiVideo
 from visualization.KittiUtils import *
 from visualization.KittiVisualization import KittiVisualizer
-from utils_classes.pointcloud_3d_detection import PointCloud_3D_Detection
 from utils_classes.stereo_depth_estimation import Stereo_Depth_Estimation
 import time
 import cv2
@@ -24,8 +22,8 @@ def parse_test_configs(parser = None):
         parser = argparse.ArgumentParser(description='Testing config for the Implementation')
     parser.add_argument('--saved_fn', type=str, default='fpn_resnet_18', metavar='FN', help='The name using for saving logs, models,...')
     parser.add_argument('-a', '--arch', type=str, default='fpn_resnet_18', metavar='ARCH', help='The name of the model architecture')
-    parser.add_argument('--pretrained_path', type=str, default='SFA3D/checkpoints/fpn_resnet_18/Model_fpn_resnet_18_epoch_90.pth', metavar='PATH')
-    # parser.add_argument('--pretrained_path', type=str, default='configs/checkpoint/fpn_resnet_18/Model_fpn_resnet_18_epoch_90.pth', metavar='PATH')
+    # parser.add_argument('--pretrained_path', type=str, default='SFA3D/checkpoints/fpn_resnet_18/Model_fpn_resnet_18_epoch_90.pth', metavar='PATH')
+    parser.add_argument('--pretrained_path', type=str, default='configs/checkpoint/fpn_resnet_18/Model_fpn_resnet_18_epoch_90.pth', metavar='PATH')
     parser.add_argument('--K', type=int, default=50, help='the number of top K')
     parser.add_argument('--no_cuda', action='store_true', help='If true, cuda is not used.')
     parser.add_argument('--gpu_idx', default=0, type=int, help='GPU index to use.')
@@ -109,13 +107,13 @@ def main():
     visualizer = KittiVisualizer()
 
     # KITTI Video
-    VIDEO_ROOT_PATH = '/home/ayman/FOE-Linux/Graduation_Project/KITTI/2011_09_26_drive_0001'
+    VIDEO_ROOT_PATH = 'data/demo'
 
     dataset = KittiVideo(
-            imgL_dir=os.path.join(VIDEO_ROOT_PATH, "2011_09_26_drive_0001_sync/2011_09_26/image_02/data"),
-            imgR_dir=os.path.join(VIDEO_ROOT_PATH, "2011_09_26_drive_0001_sync/2011_09_26/image_03/data"),
-            lidar_dir=os.path.join(VIDEO_ROOT_PATH, "2011_09_26_drive_0001_sync/2011_09_26/velodyne_points/data"),
-            calib_dir=os.path.join(VIDEO_ROOT_PATH, "2011_09_26_calib/2011_09_26")
+            imgL_dir=os.path.join(VIDEO_ROOT_PATH, "2011_09_26_0001/image_02/data"),
+            imgR_dir=os.path.join(VIDEO_ROOT_PATH, "2011_09_26_0001/image_03/data"),
+            lidar_dir=os.path.join(VIDEO_ROOT_PATH, "2011_09_26_0001/velodyne_points/data"),
+            calib_dir=os.path.join(VIDEO_ROOT_PATH, "calib/2011_09_26")
         )
 
 

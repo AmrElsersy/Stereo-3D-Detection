@@ -44,7 +44,7 @@ def makeBEVMap(PointCloud_, boundary):
     heightMap[np.int_(PointCloud_top[:, 0]), np.int_(PointCloud_top[:, 1])] = PointCloud_top[:, 2] / max_height
 
     normalizedCounts = np.minimum(1.0, np.log(unique_counts + 1) / np.log(64))
-    intensityMap[np.int_(PointCloud_top[:, 0]), np.int_(PointCloud_top[:, 1])] = PointCloud_top[:, 3]
+    intensityMap[np.int_(PointCloud_top[:, 0]), np.int_(PointCloud_top[:, 1])] = 1
     densityMap[np.int_(PointCloud_top[:, 0]), np.int_(PointCloud_top[:, 1])] = normalizedCounts
 
     RGB_Map = np.zeros((3, Height - 1, Width - 1))

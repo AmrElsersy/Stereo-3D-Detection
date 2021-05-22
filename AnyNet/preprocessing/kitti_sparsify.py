@@ -15,7 +15,7 @@ def pto_rec_map(velo_points, H=64, W=512, D=800):
                  (velo_points[:, 2] >= -2.5)
     velo_points = velo_points[valid_inds]
 
-    x, y, z, i = velo_points[:, 0], velo_points[:, 1], velo_points[:, 2], velo_points[:, 3]
+    x, y, z = velo_points[:, 0], velo_points[:, 1], velo_points[:, 2]
     x_grid = (x * D / 80.).astype(int)
     x_grid[x_grid < 0] = 0
     x_grid[x_grid >= D] = D - 1
@@ -28,12 +28,11 @@ def pto_rec_map(velo_points, H=64, W=512, D=800):
     z_grid[z_grid < 0] = 0
     z_grid[z_grid >= H] = H - 1
 
-    depth_map = - np.ones((D, W, H, 4))
+    depth_map = - np.ones((D, W, H, 3))
     depth_map[x_grid, y_grid, z_grid, 0] = x
     depth_map[x_grid, y_grid, z_grid, 1] = y
     depth_map[x_grid, y_grid, z_grid, 2] = z
-    depth_map[x_grid, y_grid, z_grid, 3] = i
-    depth_map = depth_map.reshape((-1, 4))
+    depth_map = depth_map.reshape((-1, 3))
     depth_map = depth_map[depth_map[:, 0] != -1.0]
     return depth_map
 
@@ -48,7 +47,7 @@ def pto_ang_map(velo_points, H=64, W=512, slice=1):
     dtheta = np.radians(0.4 * 64.0 / H)
     dphi = np.radians(90.0 / W)
 
-    x, y, z, i = velo_points[:, 0], velo_points[:, 1], velo_points[:, 2], velo_points[:, 3]
+    x, y, z = velo_points[:, 0], velo_points[:, 1], velo_points[:, 2]
 
     d = np.sqrt(x ** 2 + y ** 2 + z ** 2)
     r = np.sqrt(x ** 2 + y ** 2)
@@ -64,13 +63,12 @@ def pto_ang_map(velo_points, H=64, W=512, slice=1):
     theta_[theta_ < 0] = 0
     theta_[theta_ >= H] = H - 1
 
-    depth_map = - np.ones((H, W, 4))
+    depth_map = - np.ones((H, W, 3))
     depth_map[theta_, phi_, 0] = x
     depth_map[theta_, phi_, 1] = y
     depth_map[theta_, phi_, 2] = z
-    depth_map[theta_, phi_, 3] = i
     depth_map = depth_map[0::slice, :, :]
-    depth_map = depth_map.reshape((-1, 4))
+    depth_map = depth_map.reshape((-1, 3))
     depth_map = depth_map[depth_map[:, 0] != -1.0]
     return depth_map
 
