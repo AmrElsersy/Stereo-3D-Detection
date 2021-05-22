@@ -5,6 +5,7 @@ pcdet/
 AnyNet/models/
 data/
 # output/
+results/
 .idea/
 
 # Created by https://www.toptal.com/developers/gitignore/api/python,pycharm,visualstudiocode
