@@ -22,18 +22,17 @@ def default_loader(path):
 
 # ========================= Stereo =========================
 class Stereo_Depth_Estimation:
-    def __init__(self, args, cfgs, loader=default_loader):
-        self.args = args
+    def __init__(self, cfgs, loader=default_loader):
+        self.cfgs = cfgs
         self.model = self.load_model()
         self.loader = loader
-        self.configs = cfgs
         self.calib_path = None
         self.calib = None
 
     def load_model(self):
-        model = AnyNet(self.args)
+        model = AnyNet(self.cfgs)
         model = nn.DataParallel(model).cuda()
-        checkpoint = torch.load(self.args.pretrained_anynet)
+        checkpoint = torch.load(self.cfgs.pretrained_anynet)
         model.load_state_dict(checkpoint['state_dict'], strict=False)
         return model
     
@@ -98,7 +97,7 @@ class Stereo_Depth_Estimation:
         bev = makeBEVMap(filtered, cnf.boundary)
         bev = torch.from_numpy(bev)
         bev = torch.unsqueeze(bev, 0)
-        bev = bev.to(self.configs.device, non_blocking=True).float()
+        bev = bev.to(self.cfgs.device, non_blocking=True).float()
         return bev
 
     def gen_lidar(self, disp_map, max_high=1):
