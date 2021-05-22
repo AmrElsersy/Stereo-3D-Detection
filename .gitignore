@@ -4,6 +4,7 @@
 pcdet/
 AnyNet/models/
 data/
+results/
 # output/
 .idea/
 
@@ -123,6 +124,7 @@ __pycache__
 *.so
 
 # Distribution / packaging
+*.mp4
 .Python
 build/
 develop-eggs/

@@ -3,6 +3,8 @@ import torch.backends.cudnn as cudnn
 from easydict import EasyDict as edict
 import pathlib as Path
 import torch
+import pickle
+
 
 from visualization.KittiDataset import KittiDataset
 from visualization.KittiVisualization import KittiVisualizer
@@ -13,7 +15,7 @@ from utils_classes.stereo_depth_estimation import Stereo_Depth_Estimation
 
 torch.cuda.empty_cache()
 
-def parse_test_configs(parser = None):
+def parse_configs(parser = None):
     if not parser:
         parser = argparse.ArgumentParser(description='Testing config for the Implementation')
     parser.add_argument('--saved_fn', type=str, default='fpn_resnet_18', metavar='FN', help='The name using for saving logs, models,...')
@@ -27,7 +29,6 @@ def parse_test_configs(parser = None):
     parser.add_argument('--batch_size', type=int, default=1, help='mini-batch size (default: 4)')
     parser.add_argument('--peak_thresh', type=float, default=0.2)
     parser.add_argument('--save_test_output', action='store_true', help='If true, the output image of the testing phase will be saved')
-    parser.add_argument('--stereo', action='store_true', default=False, help="Run SFA3D on anynet stereo model pseduo lidar")
     parser.add_argument('--index', type=int, default=0, help="start index in dataset")
     parser.add_argument('--maxdisp', type=int, default=192,help='maxium disparity')
     parser.add_argument('--loss_weights', type=float, nargs='+', default=[0.25, 0.5, 1., 1.])
@@ -38,7 +39,6 @@ def parse_test_configs(parser = None):
     parser.add_argument('--epochs', type=int, default=300,help='number of epochs to train')
     parser.add_argument('--train_bsize', type=int, default=6,help='batch size for training (default: 6)')
     parser.add_argument('--test_bsize', type=int, default=8,help='batch size for testing (default: 8)')
-    parser.add_argument('--save_path', type=str, default='results/pseudoLidar/',help='the path of saving checkpoints and log')
     parser.add_argument('--resume', type=str, default=None,help='resume path')
     parser.add_argument('--lr', type=float, default=5e-4,help='learning rate')
     parser.add_argument('--with_spn', action='store_true', default=True, help='with spn network or not')
@@ -56,6 +56,9 @@ def parse_test_configs(parser = None):
     parser.add_argument('--max_high', type=int, default=1)
     parser.add_argument('--ext', type=str, default='.bin', help='specify the extension of your point cloud data file')
     parser.add_argument('--pseudo', action='store_true')
+
+    parser.add_argument('--generate_pickle', action='store_true', help='If true, cuda is not used.')
+    parser.add_argument('--save_path', type=str, default='results/',help='the path of saving checkpoints and log')
     args = parser.parse_args()
     configs = edict(vars(parser.parse_args()))
     configs.pin_memory = True
@@ -92,11 +95,10 @@ def parse_test_configs(parser = None):
     return configs, args
 
 def main():
-    cfg, args = parse_test_configs()
+    cfg, args = parse_configs()
     cudnn.benchmark = True
 
     dataset_root = os.path.join(cfg.dataset_dir, "training")
-    KITTI = KittiDataset(dataset_root, mode='val')
     KITTI_stereo = KittiDataset(dataset_root, stereo_mode=True, mode='val')
 
     sfa_model = SFA3D(cfg)
@@ -104,19 +106,28 @@ def main():
 
     visualizer = KittiVisualizer()
 
-    if args.stereo:
-        for i in range(args.index, len(KITTI_stereo)):
-            imgL, imgR, labels, calib = KITTI_stereo[i]
-            torch.cuda.empty_cache()
+    predictions = []
+    for i in range(args.index, len(KITTI_stereo)):
+        imgL, imgR, labels, calib = KITTI_stereo[i]
+        torch.cuda.empty_cache()
 
-            pointcloud = anynet_model.predict(imgL, imgR, calib.calib_path)
-            detections = sfa_model.predict(pointcloud)
-            objects = SFA3D_output_to_kitti_objects(detections)
+        BEV = anynet_model.predict(imgL, imgR, calib.calib_path)
+        detections = sfa_model.predict(BEV)
+        objects = SFA3D_output_to_kitti_objects(detections)
 
+        if args.generate_pickle:
+            predictions.append(objects)
+            if i % 200 == 0:
+                print(i)
+        else:
             visualizer.visualize_scene_image(imgL, objects, calib=calib, scene_2D_mode=False)
             if visualizer.user_press == 27:
                 cv2.destroyAllWindows()
                 break
+
+    if args.generate_pickle:
+        with open(args.save_path + '/sfa.pickle', 'wb') as f:
+            pickle.dump(predictions, f)
 
 if __name__ == '__main__':
     main()
