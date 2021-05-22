@@ -15,7 +15,6 @@ This repository containts a real time **3D depth estmiation** using stereo camer
 - [CUDA >= 10.0](https://developer.nvidia.com/Cuda-Toolkit)
 - [Pytorch >= 1.0](https://pytorch.org/)
 - [cuDNN](https://docs.nvidia.com/deeplearning/cudnn/)
-- Linux/Mac/Widnows
 
 ## Installation
 
