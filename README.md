@@ -82,12 +82,18 @@ python sfa_demo.py
 ```
 Note: you can navigate between images by pressing any key, and to exit press ESC
 
-- To generate demo video, be sure you adjusted the path in `sfa_demo.py` then run:
+- To generate demo video, be sure you adjusted the path in [`sfa_demo.py`](./sfa_demo.py) then run:
 ```shell script
 python sfa_demo.py --generate_video
 ```
 
-- To generate predictions pickle file, then run:
+## Evaluation
+
+1. you need To generate predictions pickle file by running:
 ```shell script
 python sfa_demo.py --generate_pickle
+```
+2. Then, to evaluate the resulted prediction run [`evaluation.py`](./evaluation.py)
+```shell script
+python evaluation.py
 ```
