@@ -268,4 +268,3 @@ if __name__ == '__main__':
     file.write(one_mAP_string)
     file.close()
     print('Saved @ File: ', args.save_path)
-

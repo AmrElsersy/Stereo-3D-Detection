@@ -6,9 +6,10 @@ import torch
 import pickle
 
 
-from visualization.KittiDataset import KittiDataset
-from visualization.KittiVisualization import KittiVisualizer
 from visualization.KittiUtils import *
+from visualization.KittiDataset import KittiDataset
+from visualization.KittiDataset import KittiVideo
+from visualization.KittiVisualization import KittiVisualizer
 
 from utils_classes.SFA3D import SFA3D
 from utils_classes.stereo_depth_estimation import Stereo_Depth_Estimation
@@ -57,8 +58,9 @@ def parse_configs(parser = None):
     parser.add_argument('--ext', type=str, default='.bin', help='specify the extension of your point cloud data file')
     parser.add_argument('--pseudo', action='store_true')
 
-    parser.add_argument('--generate_pickle', action='store_true', help='If true, cuda is not used.')
-    parser.add_argument('--save_path', type=str, default='results/',help='the path of saving checkpoints and log')
+    parser.add_argument('--generate_pickle', action='store_true', help='If true, generate pickle file.')
+    parser.add_argument('--generate_video', action='store_true', help='If true, generate video.')
+    parser.add_argument('--save_path', type=str, default='results/',help='the path of saving video and pickle files')
     args = parser.parse_args()
     configs = edict(vars(parser.parse_args()))
     configs.pin_memory = True
@@ -98,18 +100,35 @@ def main():
     cfg, args = parse_configs()
     cudnn.benchmark = True
 
-    dataset_root = os.path.join(cfg.dataset_dir, "training")
-    KITTI_stereo = KittiDataset(dataset_root, stereo_mode=True, mode='val')
-
     sfa_model = SFA3D(cfg)
     anynet_model = Stereo_Depth_Estimation(args, cfg)
 
     visualizer = KittiVisualizer()
 
     predictions = []
-    for i in range(args.index, len(KITTI_stereo)):
-        imgL, imgR, labels, calib = KITTI_stereo[i]
+
+    if args.generate_video:
+        img_list = []
+        VIDEO_ROOT_PATH = 'data/demo'
+        dataset = KittiVideo(
+                imgL_dir=os.path.join(VIDEO_ROOT_PATH, "2011_09_26_0001/image_02/data"),
+                imgR_dir=os.path.join(VIDEO_ROOT_PATH, "2011_09_26_0001/image_03/data"),
+                lidar_dir=os.path.join(VIDEO_ROOT_PATH, "2011_09_26_0001/velodyne_points/data"),
+                calib_dir=os.path.join(VIDEO_ROOT_PATH, "calib/2011_09_26")
+            )
+        loop_length=len(dataset)
+    else:
+        dataset_root = os.path.join(cfg.dataset_dir, "training")
+        KITTI_stereo = KittiDataset(dataset_root, stereo_mode=True, mode='val')
+        loop_length = len(KITTI_stereo)
+    
+    
+    for i in range(args.index, loop_length):
         torch.cuda.empty_cache()
+        if args.generate_video:
+            imgL, imgR, pointcloud, calib = dataset[i]
+        else:
+            imgL, imgR, labels, calib = KITTI_stereo[i]
 
         BEV = anynet_model.predict(imgL, imgR, calib.calib_path)
         detections = sfa_model.predict(BEV)
@@ -119,15 +138,25 @@ def main():
             predictions.append(objects)
             if i % 200 == 0:
                 print(i)
+        elif args.generate_video:
+            img_ = visualizer.visualize_scene_image(imgL, objects, calib)
+            img_list.append(img_)
         else:
             visualizer.visualize_scene_image(imgL, objects, calib=calib, scene_2D_mode=False)
             if visualizer.user_press == 27:
                 cv2.destroyAllWindows()
                 break
-
+    
+    
     if args.generate_pickle:
         with open(args.save_path + '/sfa.pickle', 'wb') as f:
             pickle.dump(predictions, f)
+
+    elif args.generate_video:
+        height, width, channels = dataset[0][0].shape
+        outVideo = cv2.VideoWriter(args.save_path + '/end-to-end_demo.mp4', cv2.VideoWriter_fourcc(*'MP4V'), 15, (width, height))
+        for img in img_list:
+            outVideo.write(img)
 
 if __name__ == '__main__':
     main()
