@@ -20,7 +20,7 @@ class Stereo_Depth_Estimation:
     def load_model(self):
         model = AnyNet(self.args)
         model = nn.DataParallel(model).cuda()
-        checkpoint = torch.load(self.args.pretrained)
+        checkpoint = torch.load(self.args.pretrained_anynet)
         model.load_state_dict(checkpoint['state_dict'], strict=False)
         return model
 
