@@ -5,6 +5,7 @@ import torch.utils.data as data
 import time
 import numpy as np
 from PIL import Image
+import torchvision.transforms as transforms
 
 from Models.AnyNet.preprocessing.generate_lidar import project_disp_to_points, Calibration
 from Models.AnyNet.preprocessing.kitti_sparsify import pto_ang_map
@@ -43,47 +44,49 @@ class Stereo_Depth_Estimation:
         right_img = Image.fromarray(np.uint8(right_img)).convert('RGB')
         w, h = left_img.size
 
-        left_img = left_img.crop((w - 1200, h - 352, w, h))
+        left_img =  left_img.crop((w - 1200, h - 352, w, h))
         right_img = right_img.crop((w - 1200, h - 352, w, h))
 
         processed = preprocess.get_transform(augment=False)
-        left_img = processed(left_img)
-        right_img = processed(right_img)
+        left_img = processed(left_img).cuda()
+        right_img = processed(right_img).cuda()
 
-        left_img = left_img.clone().detach().reshape(1, *left_img.size())
-        right_img = right_img.clone().detach().reshape(1, *right_img.size())
+        left_img = left_img.reshape(1, *left_img.size())
+        right_img = right_img.reshape(1, *right_img.size())
         return left_img, right_img
 
-    def predict(self, imgL, imgR, calib_path):
+    def predict(self, imgL, imgR, calib_path, printer=False):
+        if printer:
+            start = time.time()
+            imgL, imgR = self.preprocess(imgL, imgR)
+            end = time.time()
+            print(f"Time for pre-processing: {1000 * (end - start)} ms")
 
-        start = time.time()
-        imgL, imgR = self.preprocess(imgL, imgR)
-        end = time.time()
-        print(f"Time for pre-processing: {1000 * (end - start)} ms")
+            start = time.time()
+            disparity = self.stereo_to_disparity(imgL, imgR)
+            end = time.time()
+            print(f"Time for stereo: {1000 * (end - start)} ms")
 
-        start = time.time()
-        disparity = self.stereo_to_disparity(imgL, imgR)
-        end = time.time()
-        print(f"Time for stereo: {1000 * (end - start)} ms")
+            start = time.time()
+            psuedo_pointcloud = self.disparity_to_BEV(disparity, calib_path)
+            end = time.time()
+            print(f"Time for post processing: {1000 * (end - start)} ms")
+        else:
+            imgL, imgR = self.preprocess(imgL, imgR)
+            disparity = self.stereo_to_disparity(imgL, imgR)
+            psuedo_pointcloud = self.disparity_to_BEV(disparity, calib_path)
 
-        start = time.time()
-        psuedo_pointcloud = self.disparity_to_BEV(disparity, calib_path)
-        end = time.time()
-        print(f"Time for post processing: {1000 * (end - start)} ms")
-        
         return psuedo_pointcloud
 
     def stereo_to_disparity(self, imgL, imgR):
-        imgL = imgL.float().cuda()
-        imgR = imgR.float().cuda()
+        imgL = imgL.float()
+        imgR = imgR.float()
         with torch.no_grad():
             outputs = self.model(imgL, imgR)
-            disp_map = torch.squeeze(outputs[-1], 1)
+            disp_map = torch.squeeze(outputs[-1], 1)[0].float()
             return disp_map
     
     def disparity_to_BEV(self, disp_map, calib_path):
-        disp_map = disp_map.float()
-        disp_map = disp_map[0]
         if not calib_path == self.calib_path:
             self.calib = Calibration(calib_path)
         # Disparity to point cloud convertor

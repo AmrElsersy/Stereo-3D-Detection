@@ -50,13 +50,17 @@ class SFA3D:
         model.eval()
         return model
     
-    def predict(self, bev):
+    def predict(self, bev, printer=False):
         # convert to bird eye view -> get heatmap output -> convert to kitti format output
-        start = time_synchronized()
-        outputs = self.model(bev)
-        detections = self.post_procesiing(outputs)
-        end = time_synchronized()
-        print(f"Time for SFA: {1000 * (end - start)} ms")
+        if printer:
+            start = time_synchronized()
+            outputs = self.model(bev)
+            detections = self.post_procesiing(outputs)
+            end = time_synchronized()
+            print(f"Time for SFA: {1000 * (end - start)} ms\n")
+        else:
+            outputs = self.model(bev)
+            detections = self.post_procesiing(outputs)
         return detections
 
     def post_procesiing(self, outputs):
