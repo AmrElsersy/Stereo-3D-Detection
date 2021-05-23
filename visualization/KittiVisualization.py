@@ -135,7 +135,7 @@ class KittiVisualizer:
         cv2.imshow("BEV", BEV)
         self.__show_2D()
 
-    def visualize_scene_image(self, image, kitti_objects, calib):
+    def visualize_scene_image(self, image, kitti_objects, calib, scene_2D_mode=True):
         self.current_image = image
 
         for object in kitti_objects:
@@ -160,11 +160,11 @@ class KittiVisualizer:
             label_point = (point[0], point[1]-20)
             self.__draw_text_2D(f"{object.label}", (point[0], point[1]))
 
-        # if self.__scene_2D_mode:
-        return self.current_image 
+        if scene_2D_mode:
+            return self.current_image 
 
         cv2.imshow('Image',self.current_image)
-        # self.__show_2D()        
+        self.__show_2D()        
 
     def __show_3D(self):
         mlab.show(stop=True)

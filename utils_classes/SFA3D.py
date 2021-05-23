@@ -18,32 +18,11 @@ import torch.utils.data
 import torch.nn.functional as F
 from PIL import Image
 
-project_root = sys.path[0]
+from Models.SFA.utils.misc import make_folder, time_synchronized
+from Models.SFA.utils.evaluation_utils import decode, post_processing, convert_det_to_real_values
+from Models.SFA.utils.torch_utils import _sigmoid
 
-# ============== import SFA3D only here =====================
-# get the current path (of SFA3D.py) & remove the last 2 subfolders (/utils_classes_SFA3D.py)
-current_path = __file__
-current_path = current_path.split('/')[:-2]
-# get the SFA3D package path 
-sfa_root = ""
-for sub_path in current_path:
-    sfa_root += sub_path + '/'
-sfa_root += "SFA3D/sfa"
-# insert to the first element in sys.path to search from it first
-sys.path.insert(0, sfa_root)
-
-from utils.misc import make_folder, time_synchronized
-from utils.evaluation_utils import decode, post_processing, convert_det_to_real_values
-import config.kitti_config as cnf
-from utils.torch_utils import _sigmoid
-
-from data_process.kitti_data_utils import get_filtered_lidar
-from data_process.kitti_bev_utils import makeBEVMap
-import models.fpn_resnet as fpn_resnet
-
-# =================================================
-# first index of sys.path = project repo path
-sys.path.insert(0, project_root)
+import Models.SFA.models.fpn_resnet as fpn_resnet
 
 
 class SFA3D:
@@ -62,8 +41,8 @@ class SFA3D:
                                         imagenet_pretrained=self.configs.imagenet_pretrained
                                         )
         # load weights
-        model.load_state_dict(torch.load(self.configs.pretrained_path, map_location='cpu'))
-        print('Loaded weights from {}\n'.format(self.configs.pretrained_path))
+        model.load_state_dict(torch.load(self.configs.pretrained_sfa, map_location='cpu'))
+        print('Loaded weights from {}\n'.format(self.configs.pretrained_sfa))
         self.configs.device = torch.device('cpu' if self.configs.no_cuda else 'cuda:0')
 
         # convert to cuda & eval mode
@@ -71,24 +50,14 @@ class SFA3D:
         model.eval()
         return model
     
-    def predict(self, pointcloud):
+    def predict(self, bev):
         # convert to bird eye view -> get heatmap output -> convert to kitti format output
-        bev = self.preprocesiing(pointcloud)
-        t1 = time_synchronized()
+        start = time_synchronized()
         outputs = self.model(bev)
         detections = self.post_procesiing(outputs)
-        t2 = time_synchronized()
-        # print('\tDone testing in time: {:.1f}ms, speed {:.2f}FPS'.format((t2 - t1) * 1000,1 / (t2 - t1)))
-
+        end = time_synchronized()
+        print(f"Time for SFA: {1000 * (end - start)} ms")
         return detections
-
-    def preprocesiing(self, pointcloud):
-        pointcloud = get_filtered_lidar(pointcloud, cnf.boundary)
-        bev = makeBEVMap(pointcloud, cnf.boundary)
-        bev = torch.from_numpy(bev)
-        bev = torch.unsqueeze(bev, 0)
-        bev = bev.to(self.configs.device, non_blocking=True).float()
-        return bev
 
     def post_procesiing(self, outputs):
         outputs['hm_cen'] = _sigmoid(outputs['hm_cen'])

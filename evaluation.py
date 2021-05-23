@@ -210,10 +210,6 @@ def evaluate(args, evaluation, enable_filter = False):
                 if obj.score < 0.3:
                     objects.remove(obj)
 
-        if args.mode == 'pillars':
-            for obj in objects:
-                obj.label = pillars_labels_to_sfa_labels(obj.label)
-
         # clip labels (remove bboxes outside the pointcloud boundary)
         objects = BEVutils.clip_3d_boxes(objects, calib)
         labels = BEVutils.clip_3d_boxes(labels, calib)
@@ -238,9 +234,8 @@ def evaluate(args, evaluation, enable_filter = False):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--mode', type=str, choices=['sfa', 'pillars'], default='sfa', help='path of predictions pickle')
-    parser.add_argument('--path', type=str, default='predictions/Sparse.pickle', help='path of loading 3D bboxes predicitons')
-    parser.add_argument('--save_path', type=str, default='eval_mAP/Sparse.txt', help='file path to save the evaluation results')
+    parser.add_argument('--path', type=str, default='results/sfa.pickle', help='path of loading 3D bboxes predicitons')
+    parser.add_argument('--save_path', type=str, default='results/sfa_mAP.txt', help='file path to save the evaluation results')
     args = parser.parse_args()
 
     evaluations = [
@@ -268,9 +263,8 @@ if __name__ == '__main__':
             print(mAP_string)
             mAP_strings.append(mAP_string)
             
-    file = open(os.path.join('eval_mAP', args.save_path), 'w')
+    file = open(os.path.join(args.save_path), 'w')
     one_mAP_string = '\n'.join([string for string in mAP_strings])
     file.write(one_mAP_string)
     file.close()
     print('Saved @ File: ', args.save_path)
-

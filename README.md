@@ -1,3 +1,11 @@
+[![Made withPython](https://img.shields.io/badge/Made%20with-python-407eaf?style=for-the-badge&logo=python)](https://www.python.org/)
+[![Made withPytorch](https://img.shields.io/badge/Made%20with-pytorch-ee4c2c?style=for-the-badge&logo=pytorch)](https://www.pytorch.org/)
+[![Made withCuda](https://img.shields.io/badge/Made%20with-cuda-76b900?style=for-the-badge&logo=nvidia)](https://developer.nvidia.com/cuda-downloads)
+[![Made withAnaconda](https://img.shields.io/badge/Made%20with-anaconda-43b049?style=for-the-badge&logo=anaconda)](https://www.anaconda.com/) <br>
+![Supports_windows](https://img.shields.io/badge/windows-0078D6?style=for-the-badge&logo=windows)
+![Supports_linux](https://img.shields.io/badge/linux-white?style=for-the-badge&logo=linux)
+![Supports_macos](https://img.shields.io/badge/macos-black?style=for-the-badge&logo=macos)
+
 # 3D Detection Stereo Based
 
 This repository containts a real time **3D depth estmiation** using stereo camera on [KITTI Benchmark](http://www.cvlibs.net/datasets/kitti/)
@@ -7,7 +15,6 @@ This repository containts a real time **3D depth estmiation** using stereo camer
 - [CUDA >= 10.0](https://developer.nvidia.com/Cuda-Toolkit)
 - [Pytorch >= 1.0](https://pytorch.org/)
 - [cuDNN](https://docs.nvidia.com/deeplearning/cudnn/)
-- Linux/Mac/Widnows
 
 ## Installation
 
@@ -16,111 +23,78 @@ NOTE: this installlation is compatible with linux only, nearly will support wind
 1. you must install CUDA local on your system environment, follow this [link](https://developer.nvidia.com/Cuda-downloads)
 2. you must instakk cuDNN local in your system environment, follow this [link](https://docs.nvidia.com/deeplearning/cudnn/install-guide/index.html)
 3. you should build a specific environment so we recommend to install [anaconda](https://docs.anaconda.com/anaconda/install/)
-4. Install the dependencies for demos and visualizaiotn, we make a [yml](env_linux.yml) file which contains all the required packages
+4. Install the dependencies for demos and visualizaiotn
 	
-   - Download the yml file on your hard disk
-   - Open the file and change the name in the first line for your environment, i have S3D name for me
-
-     <img src="images/env_name.png">
-
-   - In the same file at the last line change it to your path tp install the environment then save the file
-
-	 <img src="images/env_path.png">
-
-   - `CD` to the path that you have downloaded the file and open terminal and run this command
-
-	 ```shell script
-	 conda env create -f env.yml
-	 ```
-   - Then activate your environment using `conda activate ${env_name}`
-   - `cd AnyNet/models/spn_t1/ && bash make.sh`
-   - `pip install --no-binary opencv-python opencv-python`
-
-5. you need to install [spconv](https://github.com/traveller59/spconv) in your environment
+   - Open your anaconda terminal
+   - Create new conda enviroment with python 3.8.5 by running this command ```conda create --name obj_det python=3.8.5```
+   - Activate your enviroment ```conda activate obj_det```
+   - Install dependencies following this commands
+   	
+	```shell script
+		conda install -c pytorch torchvision=0.8.2
+		pip install PyQt5 vtk tqdm matplotlib==3.3.3 easydict==1.9
+		pip install mayavi
+		conda install scikit-image shapely
+		conda install -c conda-forge opencv
+	```
 	
-   - `git clone https://github.com/traveller59/spconv.git --recursive`
-   - `sudo apt-get install libboost-all-dev`
-   - `cd spconv`
-   - `python setup.py bdist_wheel`
-   - `cd ./dist`
-   - `pip install spconv*.whl`
-
-6. you need to install [pcdet](https://github.com/open-mmlab/OpenPCDet) in your hard disk
-	
-   - `git clone https://github.com/open-mmlab/OpenPCDet.git`
-   - `cd OpenPCDet`
-   - Copy the pcdet folder and `setup.py` file to **Stereo-3D-Detection**
-   - `python setup.py develop`
-
-
+   - Then Navigate to Models/AnyNet/models/spn_t1 to activate spn layer 
+   - If you are windows user, open git bash cmd and activate the enviroment and run`sh make.sh`
+   - If you are Linuex user, open terminal and activate the enviroment and run `./make.sh` 
+   
 ## Dataset Preparation
 
 You need to make data directory first and construct dataset as following
 
 ```
 Stereo-3D-Detection
+├── checkpoints
 ├── data
 │   ├── kitti
 │   │   │── training
-│   │   │   ├──calib & velodyne & label_2 & image_2 & image_3 & (optional: planes)
+│   │   │   ├──calib & velodyne & label_2 & image_2 & image_3
 │   │   │── testing
-│   │   │   ├──calib & velodyne & image_2 & image_3
-├── pcdet
-├── configs
-├── utils
-├── .
+├── Models
+├── utils_classes
 ├── .
 ├── .
 ```
-- run this command to generate fata infos
-```python
-python -m pcdet.datasets.kitti.kitti_dataset create_kitti_infos configs/cfgs/dataset_configs/kitti_dataset.yaml
-```
-
-- link for [planes](https://drive.google.com/file/d/1d5mq0RXRnvHPVeKx6Q612z0YRO1t2wAp/view?usp=sharing)
-
-
 ## Checkpoints Preparation
 
-You can download all checkpoints from this [README.md](https://github.com/open-mmlab/OpenPCDet)
+You can download all checkpoints from this [Drive](https://drive.google.com/drive/folders/1QOAIldySCMdQuJ99SOOAmz-ckgPo-XgM?usp=sharing)
 
 ```
 Stereo-3D-Detection
-├── configs
-│   ├── cfgs
-│   │   │── dataset_configs
-│   │   │── kitti_models
-│   │   │── nuscenes_models
-│   │   │── waymo_models
-│   ├── checkpoint
-│   │   │── 3D_Detection
-│   │   │   ├──pointpillar_7728.pth & pv_rcnn_8369.pth & ... etc
-│   │   │── kitti2012_ck
-│   │   │── kitti2015_ck
-│   │   │── sceneflow
-├── pcdet
-├── configs
-├── utils
-├── .
+├── checkpoints
+│   ├── anynet.tar
+│   ├── sfa.pth
+├── data
+├── Models
+├── utils_classes
 ├── .
 ├── .
 ```
-
-NOTE: keep its file name
-
 
 ## Demo
 
 - To go from stereo to 3D object detection
-
 ```shell script
-python full_demo.py --index 0
+python sfa_demo.py
+```
+Note: you can navigate between images by pressing any key, and to exit press ESC
+
+- To generate demo video, be sure you adjusted the path in [`sfa_demo.py`](./sfa_demo.py) then run:
+```shell script
+python sfa_demo.py --generate_video
 ```
 
-- index is the corresponing to which sample in the dataset, default is 0
+## Evaluation
 
-- To go from point cloud to 3D object detection
-
+1. you need To generate predictions pickle file by running:
 ```shell script
-python pointcloud_demo.py
+python sfa_demo.py --generate_pickle
+```
+2. Then, to evaluate the resulted prediction run [`evaluation.py`](./evaluation.py)
+```shell script
+python evaluation.py
 ```
