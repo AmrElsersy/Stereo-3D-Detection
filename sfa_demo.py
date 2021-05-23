@@ -133,9 +133,11 @@ def main():
             img_ = visualizer.visualize_scene_image(imgL, objects, calib)
             img_list.append(img_)
         else:
-            visualizer.visualize_scene_image(imgL, objects, calib=calib, scene_2D_mode=False)
-            if visualizer.user_press == 27:
-                cv2.destroyAllWindows()
+            # visualizer.visualize_scene_image(imgL, objects, calib=calib, scene_2D_mode=False)
+            # if visualizer.user_press == 27:
+            #     cv2.destroyAllWindows()
+            #     break
+            if i == 50:
                 break
     
     

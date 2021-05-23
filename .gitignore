@@ -1,6 +1,8 @@
 *.pkl
 *.pth
 *.tar
+output.txt
+profiling.txt
 pcdet/
 AnyNet/models/
 data/
