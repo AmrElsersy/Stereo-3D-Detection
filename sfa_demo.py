@@ -23,6 +23,7 @@ def parse_configs():
     parser.add_argument('--generate_pickle', action='store_true', help='If true, generate pickle file.')
     parser.add_argument('--generate_video', action='store_true', help='If true, generate video.')
     parser.add_argument('--save_path', type=str, default='results/',help='the path of saving video and pickle files')
+    parser.add_argument('--with_spn', action='store_true', help='with spn network or not')
     parser.add_argument('--print_freq', type=int, default=5, help='print frequence')
 
     parser.add_argument('--saved_fn', type=str, default='fpn_resnet_18', metavar='FN', help='The name using for saving logs, models,...')
@@ -40,7 +41,6 @@ def parse_configs():
     parser.add_argument('--loss_weights', type=float, nargs='+', default=[0.25, 0.5, 1., 1.])
     parser.add_argument('--max_disparity', type=int, default=192)
     parser.add_argument('--maxdisplist', type=int, nargs='+', default=[12, 3, 3])
-    parser.add_argument('--with_spn', action='store_true', default=True, help='with spn network or not')
     parser.add_argument('--init_channels', type=int, default=1, help='initial channels for 2d feature extractor')
     parser.add_argument('--nblocks', type=int, default=2, help='number of layers in each stage')
     parser.add_argument('--channels_3d', type=int, default=4, help='number of initial channels 3d feature extractor ')
@@ -97,9 +97,9 @@ def main():
         img_list = []
         VIDEO_ROOT_PATH = 'data/demo'
         dataset = KittiVideo(
-                imgL_dir=os.path.join(VIDEO_ROOT_PATH, "2011_09_26_0059/image_02/data"),
-                imgR_dir=os.path.join(VIDEO_ROOT_PATH, "2011_09_26_0059/image_03/data"),
-                lidar_dir=os.path.join(VIDEO_ROOT_PATH, "2011_09_26_0059/velodyne_points/data"),
+                imgL_dir=os.path.join(VIDEO_ROOT_PATH, "2011_09_26_0106/image_02/data"),
+                imgR_dir=os.path.join(VIDEO_ROOT_PATH, "2011_09_26_0106/image_03/data"),
+                lidar_dir=os.path.join(VIDEO_ROOT_PATH, "2011_09_26_0106/velodyne_points/data"),
                 calib_dir=os.path.join(VIDEO_ROOT_PATH, "calib/2011_09_26")
             )
         loop_length=len(dataset)
