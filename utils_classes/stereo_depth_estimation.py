@@ -82,26 +82,26 @@ class Stereo_Depth_Estimation:
             return disp_map
     
     def disparity_to_BEV(self, disp_map, calib_path):
-        disp_map = disp_map.cpu().numpy()
-        disp_map = disp_map[0].astype(np.float32)
-
+        disp_map = disp_map.float()
+        disp_map = disp_map[0]
         if not calib_path == self.calib_path:
             self.calib = Calibration(calib_path)
         # Disparity to point cloud convertor
         lidar = self.gen_lidar(disp_map)
         # Sparsify point cloud convertor
         sparse_points = self.gen_sparse_points(lidar)
-
+        print(type(sparse_points))
         filtered = get_filtered_lidar(sparse_points, cnf.boundary)
-        
+        print(type(filtered))
         bev = makeBEVMap(filtered, cnf.boundary)
+        print(type(bev))
         bev = torch.from_numpy(bev)
         bev = torch.unsqueeze(bev, 0)
         bev = bev.to(self.cfgs.device, non_blocking=True).float()
         return bev
 
     def gen_lidar(self, disp_map, max_high=1):
-        lidar = project_disp_to_points(self.calib, disp_map, max_high).astype(np.float32)
+        lidar = project_disp_to_points(self.calib, disp_map, max_high)
         return lidar
 
     def gen_sparse_points(self, pc_velo, H=64, W=512, D=700, slice=1):
@@ -112,7 +112,7 @@ class Stereo_Depth_Estimation:
                         (pc_velo[:, 2] < 1.5)    & \
                         (pc_velo[:, 2] >= -2.5)
         pc_velo = pc_velo[valid_inds]
-        sparse_points = pto_ang_map(pc_velo, H=H, W=W, slice=slice).astype(np.float32)
+        sparse_points = pto_ang_map(pc_velo, H=H, W=W, slice=slice).float()
         return sparse_points
 
     

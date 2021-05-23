@@ -2,6 +2,7 @@ import argparse
 import os
 
 import numpy as np
+import torch
 import scipy.misc as ssc
 from .kitti_util import Calibration
 
@@ -18,10 +19,12 @@ def project_disp_to_points(calib, disp, max_high):
     disp[disp < 0] = 0
     baseline = 0.54
     mask = disp > 0
-    depth = calib.f_u * baseline / (disp + 1. - mask)
+    depth = calib.f_u * baseline / (disp + 1. - mask.long())
     rows, cols = depth.shape
-    c, r = np.meshgrid(np.arange(cols), np.arange(rows))
-    points = np.stack([c, r, depth])
+    c, r = torch.meshgrid(torch.arange(cols), torch.arange(rows))
+    c = torch.transpose(c.cuda(), 0, 1)
+    r = torch.transpose(r.cuda(), 0, 1)
+    points = torch.stack([c, r, depth])
     points = points.reshape((3, -1))
     points = points.T
     points = points[mask.reshape(-1)]

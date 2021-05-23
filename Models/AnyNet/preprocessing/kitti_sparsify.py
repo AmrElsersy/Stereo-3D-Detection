@@ -2,6 +2,7 @@ import argparse
 import os
 
 import numpy as np
+import torch
 import tqdm
 
 
@@ -54,16 +55,16 @@ def pto_ang_map(velo_points, H=64, W=512, slice=1):
     d[d == 0] = 0.000001
     r[r == 0] = 0.000001
     phi = np.radians(45.) - np.arcsin(y / r)
-    phi_ = (phi / dphi).astype(int)
+    phi_ = (phi / dphi).long()
     phi_[phi_ < 0] = 0
     phi_[phi_ >= W] = W - 1
 
     theta = np.radians(2.) - np.arcsin(z / d)
-    theta_ = (theta / dtheta).astype(int)
+    theta_ = (theta / dtheta).long()
     theta_[theta_ < 0] = 0
     theta_[theta_ >= H] = H - 1
 
-    depth_map = - np.ones((H, W, 3))
+    depth_map = - torch.ones((H, W, 3))
     depth_map[theta_, phi_, 0] = x
     depth_map[theta_, phi_, 1] = y
     depth_map[theta_, phi_, 2] = z

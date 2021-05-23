@@ -9,6 +9,7 @@ import sys
 
 import cv2
 import numpy as np
+import torch
 
 from ..config import kitti_config as cnf
 
@@ -41,7 +42,7 @@ def makeBEVMap(PointCloud_, boundary):
     intensityMap[np.int_(PointCloud_top[:, 0]), np.int_(PointCloud_top[:, 1])] = 1
     densityMap[np.int_(PointCloud_top[:, 0]), np.int_(PointCloud_top[:, 1])] = normalizedCounts
 
-    RGB_Map = np.zeros((3, Height - 1, Width - 1))
+    RGB_Map = np.zeros((3, cnf.BEV_HEIGHT, cnf.BEV_WIDTH))
     RGB_Map[2, :, :] = densityMap[:cnf.BEV_HEIGHT, :cnf.BEV_WIDTH]  # r_map
     RGB_Map[1, :, :] = heightMap[:cnf.BEV_HEIGHT, :cnf.BEV_WIDTH]  # g_map
     RGB_Map[0, :, :] = intensityMap[:cnf.BEV_HEIGHT, :cnf.BEV_WIDTH]  # b_map
