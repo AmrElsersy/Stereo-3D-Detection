@@ -106,7 +106,7 @@ def main():
         avg_time = 0.
     else:
         dataset_root = os.path.join(cfg.dataset_dir, "training")
-        KITTI_stereo = KittiDataset(dataset_root, stereo_mode=True, mode='val')
+        KITTI_stereo = KittiDataset(dataset_root, stereo_mode=True, mode='train')
         loop_length = len(KITTI_stereo)
     
 
@@ -134,6 +134,7 @@ def main():
             img_list.append(img_)
         else:
             visualizer.visualize_scene_image(imgL, objects, calib=calib, scene_2D_mode=False)
+            # visualizer.visualize_scene_2D(pointcloud, imgL, objects, labels, calib)
             if visualizer.user_press == 27:
                 cv2.destroyAllWindows()
                 break
