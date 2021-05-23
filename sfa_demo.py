@@ -103,6 +103,7 @@ def main():
                 calib_dir=os.path.join(VIDEO_ROOT_PATH, "calib/2011_09_26")
             )
         loop_length=len(dataset)
+        avg_time = 0.
     else:
         dataset_root = os.path.join(cfg.dataset_dir, "training")
         KITTI_stereo = KittiDataset(dataset_root, stereo_mode=True, mode='val')
@@ -113,18 +114,20 @@ def main():
         torch.cuda.empty_cache()
         if cfg.generate_video:
             imgL, imgR, pointcloud, calib = dataset[i]
+            t = time.time()
         else:
             imgL, imgR, labels, calib = KITTI_stereo[i]
 
         BEV = anynet_model.predict(imgL, imgR, calib.calib_path)
         detections = sfa_model.predict(BEV)
         objects = SFA3D_output_to_kitti_objects(detections)
-
+        print("\n")
         if cfg.generate_pickle:
             predictions.append(objects)
             if i % 200 == 0:
                 print(i)
         elif cfg.generate_video:
+            avg_time += (time.time() - t)
             img_ = visualizer.visualize_scene_image(imgL, objects, calib)
             img_list.append(img_)
         else:
@@ -139,6 +142,10 @@ def main():
             pickle.dump(predictions, f)
 
     elif cfg.generate_video:
+        avg_time = avg_time / loop_length
+        FPS = 1 / avg_time     
+        print("Samples Average Time",avg_time)
+        print("FPS", FPS)
         height, width, channels = dataset[0][0].shape
         outVideo = cv2.VideoWriter(cfg.save_path + '/end-to-end_demo.mp4', cv2.VideoWriter_fourcc(*'MP4V'), 15, (width, height))
         for img in img_list:

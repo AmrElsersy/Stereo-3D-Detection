@@ -90,11 +90,10 @@ class Stereo_Depth_Estimation:
         lidar = self.gen_lidar(disp_map)
         # Sparsify point cloud convertor
         sparse_points = self.gen_sparse_points(lidar)
-        print(type(sparse_points))
+
         filtered = get_filtered_lidar(sparse_points, cnf.boundary)
-        print(type(filtered))
+
         bev = makeBEVMap(filtered, cnf.boundary)
-        print(type(bev))
         bev = torch.from_numpy(bev)
         bev = torch.unsqueeze(bev, 0)
         bev = bev.to(self.cfgs.device, non_blocking=True).float()
@@ -112,7 +111,7 @@ class Stereo_Depth_Estimation:
                         (pc_velo[:, 2] < 1.5)    & \
                         (pc_velo[:, 2] >= -2.5)
         pc_velo = pc_velo[valid_inds]
-        sparse_points = pto_ang_map(pc_velo, H=H, W=W, slice=slice).float()
+        sparse_points = pto_ang_map(pc_velo, H=H, W=W, slice=slice)
         return sparse_points
 
     
