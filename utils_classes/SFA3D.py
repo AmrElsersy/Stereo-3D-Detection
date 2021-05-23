@@ -68,7 +68,7 @@ class SFA3D:
         outputs['cen_offset'] = _sigmoid(outputs['cen_offset'])
         # detections size (batch_size, K, 10)
         detections = decode(outputs['hm_cen'], outputs['cen_offset'], outputs['direction'], outputs['z_coor'],outputs['dim'], K=self.configs.K)
-        detections = detections.cpu().detach().numpy().astype(np.float32)
+        detections = detections.float().cpu().detach().numpy()
         detections = post_processing(detections, self.configs.num_classes, self.configs.down_ratio, self.configs.peak_thresh)
         detections = detections[0]
         detections = convert_det_to_real_values(detections)
