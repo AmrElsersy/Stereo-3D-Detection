@@ -141,12 +141,12 @@ class Stereo_Depth_Estimation:
         return lidar
 
     def gen_sparse_points(self, pc_velo, H=64, W=512, D=700, slice=1):
-        valid_inds =    (pc_velo[:, 0] < 120)    & \
+        valid_inds =    torch.where((pc_velo[:, 0] < 120)    & \
                         (pc_velo[:, 0] >= 0)     & \
                         (pc_velo[:, 1] < 50)     & \
                         (pc_velo[:, 1] >= -50)   & \
                         (pc_velo[:, 2] < 1.5)    & \
-                        (pc_velo[:, 2] >= -2.5)
+                        (pc_velo[:, 2] >= -2.5))
         pc_velo = pc_velo[valid_inds]
         sparse_points = pto_ang_map(pc_velo, H=H, W=W, slice=slice)
         return sparse_points
