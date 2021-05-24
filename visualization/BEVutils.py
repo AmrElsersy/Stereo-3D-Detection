@@ -28,13 +28,14 @@ boundary = {
     "maxZ": 1.27
 }
 
-BEV_WIDTH  = 600
-BEV_HEIGHT = 600
+BEV_WIDTH  = 608
+BEV_HEIGHT = 608
 
 
 descretization_x = BEV_HEIGHT / boundary["maxX"]
 descretization_y = BEV_WIDTH / (boundary["maxY"] - boundary["minY"])
 descretization_z = 1 / float(np.abs(boundary['maxZ'] - boundary['minZ']))
+max_height = float(np.abs(boundary['maxZ'] - boundary['minZ']))
 
 # =========================== BEV RGB Map ==================================
 
