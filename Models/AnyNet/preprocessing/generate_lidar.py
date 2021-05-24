@@ -20,7 +20,7 @@ def inverse_rigid_trans(Tr):
 def project_disp_to_points(calib, disp, max_high):
     start = time.time()
     disp[disp < 0] = 0
-    print( torch.sum(disp < 0) ) # Always False !!
+    # print( torch.sum(disp < 0) ) # Always False !!
     end = time.time()
     print(f"\nTime for Mask disp_to_points: {1000 * (end - start)} ms")
 

@@ -3,7 +3,7 @@ from math import sin, cos, radians
 from visualization.KittiDataset import KittiDataset
 from visualization.KittiUtils import *
 import visualization.BEVutils as BEVutils
-import cv2
+import cv2, PIL
 import os
 
 from torch import tensor
@@ -168,6 +168,10 @@ class KittiVisualizer:
 
         if scene_2D_mode:
             return self.current_image 
+
+        if type(self.current_image) == PIL.Image.Image:
+            self.current_image = np.asarray(self.current_image)
+            self.current_image = cv2.cvtColor(self.current_image, cv2.COLOR_RGB2BGR)
 
         cv2.imshow('Image',self.current_image)
         self.__show_2D()        

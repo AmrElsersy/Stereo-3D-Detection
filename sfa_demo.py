@@ -79,9 +79,9 @@ def parse_configs():
 
     # #### set it to empty as this file is inside the root of the project ####
     configs.root_dir = ''
-    # configs.dataset_dir = os.path.join(configs.root_dir, 'data', 'kitti')
-    # An-Paths
-    configs.dataset_dir = '/home/ayman/FOE-Linux/Graduation_Project/KITTI'
+    configs.dataset_dir = os.path.join(configs.root_dir, 'data', 'kitti')
+    # # An-Paths
+    # configs.dataset_dir = '/home/ayman/FOE-Linux/Graduation_Project/KITTI'
 
         
     return configs
@@ -99,19 +99,19 @@ def main():
 
     if cfg.generate_video:
         img_list = []
-        # VIDEO_ROOT_PATH = 'data/demo'
-        VIDEO_ROOT_PATH = '/home/ayman/FOE-Linux/Graduation_Project/KITTI/2011_09_26_drive_0001'
+        VIDEO_ROOT_PATH = 'data/demo'
+        # VIDEO_ROOT_PATH = '/home/ayman/FOE-Linux/Graduation_Project/KITTI/2011_09_26_drive_0001'
         dataset = KittiVideo(
-                # imgL_dir=os.path.join(VIDEO_ROOT_PATH, "2011_09_26_0106/image_02/data"),
-                # imgR_dir=os.path.join(VIDEO_ROOT_PATH, "2011_09_26_0106/image_03/data"),
-                # lidar_dir=os.path.join(VIDEO_ROOT_PATH, "2011_09_26_0106/velodyne_points/data"),
-                # calib_dir=os.path.join(VIDEO_ROOT_PATH, "calib/2011_09_26")
+                imgL_dir=os.path.join(VIDEO_ROOT_PATH, "2011_09_26_0106/image_02/data"),
+                imgR_dir=os.path.join(VIDEO_ROOT_PATH, "2011_09_26_0106/image_03/data"),
+                lidar_dir=os.path.join(VIDEO_ROOT_PATH, "2011_09_26_0106/velodyne_points/data"),
+                calib_dir=os.path.join(VIDEO_ROOT_PATH, "calib/2011_09_26")
 
-                # An-Paths
-                imgL_dir=os.path.join(VIDEO_ROOT_PATH, "2011_09_26_drive_0001_sync/2011_09_26/image_02/data"),
-                imgR_dir=os.path.join(VIDEO_ROOT_PATH, "2011_09_26_drive_0001_sync/2011_09_26/image_03/data"),
-                lidar_dir=os.path.join(VIDEO_ROOT_PATH, "2011_09_26_drive_0001_sync/2011_09_26/velodyne_points/data"),
-                calib_dir=os.path.join(VIDEO_ROOT_PATH, "2011_09_26_calib/2011_09_26")
+                # # An-Paths
+                # imgL_dir=os.path.join(VIDEO_ROOT_PATH, "2011_09_26_drive_0001_sync/2011_09_26/image_02/data"),
+                # imgR_dir=os.path.join(VIDEO_ROOT_PATH, "2011_09_26_drive_0001_sync/2011_09_26/image_03/data"),
+                # lidar_dir=os.path.join(VIDEO_ROOT_PATH, "2011_09_26_drive_0001_sync/2011_09_26/velodyne_points/data"),
+                # calib_dir=os.path.join(VIDEO_ROOT_PATH, "2011_09_26_calib/2011_09_26")
 
             )
         loop_length=len(dataset)
