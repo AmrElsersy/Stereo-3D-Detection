@@ -22,7 +22,7 @@ def project_disp_to_points(calib, disp, max_high):
     disp[disp < 0] = 0
     # print( torch.sum(disp < 0) ) # Always False !!
     end = time.time()
-    print(f"\nTime for Mask disp_to_points: {1000 * (end - start)} ms")
+    # print(f"\nTime for Mask disp_to_points: {1000 * (end - start)} ms")
 
     baseline = 0.54
     mask = disp > 0
@@ -40,7 +40,7 @@ def project_disp_to_points(calib, disp, max_high):
     start = time.time()
     cloud = calib.project_image_to_velo(points)
     end = time.time()
-    print(f"Time for Calib: {1000 * (end - start)} ms")
+    # print(f"Time for Calib: {1000 * (end - start)} ms")
 
     valid = (cloud[:, 0] >= 0) & (cloud[:, 2] < max_high)
     return cloud[valid]
