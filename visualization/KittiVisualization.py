@@ -157,11 +157,15 @@ class KittiVisualizer:
 
             color = self.__get_box_color(object.label)
             self.__draw_box_corners(proj_corners, color, VisMode.SCENE_2D)
+            
+            point = (min(proj_corners[2][0],proj_corners[3][0], proj_corners[1][0]), \
+                max(proj_corners[1][1], proj_corners[2][1], proj_corners[3][1]))
 
-            point = proj_corners[2].astype(np.int32)
-            score_point = (point[0], point[1]-10)
+            bbox_volume = object.bbox_3d.height * object.bbox_3d.width * object.bbox_3d.length
+
+            score_point = (point[0], point[1]-20)
             score_per_box = int(object.score * 100)
-            # self.__draw_text_2D(f"Score: {score_per_box}", score_point)
+            self.__draw_text_2D(f"Score: {score_per_box}", score_point, bbox_volume, color)
 
             label_point = (point[0], point[1]-20)
             # self.__draw_text_2D(f"{object.label}", (point[0], point[1]))
@@ -361,8 +365,14 @@ class KittiVisualizer:
             draw_.line(xy=[(corner1[x], corner1[y]), (corner2[x], corner2[y])], \
                 fill=clr, width=self.thickness)           
 
-    def __draw_text_2D(self, text, point, color=(0, 0, 255), font_scale=0.4, thickness=2, font=cv2.FONT_HERSHEY_SIMPLEX):
-        cv2.putText(self.current_image, text, point, font, font_scale, color, thickness)
+    def __draw_text_2D(self, text, point, bbox_volume, color=(255, 255, 255), font_scale=0.4, thickness=2, font=cv2.FONT_HERSHEY_SIMPLEX):
+        # cv2.putText(self.current_image, text, point, font, font_scale, color, thickness)
+        draw = ImageDraw.Draw(self.current_image, mode='RGB')
+        font = ImageFont.truetype('arial.ttf', int(bbox_volume))
+        draw.text(xy=(point), 
+            text=text,
+            fill=color,
+            font=font)
 
     def __draw_text_3D(self, x, y, z, text, color):
         mlab.text3d(x,y,z, text, scale=0.3, color=color, figure=self.figure)
