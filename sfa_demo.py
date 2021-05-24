@@ -1,4 +1,5 @@
 import argparse, cv2, time
+from PIL import Image
 import torch.backends.cudnn as cudnn
 from easydict import EasyDict as edict
 import pathlib as Path
@@ -78,7 +79,10 @@ def parse_configs():
 
     # #### set it to empty as this file is inside the root of the project ####
     configs.root_dir = ''
-    configs.dataset_dir = os.path.join(configs.root_dir, 'data', 'kitti')
+    # configs.dataset_dir = os.path.join(configs.root_dir, 'data', 'kitti')
+    # An-Paths
+    configs.dataset_dir = '/home/ayman/FOE-Linux/Graduation_Project/KITTI'
+
         
     return configs
 
@@ -95,12 +99,20 @@ def main():
 
     if cfg.generate_video:
         img_list = []
-        VIDEO_ROOT_PATH = 'data/demo'
+        # VIDEO_ROOT_PATH = 'data/demo'
+        VIDEO_ROOT_PATH = '/home/ayman/FOE-Linux/Graduation_Project/KITTI/2011_09_26_drive_0001'
         dataset = KittiVideo(
-                imgL_dir=os.path.join(VIDEO_ROOT_PATH, "2011_09_26_0106/image_02/data"),
-                imgR_dir=os.path.join(VIDEO_ROOT_PATH, "2011_09_26_0106/image_03/data"),
-                lidar_dir=os.path.join(VIDEO_ROOT_PATH, "2011_09_26_0106/velodyne_points/data"),
-                calib_dir=os.path.join(VIDEO_ROOT_PATH, "calib/2011_09_26")
+                # imgL_dir=os.path.join(VIDEO_ROOT_PATH, "2011_09_26_0106/image_02/data"),
+                # imgR_dir=os.path.join(VIDEO_ROOT_PATH, "2011_09_26_0106/image_03/data"),
+                # lidar_dir=os.path.join(VIDEO_ROOT_PATH, "2011_09_26_0106/velodyne_points/data"),
+                # calib_dir=os.path.join(VIDEO_ROOT_PATH, "calib/2011_09_26")
+
+                # An-Paths
+                imgL_dir=os.path.join(VIDEO_ROOT_PATH, "2011_09_26_drive_0001_sync/2011_09_26/image_02/data"),
+                imgR_dir=os.path.join(VIDEO_ROOT_PATH, "2011_09_26_drive_0001_sync/2011_09_26/image_03/data"),
+                lidar_dir=os.path.join(VIDEO_ROOT_PATH, "2011_09_26_drive_0001_sync/2011_09_26/velodyne_points/data"),
+                calib_dir=os.path.join(VIDEO_ROOT_PATH, "2011_09_26_calib/2011_09_26")
+
             )
         loop_length=len(dataset)
         avg_time = 0.
@@ -124,6 +136,10 @@ def main():
         torch.cuda.empty_cache()
         detections = sfa_model.predict(BEV, printer=printer)
         objects = SFA3D_output_to_kitti_objects(detections)
+
+        # Preprocessing for viz.
+        imgL = cv2.cvtColor(imgL, cv2.COLOR_BGR2RGB)
+        imgL = Image.fromarray(imgL)
 
         if cfg.generate_pickle:
             predictions.append(objects)
@@ -154,6 +170,7 @@ def main():
         height, width, channels = dataset[0][0].shape
         outVideo = cv2.VideoWriter(cfg.save_path + '/end-to-end_demo.mp4', cv2.VideoWriter_fourcc(*'MP4V'), 15, (width, height))
         for img in img_list:
+            img = np.array(img)
             outVideo.write(img)
 
 if __name__ == '__main__':

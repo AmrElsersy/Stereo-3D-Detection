@@ -9,13 +9,19 @@ import os
 from torch import tensor
 from mayavi import mlab
 
+from PIL import Image
+from PIL import ImageColor
+from PIL import ImageDraw
+from PIL import ImageFont
+
 class KittiVisualizer:
     def __init__(self):
         self.__scene_2D_mode = False
         self.scene_2D_width = 750
         self.ground_truth_color = (0,1,0) # green
-        self.thickness = 2
-        self.user_press =None
+        self.thickness = 3
+        self.user_press = None
+        self.confidence_score_thresh = 0.4 
         
     def visualize_scene_3D(self, pointcloud, objects, labels=None, calib=None):
         """
@@ -139,7 +145,7 @@ class KittiVisualizer:
         self.current_image = image
 
         for object in kitti_objects:
-            if object.score < 0.4:
+            if object.score < self.confidence_score_thresh:
                 continue
 
             corners = self.__convert_3d_bbox_to_corners(object.bbox_3d, calib)
@@ -155,10 +161,10 @@ class KittiVisualizer:
             point = proj_corners[2].astype(np.int32)
             score_point = (point[0], point[1]-10)
             score_per_box = int(object.score * 100)
-            self.__draw_text_2D(f"Score: {score_per_box}", score_point)
+            # self.__draw_text_2D(f"Score: {score_per_box}", score_point)
 
             label_point = (point[0], point[1]-20)
-            self.__draw_text_2D(f"{object.label}", (point[0], point[1]))
+            # self.__draw_text_2D(f"{object.label}", (point[0], point[1]))
 
         if scene_2D_mode:
             return self.current_image 
@@ -345,8 +351,11 @@ class KittiVisualizer:
                     line_width=2, color=clr, figure=self.figure)
 
         elif vis_mode == VisMode.SCENE_2D:
-
-            cv2.line(self.current_image, (corner1[x], corner1[y]), (corner2[x], corner2[y]), color=tuple([255 * x for x in clr]), thickness=2)
+            draw_ = ImageDraw.Draw(self.current_image, mode='RGB')
+            # cv2.line(self.current_image, (corner1[x], corner1[y]), (corner2[x], corner2[y]), \
+                # color=tuple([255 * x for x in clr]), thickness=2)
+            draw_.line(xy=[(corner1[x], corner1[y]), (corner2[x], corner2[y])], \
+                fill=clr, width=self.thickness)           
 
     def __draw_text_2D(self, text, point, color=(0, 0, 255), font_scale=0.4, thickness=2, font=cv2.FONT_HERSHEY_SIMPLEX):
         cv2.putText(self.current_image, text, point, font, font_scale, color, thickness)
@@ -359,9 +368,9 @@ class KittiVisualizer:
             class_id = class_name_to_label(class_id)
 
         colors = [
-            (0,0,1),
-            (1,0,0),
-            (0,1,1),
+            (128,128,128),
+            (0,205,255),
+            (255,255,51),
         ]
 
         return colors[class_id]

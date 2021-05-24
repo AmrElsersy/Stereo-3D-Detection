@@ -6,7 +6,7 @@ import numpy as np
 import cv2
 
 from visualization.KittiUtils import *
-
+from PIL import Image
 
 class KittiDataset(Dataset):
     def __init__(self, root="../data/kitti/testing", mode='train', transform = None, stereo_mode=False):
