@@ -130,7 +130,10 @@ def main():
             printer = ((i % cfg.print_freq) == 0)
         else:
             imgL, imgR, labels, calib = KITTI_stereo[i]
-            printer = True
+            if cfg.generate_pickle:
+                printer = False
+            else:
+                printer = True
             
         BEV = anynet_model.predict(imgL, imgR, calib.calib_path, printer=printer)
         torch.cuda.empty_cache()

@@ -76,7 +76,7 @@ class Stereo_Depth_Estimation:
         else:
             imgL, imgR = self.preprocess(imgL, imgR)
             disparity = self.stereo_to_disparity(imgL, imgR)
-            psuedo_pointcloud = self.disparity_to_BEV(disparity, calib_path)
+            psuedo_pointcloud = self.disparity_to_BEV(disparity, calib_path, printer)
 
         return psuedo_pointcloud
 
