@@ -88,30 +88,42 @@ class Stereo_Depth_Estimation:
             disp_map = torch.squeeze(outputs[-1], 1)[0].float()
             return disp_map
     
-    def disparity_to_BEV(self, disp_map, calib_path):
+    def disparity_to_BEV(self, disp_map, calib_path, printer=True):
         if not calib_path == self.calib_path:
             self.calib = Calibration(calib_path)
 
+        start = time.time()
         # Disparity to point cloud convertor
-        lidar = self.gen_lidar(disp_map)
+        lidar = self.gen_lidar(disp_map) # disp_map cuda ... lidar cpu
+        # print(lidar.device)
         lidar = lidar.to(device)
+        end = time.time()
+        if printer:
+            print(f"\nTime for Disparity_LIDAR: {1000 * (end - start)} ms")
 
-        # Sparsify point cloud convertor
+        start = time.time()
+        # Sparsify point cloud convertor (Cuda = 2.5 ms instead of 15 ms)
         sparse_points = self.gen_sparse_points(lidar)
-        print(sparse_points.device)
+        end = time.time()
+        if printer:
+            print(f"Time for Sparsify: {1000 * (end - start)} ms")
 
+        start = time.time()
+        # filter (no big diffrence between cuda & cpu .. both < 1 ms)
         filtered = self.get_filtered_lidar(sparse_points, cnf.boundary) 
+        end = time.time()
+        if printer:
+            print(f"Time for Filter: {1000 * (end - start)} ms")
 
-        # our implementation (from )
-        print(filtered.device)
+        start = time.time()
+        # our implementation (2.5 ms)
         bev = self.makeBEVMap(filtered)
-        print(bev.device)
+        end = time.time()
+        if printer:
+            print(f"Time for BEV: {1000 * (end - start)} ms\n")
 
-        # SFA implementation
-        # bev = self.makeBEVMap2(filtered) 
-
-        # numpy implementation ( from 58 to 66 ms)
-        # bev = makeBEVMap(filtered, cnf.boundary)
+        # numpy implementation (10 ms)
+        # bev = makeBEVMap(filtered.cpu().numpy(), cnf.boundary)
         # bev = torch.from_numpy(bev)
 
         # visualize
@@ -152,10 +164,9 @@ class Stereo_Depth_Estimation:
         MAP_HEIGHT = cnf.BEV_HEIGHT + 1
         MAP_WIDTH  = cnf.BEV_WIDTH  + 1
 
-        height_map    = torch.zeros((MAP_HEIGHT, MAP_WIDTH), dtype=torch.float32, device=device) # max z
-        intensity_map = torch.zeros((MAP_HEIGHT, MAP_WIDTH), dtype=torch.float32, device=device) # intensity (contains reflectivity or 1 if not supported)
-        density_map   = torch.zeros((MAP_HEIGHT, MAP_WIDTH), dtype=torch.float32, device=device) # density of the mapped 3D points to a the pixel
-
+        height_map    = torch.zeros((MAP_HEIGHT, MAP_WIDTH), dtype=torch.float32, device=pointcloud.device)
+        intensity_map = torch.zeros((MAP_HEIGHT, MAP_WIDTH), dtype=torch.float32, device=pointcloud.device)  
+        density_map   = torch.zeros((MAP_HEIGHT, MAP_WIDTH), dtype=torch.float32, device=pointcloud.device)
         x_bev = torch.tensor( pointcloud[:, 0] * descretization_x, dtype=torch.long).to(device)
         y_bev = torch.tensor((cnf.BEV_WIDTH/2) + pointcloud[:, 1] * descretization_y, dtype=torch.long).to(device)
         z_bev = pointcloud[:, 2] # float32, cuda

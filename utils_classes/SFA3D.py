@@ -40,10 +40,11 @@ class SFA3D:
                                         head_conv=self.configs.head_conv,
                                         imagenet_pretrained=self.configs.imagenet_pretrained
                                         )
-        # load weights
-        model.load_state_dict(torch.load(self.configs.pretrained_sfa, map_location='cpu'))
-        print('Loaded weights from {}\n'.format(self.configs.pretrained_sfa))
         self.configs.device = torch.device('cpu' if self.configs.no_cuda else 'cuda:0')
+
+        # load weights
+        model.load_state_dict(torch.load(self.configs.pretrained_sfa, map_location=self.configs.device))
+        print('Loaded weights from {}\n'.format(self.configs.pretrained_sfa))
 
         # convert to cuda & eval mode
         model = model.to(device=self.configs.device)

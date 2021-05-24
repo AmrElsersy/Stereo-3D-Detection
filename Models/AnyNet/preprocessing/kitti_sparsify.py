@@ -37,8 +37,6 @@ def pto_rec_map(velo_points, H=64, W=512, D=800):
     depth_map = depth_map[depth_map[:, 0] != -1.0]
     return depth_map
 
-def radians(x):
-    return x * 0.0174532925
 
 def pto_ang_map(velo_points, H=64, W=512, slice=1):
     """
@@ -46,6 +44,9 @@ def pto_ang_map(velo_points, H=64, W=512, slice=1):
     :param W: the col num of depth map
     :param slice: output every slice lines
     """
+
+    def radians(x):
+        return x * 0.0174532925
 
     dtheta = radians(0.4 * 64.0 / H)
     dphi = radians(90.0 / W)
