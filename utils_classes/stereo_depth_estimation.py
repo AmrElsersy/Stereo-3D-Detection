@@ -188,52 +188,6 @@ class Stereo_Depth_Estimation:
         return RGB_Map
         
 
-    # THIS IS NOTTTT WORKING YET
-    def makeBEVMap2(self, pointcloud):
-        torch.cuda.empty_cache()
-        pointcloud = pointcloud.to(device)
-
-        Height = cnf.BEV_HEIGHT + 1
-        Width = cnf.BEV_WIDTH + 1
-
-        # Discretize Feature Map        
-        pointcloud[:, 0] = torch.tensor(torch.floor(pointcloud[:, 0] / cnf.DISCRETIZATION))
-        pointcloud[:, 1] = torch.tensor(torch.floor(pointcloud[:, 1] / cnf.DISCRETIZATION) + Width / 2)
-
-        z_indices = torch.argsort(pointcloud[:,2])
-        pointcloud = pointcloud[z_indices]
-
-        xy_bev_unique, inverse_indices, counts = torch.unique(pointcloud[:, 0:2], return_counts=True, return_inverse=True, dim=0)
-
-        perm = torch.arange(inverse_indices.size(0), dtype=inverse_indices.dtype, device=inverse_indices.device)
-        inverse_indices, perm = inverse_indices.flip([0]), perm.flip([0])
-        indices = inverse_indices.new_empty(xy_bev_unique.size(0)).scatter_(0, inverse_indices, perm)
-
-        pointcloud_top = pointcloud[indices]
-        pointcloud_top = pointcloud_top.long()
-
-        # Height Map, Intensity Map & Density Map
-        heightMap    = torch.zeros((Height, Width), dtype=torch.float32, device=device)
-        intensityMap = torch.zeros((Height, Width), dtype=torch.float32, device=device)
-        densityMap   = torch.zeros((Height, Width), dtype=torch.float32, device=device)
-
-        # some important problem is image coordinate is (y,x), not (x,y)
-        heightMap[pointcloud_top[:, 0], pointcloud_top[:, 1]] = pointcloud_top[:, 2] / max_height
-
-        intensityMap[pointcloud_top[:, 0], pointcloud_top[:, 1]] = 1
-        densityMap[pointcloud_top[:, 0], pointcloud_top[:, 1]] = torch.minimum(
-            torch.ones_like(counts), 
-            torch.log(counts.float() + 1)/ np.log(64)
-            )
-
-        RGB_Map = torch.zeros((3, cnf.BEV_HEIGHT, cnf.BEV_WIDTH), dtype=torch.float32, device=device)
-        RGB_Map[2, :, :] = densityMap[:cnf.BEV_HEIGHT, :cnf.BEV_WIDTH]  # r_map
-        RGB_Map[1, :, :] = heightMap[:cnf.BEV_HEIGHT, :cnf.BEV_WIDTH]  # g_map
-        RGB_Map[0, :, :] = intensityMap[:cnf.BEV_HEIGHT, :cnf.BEV_WIDTH]  # b_map
-
-        return RGB_Map
-
-    
     def get_filtered_lidar(self, lidar, boundary):
         minX = boundary['minX']
         maxX = boundary['maxX']
