@@ -142,6 +142,11 @@ class KittiVisualizer:
         self.__show_2D()
 
     def visualize_scene_image(self, image, kitti_objects, calib, scene_2D_mode=True):
+        
+        # Preprocessing for viz.
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        image = Image.fromarray(image)
+
         self.current_image = image
 
         for object in kitti_objects:
@@ -162,7 +167,8 @@ class KittiVisualizer:
                 max(proj_corners[1][1], proj_corners[2][1], proj_corners[3][1]))
 
             bbox_volume = object.bbox_3d.height * object.bbox_3d.width * object.bbox_3d.length
-
+            box_depth = object.bbox_3d.x
+            
             score_point = (point[0], point[1]-20)
             score_per_box = int(object.score * 100)
             self.__draw_text_2D(f"Score: {score_per_box}", score_point, bbox_volume, color)
@@ -170,12 +176,10 @@ class KittiVisualizer:
             label_point = (point[0], point[1]-20)
             # self.__draw_text_2D(f"{object.label}", (point[0], point[1]))
 
-        if scene_2D_mode:
-            return self.current_image 
+        self.current_image = np.array(self.current_image) 
 
-        if type(self.current_image) == PIL.Image.Image:
-            self.current_image = np.asarray(self.current_image)
-            self.current_image = cv2.cvtColor(self.current_image, cv2.COLOR_RGB2BGR)
+        if scene_2D_mode:
+            return np.array(self.current_image) 
 
         cv2.imshow('Image',self.current_image)
         self.__show_2D()        

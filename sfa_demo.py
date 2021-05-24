@@ -122,7 +122,7 @@ def main():
         loop_length = len(KITTI_stereo)
     
 
-    for i in range(cfg.index, loop_length-80):
+    for i in range(cfg.index, loop_length):
         torch.cuda.empty_cache()
         if cfg.generate_video:
             imgL, imgR, pointcloud, calib = dataset[i]
@@ -140,10 +140,6 @@ def main():
         detections = sfa_model.predict(BEV, printer=printer)
         objects = SFA3D_output_to_kitti_objects(detections)
 
-        # Preprocessing for viz.
-        imgL = cv2.cvtColor(imgL, cv2.COLOR_BGR2RGB)
-        imgL = Image.fromarray(imgL)
-
         if cfg.generate_pickle:
             predictions.append(objects)
             if i % cfg.print_freq == 0:
@@ -158,7 +154,6 @@ def main():
                 cv2.destroyAllWindows()
                 break
     
-    
     if cfg.generate_pickle:
         with open(cfg.save_path + '/sfa.pickle', 'wb') as f:
             pickle.dump(predictions, f)
@@ -171,7 +166,6 @@ def main():
         height, width, channels = dataset[0][0].shape
         outVideo = cv2.VideoWriter(cfg.save_path + '/end-to-end_demo.mp4', cv2.VideoWriter_fourcc(*'MP4V'), 10, (width, height))
         for img in img_list:
-            img = np.array(img)
             outVideo.write(img)
 
 if __name__ == '__main__':
