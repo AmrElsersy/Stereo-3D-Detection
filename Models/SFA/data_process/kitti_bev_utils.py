@@ -27,6 +27,7 @@ def makeBEVMap(PointCloud_, boundary):
     sorted_indices = np.lexsort((-PointCloud[:, 2], PointCloud[:, 1], PointCloud[:, 0]))
     PointCloud = PointCloud[sorted_indices]
     _, unique_indices, unique_counts = np.unique(PointCloud[:, 0:2], axis=0, return_index=True, return_counts=True)
+    # print(unique_counts.shape, unique_indices.shape, unique_counts, unique_indices)
     PointCloud_top = PointCloud[unique_indices]
 
     # Height Map, Intensity Map & Density Map

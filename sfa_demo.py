@@ -118,7 +118,7 @@ def main():
         avg_time = 0.
     else:
         dataset_root = os.path.join(cfg.dataset_dir, "training")
-        KITTI_stereo = KittiDataset(dataset_root, stereo_mode=True, mode='val')
+        KITTI_stereo = KittiDataset(dataset_root, stereo_mode=True, mode='train')
         loop_length = len(KITTI_stereo)
     
 
@@ -133,6 +133,7 @@ def main():
             printer = True
             
         BEV = anynet_model.predict(imgL, imgR, calib.calib_path, printer=printer)
+        torch.cuda.empty_cache()
         detections = sfa_model.predict(BEV, printer=printer)
         objects = SFA3D_output_to_kitti_objects(detections)
 
@@ -149,10 +150,10 @@ def main():
             img_ = visualizer.visualize_scene_image(imgL, objects, calib)
             img_list.append(img_)
         else:
-            # visualizer.visualize_scene_image(imgL, objects, calib=calib, scene_2D_mode=False)
-            # if visualizer.user_press == 27:
-            #     cv2.destroyAllWindows()
-            #     break
+            visualizer.visualize_scene_image(imgL, objects, calib=calib, scene_2D_mode=False)
+            if visualizer.user_press == 27:
+                cv2.destroyAllWindows()
+                break
             if i == 50:
                 break
     
