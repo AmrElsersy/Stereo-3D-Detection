@@ -19,12 +19,11 @@ torch.cuda.empty_cache()
 def parse_configs():
     parser = argparse.ArgumentParser(description='Testing config for the Implementation')
     
+    parser.add_argument('--save_path', type=str, default='results/',help='the path of saving video and pickle files')
     parser.add_argument('--pretrained_anynet', type=str, default='checkpoints/anynet.tar',help='pretrained model path')
     parser.add_argument('--pretrained_sfa', type=str, default='checkpoints/sfa.pth', metavar='PATH')
     parser.add_argument('--generate_pickle', action='store_true', help='If true, generate pickle file.')
     parser.add_argument('--generate_video', action='store_true', help='If true, generate video.')
-    parser.add_argument('--save_path', type=str, default='results/',help='the path of saving video and pickle files')
-    parser.add_argument('--with_spn', action='store_true', default=True, help='with spn network or not')
     parser.add_argument('--print_freq', type=int, default=5, help='print frequence')
 
     parser.add_argument('--saved_fn', type=str, default='fpn_resnet_18', metavar='FN', help='The name using for saving logs, models,...')
@@ -34,24 +33,33 @@ def parse_configs():
     parser.add_argument('--gpu_idx', default=0, type=int, help='GPU index to use.')
     parser.add_argument('--num_samples', type=int, default=None, help='Take a subset of the dataset to run and debug')
     parser.add_argument('--num_workers', type=int, default=1, help='Number of threads for loading data')
-    parser.add_argument('--batch_size', type=int, default=1, help='mini-batch size (default: 4)')
     parser.add_argument('--peak_thresh', type=float, default=0.2)
     parser.add_argument('--save_test_output', action='store_true', help='If true, the output image of the testing phase will be saved')
     parser.add_argument('--index', type=int, default=0, help="start index in dataset")
     parser.add_argument('--maxdisp', type=int, default=192,help='maxium disparity')
     parser.add_argument('--loss_weights', type=float, nargs='+', default=[0.25, 0.5, 1., 1.])
-    parser.add_argument('--max_disparity', type=int, default=192)
-    parser.add_argument('--maxdisplist', type=int, nargs='+', default=[12, 3, 3])
+    # parser.add_argument('--max_disparity', type=int, default=192)
+    parser.add_argument('--pseudo', action='store_true')
+
+    """ Anynet modal args """
     parser.add_argument('--init_channels', type=int, default=1, help='initial channels for 2d feature extractor')
+    parser.add_argument('--maxdisplist', type=int, nargs='+', default=[12, 3, 3])
     parser.add_argument('--nblocks', type=int, default=2, help='number of layers in each stage')
     parser.add_argument('--channels_3d', type=int, default=4, help='number of initial channels 3d feature extractor ')
     parser.add_argument('--layers_3d', type=int, default=4, help='number of initial layers in 3d network')
     parser.add_argument('--growth_rate', type=int, nargs='+', default=[4,1,1], help='growth rate in the 3d network')
     parser.add_argument('--spn_init_channels', type=int, default=8, help='initial channels for spnet')
+    """ LiDAR args """
     parser.add_argument('--max_high', type=int, default=1)
-    parser.add_argument('--pseudo', action='store_true')
+
+    """ Kitti sparsify args """
+    parser.add_argument('--H', default=64, type=int)
+    parser.add_argument('--W', default=512, type=int)
+    parser.add_argument('--D', default=700, type=int)
+    parser.add_argument('--slice', default=1, type=int)
 
     configs = edict(vars(parser.parse_args()))
+    configs.with_spn = True
     configs.pin_memory = True
     configs.distributed = False  # For testing on 1 GPU only
 
@@ -59,7 +67,6 @@ def parse_configs():
     configs.hm_size = (152, 152)
     configs.down_ratio = 4
     configs.max_objects = 50
-
     configs.imagenet_pretrained = False
     configs.head_conv = 64
     configs.num_classes = 3
@@ -102,9 +109,9 @@ def main():
         VIDEO_ROOT_PATH = 'data/demo'
         # VIDEO_ROOT_PATH = '/home/ayman/FOE-Linux/Graduation_Project/KITTI/2011_09_26_drive_0001'
         dataset = KittiVideo(
-                imgL_dir=os.path.join(VIDEO_ROOT_PATH, "2011_09_26_0001/image_02/data"),
-                imgR_dir=os.path.join(VIDEO_ROOT_PATH, "2011_09_26_0001/image_03/data"),
-                lidar_dir=os.path.join(VIDEO_ROOT_PATH, "2011_09_26_0001/velodyne_points/data"),
+                imgL_dir=os.path.join(VIDEO_ROOT_PATH, "2011_09_26_0106/image_02/data"),
+                imgR_dir=os.path.join(VIDEO_ROOT_PATH, "2011_09_26_0106/image_03/data"),
+                lidar_dir=os.path.join(VIDEO_ROOT_PATH, "2011_09_26_0106/velodyne_points/data"),
                 calib_dir=os.path.join(VIDEO_ROOT_PATH, "calib/2011_09_26")
 
                 # An-Paths
