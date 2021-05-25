@@ -89,38 +89,42 @@ class Stereo_Depth_Estimation:
             return disp_map
     
     def disparity_to_BEV(self, disp_map, calib_path, printer=True):
+        # start = time.time()
         if not calib_path == self.calib_path:
             self.calib = Calibration(calib_path)
+            self.calib_path = calib_path
+        # end = time.time()
+        # if printer:
+        #     print(f"Time for calibrating: {1000 * (end - start)} ms")
 
-        start = time.time()
         # Disparity to point cloud convertor
-        lidar = self.gen_lidar(disp_map) # disp_map cuda ... lidar cpu
-        # print(lidar.device)
-        lidar = lidar.to(device)
-        end = time.time()
-        if printer:
-            print(f"\nTime for Disparity_LIDAR: {1000 * (end - start)} ms")
+        # start = time.time()
+        lidar = self.gen_lidar(disp_map)
+        # end = time.time()
+        # if printer:
+        #     print(f"\nTime for Disparity_LIDAR: {1000 * (end - start)} ms")
 
-        start = time.time()
         # Sparsify point cloud convertor (Cuda = 2.5 ms instead of 15 ms)
+        # start = time.time()
         sparse_points = self.gen_sparse_points(lidar)
-        end = time.time()
-        if printer:
-            print(f"Time for Sparsify: {1000 * (end - start)} ms")
+        # end = time.time()
+        # if printer:
+        #     print(f"Time for Sparsify: {1000 * (end - start)} ms")
 
-        start = time.time()
         # filter (no big diffrence between cuda & cpu .. both < 1 ms)
-        filtered = self.get_filtered_lidar(sparse_points, cnf.boundary) 
-        end = time.time()
-        if printer:
-            print(f"Time for Filter: {1000 * (end - start)} ms")
+        # start = time.time()
+        filtered = self.get_filtered_lidar(sparse_points, cnf.boundary)
+        # end = time.time()
+        # if printer:
+        #     print(f"Time for Filter: {1000 * (end - start)} ms")
 
-        start = time.time()
         # our implementation (2.5 ms)
+        # start = time.time()
         bev = self.makeBEVMap(filtered)
-        end = time.time()
-        if printer:
-            print(f"Time for BEV: {1000 * (end - start)} ms\n")
+        bev = torch.unsqueeze(bev, 0)
+        # end = time.time()
+        # if printer:
+        #     print(f"Time for BEV: {1000 * (end - start)} ms\n")
 
         # numpy implementation (10 ms)
         # bev = makeBEVMap(filtered.cpu().numpy(), cnf.boundary)
@@ -131,9 +135,7 @@ class Stereo_Depth_Estimation:
         # b = bev.permute((1,2,0)).cpu().numpy()
         # cv2.imshow('bev', b)
         # cv2.waitKey(0)
-
-        bev = torch.unsqueeze(bev, 0)
-        bev = bev.to(self.cfgs.device, non_blocking=True).float()
+        
         return bev
 
     def gen_lidar(self, disp_map, max_high=1):
@@ -153,9 +155,6 @@ class Stereo_Depth_Estimation:
 
 
     def makeBEVMap(self, pointcloud):
-        torch.cuda.empty_cache()
-        pointcloud = pointcloud.to(device)
-
         # sort by z ... to get the maximum z when using unique 
         # (as unique function gets the first unique elemnt so we attatch it with max value)
         z_indices = torch.argsort(pointcloud[:,2])

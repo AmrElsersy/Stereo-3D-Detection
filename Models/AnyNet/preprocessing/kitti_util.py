@@ -8,6 +8,7 @@ from __future__ import print_function
 import numpy as np
 import torch
 import torch.linalg as linalg
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 class Calibration(object):
     ''' Calibration matrices and utils
@@ -43,7 +44,6 @@ class Calibration(object):
     '''
 
     def __init__(self, calib_filepath):
-
         calibs = self.read_calib_file(calib_filepath)
         # Projection matrix from rect camera coord to image2 coord
         self.P = calibs['P2']
@@ -77,7 +77,7 @@ class Calibration(object):
                 # The only non-float values in these files are dates, which
                 # we don't care about anyway
                 try:
-                    data[key] = torch.tensor([float(x) for x in value.split()])
+                    data[key] = torch.tensor([float(x) for x in value.split()], device=device)
                 except ValueError:
                     pass
 
@@ -88,7 +88,7 @@ class Calibration(object):
             Oupput: nx4 points in Homogeneous by pending 1
         '''
         n = pts_3d.shape[0]
-        pts_3d_hom = torch.hstack((pts_3d, torch.ones((n, 1))))
+        pts_3d_hom = torch.hstack((pts_3d, torch.ones((n, 1), device=device)))
         return pts_3d_hom
 
     # =========================== 
@@ -152,7 +152,7 @@ class Calibration(object):
         n = uv_depth.shape[0]
         x = ((uv_depth[:, 0] - self.c_u) * uv_depth[:, 2]) / self.f_u + self.b_x
         y = ((uv_depth[:, 1] - self.c_v) * uv_depth[:, 2]) / self.f_v + self.b_y
-        pts_3d_rect = torch.zeros((n, 3))
+        pts_3d_rect = torch.zeros((n, 3), device=device)
         pts_3d_rect[:, 0] = x
         pts_3d_rect[:, 1] = y
         pts_3d_rect[:, 2] = uv_depth[:, 2]
@@ -167,7 +167,7 @@ def inverse_rigid_trans(Tr):
     ''' Inverse a rigid body transform matrix (3x4 as [R|t])
         [R'|-R't; 0|1]
     '''
-    inv_Tr = torch.zeros_like(Tr)  # 3x4
+    inv_Tr = torch.zeros_like(Tr, device=device)  # 3x4
     inv_Tr[0:3, 0:3] = torch.transpose(Tr[0:3, 0:3], 0, 1)
     # print(inv_Tr.shape)
     # print(torch.dot(-inv_Tr[0:3, 0:3], Tr[0:3, 3]).shape)

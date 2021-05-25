@@ -18,29 +18,25 @@ def inverse_rigid_trans(Tr):
     return inv_Tr
 
 def project_disp_to_points(calib, disp, max_high):
-    start = time.time()
-    disp[disp < 0] = 0
+    mask = (disp > 0).reshape(-1).long()
+    disp = disp.clamp(min=0) + 0.1
     # print( torch.sum(disp < 0) ) # Always False !!
-    end = time.time()
-    # print(f"\nTime for Mask disp_to_points: {1000 * (end - start)} ms")
-
     baseline = 0.54
-    mask = disp > 0
-    depth = calib.f_u * baseline / (disp + 1. - mask.long())
+    depth = calib.f_u * baseline / (disp) 
     rows, cols = depth.shape
-    c, r = torch.meshgrid(torch.arange(cols), torch.arange(rows))
-
-    c = torch.transpose(c.cuda(), 0, 1)
-    r = torch.transpose(r.cuda(), 0, 1)
+    # start = time.time()
+    c, r = torch.meshgrid(torch.arange(cols, device=device), torch.arange(rows, device=device))
+    c = c.T.reshape(-1) * mask
+    r = r.T.reshape(-1) * mask
+    depth = depth.reshape(-1) * mask
     points = torch.stack([c, r, depth])
-    points = points.reshape((3, -1)).T
-    points = points[mask.reshape(-1)] # shape = n_points, 3
+    points = points.T
+    # points = points[mask]
+    # end = time.time()
+    # print(f"Time for Calib: {1000 * (end - start)} ms")
 
     # (5 - 10 ms)
-    start = time.time()
     cloud = calib.project_image_to_velo(points)
-    end = time.time()
-    # print(f"Time for Calib: {1000 * (end - start)} ms")
 
     valid = (cloud[:, 0] >= 0) & (cloud[:, 2] < max_high)
     return cloud[valid]

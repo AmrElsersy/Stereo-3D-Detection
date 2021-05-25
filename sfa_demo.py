@@ -24,7 +24,7 @@ def parse_configs():
     parser.add_argument('--generate_pickle', action='store_true', help='If true, generate pickle file.')
     parser.add_argument('--generate_video', action='store_true', help='If true, generate video.')
     parser.add_argument('--save_path', type=str, default='results/',help='the path of saving video and pickle files')
-    parser.add_argument('--with_spn', action='store_true', help='with spn network or not')
+    parser.add_argument('--with_spn', action='store_true', default=True, help='with spn network or not')
     parser.add_argument('--print_freq', type=int, default=5, help='print frequence')
 
     parser.add_argument('--saved_fn', type=str, default='fpn_resnet_18', metavar='FN', help='The name using for saving logs, models,...')
@@ -102,9 +102,9 @@ def main():
         VIDEO_ROOT_PATH = 'data/demo'
         # VIDEO_ROOT_PATH = '/home/ayman/FOE-Linux/Graduation_Project/KITTI/2011_09_26_drive_0001'
         dataset = KittiVideo(
-                imgL_dir=os.path.join(VIDEO_ROOT_PATH, "2011_09_26_0106/image_02/data"),
-                imgR_dir=os.path.join(VIDEO_ROOT_PATH, "2011_09_26_0106/image_03/data"),
-                lidar_dir=os.path.join(VIDEO_ROOT_PATH, "2011_09_26_0106/velodyne_points/data"),
+                imgL_dir=os.path.join(VIDEO_ROOT_PATH, "2011_09_26_0001/image_02/data"),
+                imgR_dir=os.path.join(VIDEO_ROOT_PATH, "2011_09_26_0001/image_03/data"),
+                lidar_dir=os.path.join(VIDEO_ROOT_PATH, "2011_09_26_0001/velodyne_points/data"),
                 calib_dir=os.path.join(VIDEO_ROOT_PATH, "calib/2011_09_26")
 
                 # An-Paths
