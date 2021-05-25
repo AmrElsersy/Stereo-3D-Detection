@@ -108,11 +108,12 @@ def main():
     if cfg.generate_video:
         img_list = []
         VIDEO_ROOT_PATH = 'data/demo'
+        VIDEO_NAME = "2011_09_26_0106"
         # VIDEO_ROOT_PATH = '/home/ayman/FOE-Linux/Graduation_Project/KITTI/2011_09_26_drive_0001'
         dataset = KittiVideo(
-                imgL_dir=os.path.join(VIDEO_ROOT_PATH, "2011_09_26_0106/image_02/data"),
-                imgR_dir=os.path.join(VIDEO_ROOT_PATH, "2011_09_26_0106/image_03/data"),
-                lidar_dir=os.path.join(VIDEO_ROOT_PATH, "2011_09_26_0106/velodyne_points/data"),
+                imgL_dir=os.path.join(VIDEO_ROOT_PATH, VIDEO_NAME + "/image_02/data"),
+                imgR_dir=os.path.join(VIDEO_ROOT_PATH, VIDEO_NAME + "/image_03/data"),
+                lidar_dir=os.path.join(VIDEO_ROOT_PATH, VIDEO_NAME + "/velodyne_points/data"),
                 calib_dir=os.path.join(VIDEO_ROOT_PATH, "calib/2011_09_26")
 
                 # An-Paths
@@ -131,7 +132,6 @@ def main():
     
 
     for i in range(cfg.index, loop_length):
-        torch.cuda.empty_cache()
         if cfg.generate_video:
             imgL, imgR, pointcloud, calib = dataset[i]
             t = time_synchronized()
@@ -142,11 +142,10 @@ def main():
                 printer = False
             else:
                 printer = True
-            
-        BEV = anynet_model.predict(imgL, imgR, calib.calib_path, printer=printer)
-        detections = sfa_model.predict(BEV, printer=printer)
-        objects = SFA3D_output_to_kitti_objects(detections)
-
+        with torch.no_grad():
+            BEV = anynet_model.predict(imgL, imgR, calib.calib_path, printer=printer)
+            detections = sfa_model.predict(BEV, printer=printer)
+            objects = SFA3D_output_to_kitti_objects(detections)
         if cfg.generate_pickle:
             predictions.append(objects)
             if i % cfg.print_freq == 0:
@@ -162,7 +161,8 @@ def main():
             if visualizer.user_press == 27:
                 cv2.destroyAllWindows()
                 break
-    
+        torch.cuda.empty_cache()
+
     if cfg.generate_pickle:
         with open(cfg.save_path + '/sfa.pickle', 'wb') as f:
             pickle.dump(predictions, f)
@@ -173,7 +173,7 @@ def main():
         print("Samples Average Time",avg_time)
         print("FPS", FPS)
         height, width, channels = dataset[0][0].shape
-        outVideo = cv2.VideoWriter(cfg.save_path + '/end-to-end_demo.mp4', cv2.VideoWriter_fourcc(*'MP4V'), 10, (width, height))
+        outVideo = cv2.VideoWriter(cfg.save_path + '/'+ VIDEO_NAME+'.mp4', cv2.VideoWriter_fourcc(*'MP4V'), 10, (width, height))
         for img in img_list:
             outVideo.write(img)
 

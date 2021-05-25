@@ -84,10 +84,9 @@ class Stereo_Depth_Estimation:
     def stereo_to_disparity(self, imgL, imgR):
         imgL = imgL.float()
         imgR = imgR.float()
-        with torch.no_grad():
-            outputs = self.model(imgL, imgR)
-            disp_map = torch.squeeze(outputs[-1], 1)[0].float()
-            return disp_map
+        outputs = self.model(imgL, imgR)
+        disp_map = torch.squeeze(outputs[-1], 1)[0].float()
+        return disp_map
     
     def disparity_to_BEV(self, disp_map, calib_path, printer=True):
         # start = time_synchronized()
