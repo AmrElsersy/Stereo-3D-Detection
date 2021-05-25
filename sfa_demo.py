@@ -24,6 +24,7 @@ def parse_configs():
     parser.add_argument('--pretrained_sfa', type=str, default='checkpoints/sfa.pth', metavar='PATH')
     parser.add_argument('--generate_pickle', action='store_true', help='If true, generate pickle file.')
     parser.add_argument('--generate_video', action='store_true', help='If true, generate video.')
+    parser.add_argument('--with_spn', action='store_true', default=True, help='Allow using spn layer')
     parser.add_argument('--print_freq', type=int, default=5, help='print frequence')
 
     parser.add_argument('--saved_fn', type=str, default='fpn_resnet_18', metavar='FN', help='The name using for saving logs, models,...')
@@ -38,7 +39,7 @@ def parse_configs():
     parser.add_argument('--index', type=int, default=0, help="start index in dataset")
     parser.add_argument('--maxdisp', type=int, default=192,help='maxium disparity')
     parser.add_argument('--loss_weights', type=float, nargs='+', default=[0.25, 0.5, 1., 1.])
-    # parser.add_argument('--max_disparity', type=int, default=192)
+    parser.add_argument('--max_disparity', type=int, default=192)
     parser.add_argument('--pseudo', action='store_true')
 
     """ Anynet modal args """
@@ -59,7 +60,6 @@ def parse_configs():
     parser.add_argument('--slice', default=1, type=int)
 
     configs = edict(vars(parser.parse_args()))
-    configs.with_spn = True
     configs.pin_memory = True
     configs.distributed = False  # For testing on 1 GPU only
 
