@@ -44,6 +44,7 @@ class KittiDataset(Dataset):
         calibrationPath = os.path.join(self.rootCalibration, self.calibrationNames[index])
 
         image = self.read_image_cv2(imagePath)
+        # image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         pointcloud = self.read_pointcloud_bin(pointcloudPath)
         labels = self.read_labels_annotations(annotationPath)
         labels = self.convert_to_kitti_objects(labels)

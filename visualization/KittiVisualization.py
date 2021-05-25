@@ -176,7 +176,8 @@ class KittiVisualizer:
             label_point = (point[0], point[1]-20)
             # self.__draw_text_2D(f"{object.label}", (point[0], point[1]))
 
-        self.current_image = np.array(self.current_image) 
+        self.current_image = np.array(self.current_image)
+        self.current_image = cv2.cvtColor(self.current_image, cv2.COLOR_RGB2BGR) 
 
         if scene_2D_mode:
             return np.array(self.current_image) 

@@ -15,6 +15,7 @@ from Models.AnyNet.models.anynet import AnyNet
 import Models.SFA.config.kitti_config as cnf
 from Models.SFA.data_process.kitti_data_utils import get_filtered_lidar
 from Models.SFA.data_process.kitti_bev_utils import makeBEVMap
+from Models.SFA.utils.misc import time_synchronized
 
 from visualization.KittiUtils import *
 from visualization.BEVutils import *
@@ -40,38 +41,38 @@ class Stereo_Depth_Estimation:
         return model
     
     def preprocess(self, left_img, right_img):
-        # left_img = left_img.convert('RGB')
-        # right_img = right_img.convert('RGB')
-        left_img = Image.fromarray(np.uint8(left_img)).convert('RGB')
-        right_img = Image.fromarray(np.uint8(right_img)).convert('RGB')
-        w, h = left_img.size
+        normalize = {'mean': [0.485, 0.456, 0.406],
+                   'std': [0.229, 0.224, 0.225]}
+        left_img = torch.tensor(left_img, dtype=torch.float32, device=device).transpose(0, 1).T
+        right_img = torch.tensor(right_img, dtype=torch.float32, device=device).transpose(0, 1).T
 
-        left_img =  left_img.crop((w - 1200, h - 352, w, h))
-        right_img = right_img.crop((w - 1200, h - 352, w, h))
+        c, h, w = left_img.shape
+    
+        left_img =  transforms.functional.crop(left_img, h - 352,  w - 1200, h, w)
+        right_img =  transforms.functional.crop(right_img, h - 352,  w - 1200, h, w)
 
-        processed = preprocess.get_transform(augment=False)
-        left_img = processed(left_img).cuda()
-        right_img = processed(right_img).cuda()
-
+        left_img = transforms.Normalize(**normalize)(left_img)
+        right_img = transforms.Normalize(**normalize)(right_img)
         left_img = left_img.reshape(1, *left_img.size())
         right_img = right_img.reshape(1, *right_img.size())
+
         return left_img, right_img
 
     def predict(self, imgL, imgR, calib_path, printer=False):
         if printer:
-            start = time.time()
+            start = time_synchronized()
             imgL, imgR = self.preprocess(imgL, imgR)
-            end = time.time()
+            end = time_synchronized()
             print(f"Time for pre-processing: {1000 * (end - start)} ms")
 
-            start = time.time()
+            start = time_synchronized()
             disparity = self.stereo_to_disparity(imgL, imgR)
-            end = time.time()
+            end = time_synchronized()
             print(f"Time for stereo: {1000 * (end - start)} ms")
 
-            start = time.time()
+            start = time_synchronized()
             psuedo_pointcloud = self.disparity_to_BEV(disparity, calib_path)
-            end = time.time()
+            end = time_synchronized()
             print(f"Time for post processing: {1000 * (end - start)} ms")
         else:
             imgL, imgR = self.preprocess(imgL, imgR)
@@ -89,39 +90,39 @@ class Stereo_Depth_Estimation:
             return disp_map
     
     def disparity_to_BEV(self, disp_map, calib_path, printer=True):
-        # start = time.time()
+        # start = time_synchronized()
         if not calib_path == self.calib_path:
             self.calib = Calibration(calib_path)
             self.calib_path = calib_path
-        # end = time.time()
+        # end = time_synchronized()
         # if printer:
         #     print(f"Time for calibrating: {1000 * (end - start)} ms")
 
         # Disparity to point cloud convertor
-        # start = time.time()
+        # start = time_synchronized()
         lidar = self.gen_lidar(disp_map)
-        # end = time.time()
+        # end = time_synchronized()
         # if printer:
         #     print(f"\nTime for Disparity_LIDAR: {1000 * (end - start)} ms")
 
         # Sparsify point cloud convertor (Cuda = 2.5 ms instead of 15 ms)
-        # start = time.time()
+        # start = time_synchronized()
         sparse_points = self.gen_sparse_points(lidar)
-        # end = time.time()
+        # end = time_synchronized()
         # if printer:
         #     print(f"Time for Sparsify: {1000 * (end - start)} ms")
 
         # filter (no big diffrence between cuda & cpu .. both < 1 ms)
-        # start = time.time()
+        # start = time_synchronized()
         filtered = self.get_filtered_lidar(sparse_points, cnf.boundary)
-        # end = time.time()
+        # end = time_synchronized()
         # if printer:
         #     print(f"Time for Filter: {1000 * (end - start)} ms")
 
         # our implementation (2.5 ms)
-        # start = time.time()
+        # start = time_synchronized()
         bev = self.makeBEVMap(filtered)
-        # end = time.time()
+        # end = time_synchronized()
         # if printer:
         #     print(f"Time for BEV: {1000 * (end - start)} ms\n")
 

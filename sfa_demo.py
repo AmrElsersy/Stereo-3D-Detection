@@ -10,6 +10,7 @@ from visualization.KittiUtils import *
 from visualization.KittiDataset import KittiDataset
 from visualization.KittiDataset import KittiVideo
 from visualization.KittiVisualization import KittiVisualizer
+from Models.SFA.utils.misc import time_synchronized
 
 from utils_classes.SFA3D import SFA3D
 from utils_classes.stereo_depth_estimation import Stereo_Depth_Estimation
@@ -133,7 +134,7 @@ def main():
         torch.cuda.empty_cache()
         if cfg.generate_video:
             imgL, imgR, pointcloud, calib = dataset[i]
-            t = time.time()
+            t = time_synchronized()
             printer = ((i % cfg.print_freq) == 0)
         else:
             imgL, imgR, labels, calib = KITTI_stereo[i]
@@ -143,7 +144,6 @@ def main():
                 printer = True
             
         BEV = anynet_model.predict(imgL, imgR, calib.calib_path, printer=printer)
-        torch.cuda.empty_cache()
         detections = sfa_model.predict(BEV, printer=printer)
         objects = SFA3D_output_to_kitti_objects(detections)
 
@@ -154,7 +154,7 @@ def main():
         elif cfg.generate_video:
             if i == 0:
                 continue 
-            avg_time += (time.time() - t)
+            avg_time += (time_synchronized() - t)
             img_ = visualizer.visualize_scene_image(imgL, objects, calib)
             img_list.append(img_)
         else:
