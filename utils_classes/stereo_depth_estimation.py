@@ -121,7 +121,6 @@ class Stereo_Depth_Estimation:
         # our implementation (2.5 ms)
         # start = time.time()
         bev = self.makeBEVMap(filtered)
-        bev = torch.unsqueeze(bev, 0)
         # end = time.time()
         # if printer:
         #     print(f"Time for BEV: {1000 * (end - start)} ms\n")
@@ -166,18 +165,19 @@ class Stereo_Depth_Estimation:
         height_map    = torch.zeros((MAP_HEIGHT, MAP_WIDTH), dtype=torch.float32, device=pointcloud.device)
         intensity_map = torch.zeros((MAP_HEIGHT, MAP_WIDTH), dtype=torch.float32, device=pointcloud.device)  
         density_map   = torch.zeros((MAP_HEIGHT, MAP_WIDTH), dtype=torch.float32, device=pointcloud.device)
-        x_bev = torch.tensor( pointcloud[:, 0] * descretization_x, dtype=torch.long).to(device)
-        y_bev = torch.tensor((cnf.BEV_WIDTH/2) + pointcloud[:, 1] * descretization_y, dtype=torch.long).to(device)
+        x_bev = torch.tensor( pointcloud[:, 0] * descretization_x, dtype=torch.long, device=device)
+        y_bev = torch.tensor((cnf.BEV_WIDTH/2) + pointcloud[:, 1] * descretization_y, dtype=torch.long, device=device)
         z_bev = pointcloud[:, 2] # float32, cuda
                     
         xy_bev = torch.stack((x_bev, y_bev), dim=1)
 
         # counts.shape  (n_unique_elements,) .. counts is count of repeate times of each unique element (needed for density)
         xy_bev_unique, inverse_indices, counts = torch.unique(xy_bev, return_counts=True, return_inverse=True, dim=0)
+        
 
         perm = torch.arange(inverse_indices.size(0), dtype=inverse_indices.dtype, device=inverse_indices.device)
         inverse_indices, perm = inverse_indices.flip([0]), perm.flip([0])
-        indices = inverse_indices.new_empty(xy_bev_unique.size(0)).scatter_(0, inverse_indices, perm)
+        indices = inverse_indices.new_empty(xy_bev_unique.size(0), device=device).scatter_(0, inverse_indices, perm)
 
         # 1 or reflectivity if supported
         intensity_map[xy_bev_unique[:,0], xy_bev_unique[:,1]] = 1
@@ -194,6 +194,8 @@ class Stereo_Depth_Estimation:
         RGB_Map[2, :, :] = density_map[:cnf.BEV_HEIGHT, :cnf.BEV_WIDTH]  # r_map
         RGB_Map[1, :, :] = height_map[:cnf.BEV_HEIGHT, :cnf.BEV_WIDTH]  # g_map
         RGB_Map[0, :, :] = intensity_map[:cnf.BEV_HEIGHT, :cnf.BEV_WIDTH]  # b_map
+
+        RGB_Map = torch.unsqueeze(RGB_Map, 0)
 
         return RGB_Map
         
