@@ -5,10 +5,11 @@ import torch.utils.data as data
 import time
 import numpy as np
 from PIL import Image
-import torchvision.transforms as transforms
 
 from Models.AnyNet.preprocessing.generate_lidar import  Calibration
 from Models.AnyNet.models.anynet import AnyNet
+import Models.AnyNet.dataloader.preprocess as preprocess
+
 
 import Models.SFA.config.kitti_config as cnf
 from Models.SFA.utils.misc import time_synchronized
@@ -35,23 +36,32 @@ class Stereo_Depth_Estimation:
         model = nn.DataParallel(model).cuda()
         checkpoint = torch.load(self.cfgs.pretrained_anynet)
         model.load_state_dict(checkpoint['state_dict'], strict=False)
+        model.eval()
         return model
     
     def preprocess(self, left_img, right_img):
-        normalize = {'mean': [0.485, 0.456, 0.406],
-                   'std': [0.229, 0.224, 0.225]}
-        left_img = torch.tensor(left_img, dtype=torch.float32, device=device).transpose(0, 1).T
-        right_img = torch.tensor(right_img, dtype=torch.float32, device=device).transpose(0, 1).T
+        # normalize = {'mean': [0.485, 0.456, 0.406],
+        #            'std': [0.229, 0.224, 0.225]}
+        # left_img = torch.tensor(left_img, dtype=torch.float32, device=device).transpose(0, 1).T
+        # right_img = torch.tensor(right_img, dtype=torch.float32, device=device).transpose(0, 1).T
 
-        c, h, w = left_img.shape
+        # c, h, w = left_img.shape
     
-        left_img =  transforms.functional.crop(left_img, h - 352,  w - 1200, h, w)
-        right_img =  transforms.functional.crop(right_img, h - 352,  w - 1200, h, w)
+        # left_img =  transforms.functional.crop(left_img, h - 352,  w - 1200, h, w)
+        # right_img =  transforms.functional.crop(right_img, h - 352,  w - 1200, h, w)
 
-        left_img = transforms.Normalize(**normalize)(left_img)
-        right_img = transforms.Normalize(**normalize)(right_img)
-        left_img = left_img.reshape(1, *left_img.size())
-        right_img = right_img.reshape(1, *right_img.size())
+        # left_img = transforms.Normalize(**normalize)(left_img)
+        # right_img = transforms.Normalize(**normalize)(right_img)
+        w, h = left_img.size
+        left_img = left_img.crop((w - 1200, h - 352, w, h))
+        right_img = right_img.crop((w - 1200, h - 352, w, h))
+
+        processed = preprocess.get_transform(augment=False)
+        left_img = processed(left_img)
+        right_img = processed(right_img)
+        
+        left_img = left_img.unsqueeze(0)
+        right_img = right_img.unsqueeze(0)
 
         return left_img, right_img
 
