@@ -25,6 +25,7 @@ def parse_configs():
     parser.add_argument('--pretrained_sfa', type=str, default='checkpoints/sfa.pth', metavar='PATH')
     parser.add_argument('--generate_pickle', action='store_true', help='If true, generate pickle file.')
     parser.add_argument('--generate_video', action='store_true', help='If true, generate video.')
+    parser.add_argument('--profiling', action='store_true', help='put small limit for loop length')
     parser.add_argument('--with_spn', action='store_true', default=True, help='Allow using spn layer')
     parser.add_argument('--print_freq', type=int, default=5, help='print frequence')
 
@@ -108,7 +109,7 @@ def main():
     if cfg.generate_video:
         img_list = []
         VIDEO_ROOT_PATH = 'data/demo'
-        VIDEO_NAME = "2011_09_26_0106"
+        VIDEO_NAME = "2011_09_26_0059"
         # VIDEO_ROOT_PATH = '/home/ayman/FOE-Linux/Graduation_Project/KITTI/2011_09_26_drive_0001'
         dataset = KittiVideo(
                 imgL_dir=os.path.join(VIDEO_ROOT_PATH, VIDEO_NAME + "/image_02/data"),
@@ -129,7 +130,8 @@ def main():
         dataset_root = os.path.join(cfg.dataset_dir, "training")
         KITTI_stereo = KittiDataset(dataset_root, stereo_mode=True, mode='val')
         loop_length = len(KITTI_stereo)
-    
+        if cfg.profiling:
+            loop_length = 20
 
     for i in range(cfg.index, loop_length):
         if cfg.generate_video:
@@ -156,7 +158,7 @@ def main():
             avg_time += (time_synchronized() - t)
             img_ = visualizer.visualize_scene_image(imgL, objects, calib)
             img_list.append(img_)
-        else:
+        elif not cfg.profiling:
             visualizer.visualize_scene_image(imgL, objects, calib=calib, scene_2D_mode=False)
             if visualizer.user_press == 27:
                 cv2.destroyAllWindows()

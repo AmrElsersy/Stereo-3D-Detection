@@ -373,7 +373,7 @@ class KittiVisualizer:
     def __draw_text_2D(self, text, point, bbox_volume, color=(255, 255, 255), font_scale=0.4, thickness=2, font=cv2.FONT_HERSHEY_SIMPLEX):
         # cv2.putText(self.current_image, text, point, font, font_scale, color, thickness)
         draw = ImageDraw.Draw(self.current_image, mode='RGB')
-        font = ImageFont.truetype('arial.ttf', int(bbox_volume))
+        font = ImageFont.truetype('Extras/arial.ttf', int(bbox_volume))
         draw.text(xy=(point), 
             text=text,
             fill=color,

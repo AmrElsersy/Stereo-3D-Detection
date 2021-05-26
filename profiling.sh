@@ -1,3 +1,2 @@
-python -m cProfile -o output.txt sfa_demo.py --with_spn
-python profiling.py > profiling.txt
-
+python -m cProfile -o tools/output.txt demo.py --profiling
+python tools/profiling.py > profiling.txt

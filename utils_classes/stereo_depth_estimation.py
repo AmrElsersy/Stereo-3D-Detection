@@ -7,15 +7,12 @@ import numpy as np
 from PIL import Image
 import torchvision.transforms as transforms
 
-from Models.AnyNet.preprocessing.generate_lidar import project_disp_to_points, Calibration
-from Models.AnyNet.preprocessing.kitti_sparsify import pto_ang_map
-from Models.AnyNet.dataloader import preprocess
+from Models.AnyNet.preprocessing.generate_lidar import  Calibration
 from Models.AnyNet.models.anynet import AnyNet
 
 import Models.SFA.config.kitti_config as cnf
-from Models.SFA.data_process.kitti_data_utils import get_filtered_lidar
-from Models.SFA.data_process.kitti_bev_utils import makeBEVMap
 from Models.SFA.utils.misc import time_synchronized
+from Models.SFA.data_process.kitti_bev_utils import makeBEVMap
 
 from visualization.KittiUtils import *
 from visualization.BEVutils import *
@@ -99,14 +96,14 @@ class Stereo_Depth_Estimation:
 
         # Disparity to point cloud convertor
         # start = time_synchronized()
-        lidar = self.gen_lidar(disp_map)
+        lidar = self.gen_lidar(self.calib, disp_map, self.cfgs.max_high)
         # end = time_synchronized()
         # if printer:
         #     print(f"\nTime for Disparity_LIDAR: {1000 * (end - start)} ms")
 
         # Sparsify point cloud convertor (Cuda = 2.5 ms instead of 15 ms)
         # start = time_synchronized()
-        sparse_points = self.gen_sparse_points(lidar)
+        sparse_points = self.gen_sparse_points(lidar, H=self.cfgs.H, W=self.cfgs.W, slice=self.cfgs.slice)
         # end = time_synchronized()
         # if printer:
         #     print(f"Time for Sparsify: {1000 * (end - start)} ms")
@@ -127,7 +124,8 @@ class Stereo_Depth_Estimation:
 
         # numpy implementation (10 ms)
         # bev = makeBEVMap(filtered.cpu().numpy(), cnf.boundary)
-        # bev = torch.from_numpy(bev)
+        # bev = torch.from_numpy(bev).float().cuda()
+        # bev = torch.unsqueeze(bev, 0)
 
         # visualize
         # import cv2
@@ -136,22 +134,6 @@ class Stereo_Depth_Estimation:
         # cv2.waitKey(0)
         
         return bev
-
-    def gen_lidar(self, disp_map, max_high=1):
-        lidar = project_disp_to_points(self.calib, disp_map, max_high)
-        return lidar
-
-    def gen_sparse_points(self, pc_velo, H=64, W=512, D=700, slice=1):
-        valid_inds =    ((pc_velo[:, 0] < 120)    & \
-                        (pc_velo[:, 0] >= 0)     & \
-                        (pc_velo[:, 1] < 50)     & \
-                        (pc_velo[:, 1] >= -50)   & \
-                        (pc_velo[:, 2] < 1.5)    & \
-                        (pc_velo[:, 2] >= -2.5))
-        pc_velo = pc_velo[valid_inds]
-        sparse_points = pto_ang_map(pc_velo, H=H, W=W, slice=slice)
-        return sparse_points
-
 
     def makeBEVMap(self, pointcloud):
         # sort by z ... to get the maximum z when using unique 
@@ -216,3 +198,70 @@ class Stereo_Depth_Estimation:
         lidar[:, 2] = lidar[:, 2] - minZ
 
         return lidar
+
+    def gen_lidar(self, calib, disp, max_high):
+        mask = (disp > 0).reshape(-1).long()
+        disp = disp.clamp(min=0) + 0.1
+
+        baseline = 0.54
+        depth = calib.f_u * baseline / (disp) 
+        rows, cols = depth.shape
+
+        c, r = torch.meshgrid(torch.arange(cols, device=device), torch.arange(rows, device=device))
+        c = c.T.reshape(-1) * mask
+        r = r.T.reshape(-1) * mask
+        depth = depth.reshape(-1) * mask
+        points = torch.stack([c, r, depth])
+        points = points.T
+
+        # (5 - 10 ms)
+        cloud = calib.project_image_to_velo(points)
+
+        valid = (cloud[:, 0] >= 0) & (cloud[:, 2] < max_high)
+        return cloud[valid]
+
+    def gen_sparse_points(self, pc_velo, H=64, W=512, slice=1):
+        """
+        :param H: the row num of depth map, could be 64(default), 32, 16
+        :param W: the col num of depth map
+        :param slice: output every slice lines
+        """
+        valid_inds =    torch.where((pc_velo[:, 0] < 120)    & \
+                        (pc_velo[:, 0] >= 0)     & \
+                        (pc_velo[:, 1] < 50)     & \
+                        (pc_velo[:, 1] >= -50)   & \
+                        (pc_velo[:, 2] < 1.5)    & \
+                        (pc_velo[:, 2] >= -2.5))
+        
+        pc_velo = pc_velo[valid_inds]
+
+        def radians(x):
+            return x * 0.0174532925
+
+        dtheta = radians(0.4 * 64.0 / H)
+        dphi = radians(90.0 / W)
+
+        x, y, z = pc_velo[:, 0], pc_velo[:, 1], pc_velo[:, 2]
+
+        x_y = x**2 + y**2
+
+        d = torch.sqrt(x_y + z ** 2)
+        r = torch.sqrt(x_y) 
+        d = d.clamp(0.000001)
+        r = r.clamp(0.000001)
+        phi = radians(45.) - torch.arcsin(y / r)
+        phi_ = (phi / dphi).long()
+        phi_ = phi_.clamp(min=0, max=W - 1) 
+
+        theta = radians(2.) - torch.arcsin(z / d)
+        theta_ = (theta / dtheta).long()
+        theta_ = theta_.clamp(min=0, max= H - 1)
+
+        depth_map = - torch.ones((H, W, 3), device= pc_velo.device)
+        depth_map[theta_, phi_, 0] = x
+        depth_map[theta_, phi_, 1] = y
+        depth_map[theta_, phi_, 2] = z
+        depth_map = depth_map[0::slice, :, :]
+        depth_map = depth_map.reshape((-1, 3))
+        depth_map = depth_map[depth_map[:, 0] != -1.0]
+        return depth_map
