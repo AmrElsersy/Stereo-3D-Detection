@@ -24,15 +24,15 @@ parser.add_argument('--datatype', default='2015',
 parser.add_argument('--datapath', default=None, help='datapath')
 parser.add_argument('--epochs', type=int, default=110,
                     help='number of epochs to train')
-parser.add_argument('--train_bsize', type=int, default=16,
+parser.add_argument('--train_bsize', type=int, default=8,
                     help='batch size for training (default: 6)')
-parser.add_argument('--test_bsize', type=int, default=32,
+parser.add_argument('--test_bsize', type=int, default=8,
                     help='batch size for testing (default: 8)')
 parser.add_argument('--save_path', type=str, default='results/finetune_anynet',
                     help='the path of saving checkpoints and log')
 parser.add_argument('--resume', type=str, default=None,
                     help='resume path')
-parser.add_argument('--lr', type=float, default=1e-4,
+parser.add_argument('--lr', type=float, default=1e-3,
                     help='learning rate')   
 parser.add_argument('--with_spn', action='store_true', help='with spn network or not')
 parser.add_argument('--print_freq', type=int, default=25, help='print frequence')
@@ -53,13 +53,15 @@ parser.add_argument('--split_file', type=str, default=None)
 
 args = parser.parse_args()
 
-from Models.AnyNet.dataloader import KITTILoader as DA
 if args.datatype == '2015':
     from Models.AnyNet.dataloader import KITTIloader2015 as ls
+    from Models.AnyNet.dataloader import KITTILoader as DA
 elif args.datatype == '2012':
     from Models.AnyNet.dataloader import KITTIloader2012 as ls
+    from Models.AnyNet.dataloader import KITTILoader as DA
 elif args.datatype == 'other':
     from Models.AnyNet.dataloader import KITTI_dataset as ls
+    from Models.AnyNet.dataloader import KITTILoader3D as DA
     
 def main():
     global args
@@ -234,9 +236,9 @@ def error_estimating(disp, ground_truth, maxdisp=192):
     return err3.float() / mask.sum().float()
 
 def adjust_learning_rate(optimizer, epoch):
-    if epoch <= 110:
+    if epoch <= 35:
         lr = args.lr
-    elif epoch <= 150:
+    elif epoch <= 44:
         lr = args.lr * 0.1
     else:
         lr = args.lr * 0.01

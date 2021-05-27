@@ -61,8 +61,7 @@ class myImageFloder(data.Dataset):
             dataL = np.ascontiguousarray(dataL, dtype=np.float32)/256
             dataL = dataL[h - 352:h, w - 1200:w]
             dataL = torch.from_numpy(dataL).cuda()
-
-            return left_img.cpu(), right_img.cpu(), dataL.cpu()
+            
         else:
             left_img = torch.tensor(left_img, dtype=torch.float32, device=device).transpose(0, 1).T
             right_img = torch.tensor(right_img, dtype=torch.float32, device=device).transpose(0, 1).T
@@ -79,7 +78,7 @@ class myImageFloder(data.Dataset):
             dataL = dataL[h - 352:h, w - 1200:w]
             dataL = torch.from_numpy(dataL).cuda()
 
-            return left_img.cpu(), right_img.cpu(), dataL.cpu()
+        return left_img.cpu(), right_img.cpu(), dataL.cpu()
 
     def __len__(self):
         return len(self.left)

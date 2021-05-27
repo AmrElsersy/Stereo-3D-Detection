@@ -1,3 +1,4 @@
+from os import error
 import torch
 import torch.nn as nn
 import torch.nn.parallel
@@ -5,6 +6,7 @@ import torch.utils.data as data
 import time
 import numpy as np
 from PIL import Image
+import torchvision.transforms as transforms
 
 from Models.AnyNet.preprocessing.generate_lidar import  Calibration
 from Models.AnyNet.models.anynet import AnyNet
@@ -32,33 +34,38 @@ class Stereo_Depth_Estimation:
         self.calib = None
 
     def load_model(self):
-        model = AnyNet(self.cfgs)
-        model = nn.DataParallel(model).cuda()
-        checkpoint = torch.load(self.cfgs.pretrained_anynet)
-        model.load_state_dict(checkpoint['state_dict'], strict=False)
-        model.eval()
+        if os.path.isfile(self.cfgs.pretrained_anynet):
+            model = AnyNet(self.cfgs)
+            model = nn.DataParallel(model).cuda()
+            checkpoint = torch.load(self.cfgs.pretrained_anynet)
+            print("=> loaded anynet pretrained model '{}'".format(self.cfgs.pretrained_anynet))
+            model.load_state_dict(checkpoint['state_dict'], strict=False)
+            model.eval()
+        else:
+            print("No model at this location '{}'".format(self.cfgs.pretrained_anynet))
+            raise error
         return model
     
     def preprocess(self, left_img, right_img):
-        # normalize = {'mean': [0.485, 0.456, 0.406],
-        #            'std': [0.229, 0.224, 0.225]}
-        # left_img = torch.tensor(left_img, dtype=torch.float32, device=device).transpose(0, 1).T
-        # right_img = torch.tensor(right_img, dtype=torch.float32, device=device).transpose(0, 1).T
+        normalize = {'mean': [0.485, 0.456, 0.406],
+                   'std': [0.229, 0.224, 0.225]}
+        left_img = torch.tensor(left_img, dtype=torch.float32, device=device).transpose(0, 1).T
+        right_img = torch.tensor(right_img, dtype=torch.float32, device=device).transpose(0, 1).T
 
-        # c, h, w = left_img.shape
+        c, h, w = left_img.shape
     
-        # left_img =  transforms.functional.crop(left_img, h - 352,  w - 1200, h, w)
-        # right_img =  transforms.functional.crop(right_img, h - 352,  w - 1200, h, w)
+        left_img =  transforms.functional.crop(left_img, h - 352,  w - 1200, h, w)
+        right_img =  transforms.functional.crop(right_img, h - 352,  w - 1200, h, w)
 
-        # left_img = transforms.Normalize(**normalize)(left_img)
-        # right_img = transforms.Normalize(**normalize)(right_img)
-        w, h = left_img.size
-        left_img = left_img.crop((w - 1200, h - 352, w, h))
-        right_img = right_img.crop((w - 1200, h - 352, w, h))
+        left_img = transforms.Normalize(**normalize)(left_img)
+        right_img = transforms.Normalize(**normalize)(right_img)
+        # w, h = left_img.size
+        # left_img = left_img.crop((w - 1200, h - 352, w, h))
+        # right_img = right_img.crop((w - 1200, h - 352, w, h))
 
-        processed = preprocess.get_transform(augment=False)
-        left_img = processed(left_img)
-        right_img = processed(right_img)
+        # processed = preprocess.get_transform(augment=False)
+        # left_img = processed(left_img)
+        # right_img = processed(right_img)
         
         left_img = left_img.unsqueeze(0)
         right_img = right_img.unsqueeze(0)

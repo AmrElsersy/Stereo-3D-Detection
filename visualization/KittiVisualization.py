@@ -144,8 +144,8 @@ class KittiVisualizer:
     def visualize_scene_image(self, image, kitti_objects, calib, scene_2D_mode=True):
         
         # Preprocessing for viz.
-        # image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        # image = Image.fromarray(image)
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        image = Image.fromarray(image)
 
         self.current_image = image
 

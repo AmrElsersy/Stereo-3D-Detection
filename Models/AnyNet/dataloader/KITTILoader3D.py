@@ -1,10 +1,12 @@
 import random
+import torchvision.transforms as transforms
 
 import numpy as np
 from . import preprocess
 import torch
 import torch.utils.data as data
 from PIL import Image
+import cv2
 
 IMG_EXTENSIONS = [
     '.jpg', '.JPG', '.jpeg', '.JPEG',
@@ -17,12 +19,14 @@ def is_image_file(filename):
 
 
 def default_loader(path):
-    return Image.open(path).convert('RGB')
+    pil_image =  Image.open(path).convert('RGB')
+    return cv2.cvtColor(np.array(pil_image), cv2.COLOR_RGB2BGR)
 
 
 def disparity_loader(path):
     return np.load(path).astype(np.float32)
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 class myImageFloder(data.Dataset):
     def __init__(self, left, right, left_disparity, training, loader=default_loader, dploader=disparity_loader):
@@ -33,6 +37,7 @@ class myImageFloder(data.Dataset):
         self.loader = loader
         self.dploader = dploader
         self.training = training
+        self.normalize = {'mean': [0.485, 0.456, 0.406], 'std': [0.229, 0.224, 0.225]}
 
     def __getitem__(self, index):
         left = self.left[index]
@@ -44,38 +49,35 @@ class myImageFloder(data.Dataset):
         dataL = self.dploader(disp_L)
 
         if self.training:
-            w, h = left_img.size
-            th, tw = 256, 512
+            left_img = torch.tensor(left_img, dtype=torch.float32, device=device).transpose(0, 1).T
+            right_img = torch.tensor(right_img, dtype=torch.float32, device=device).transpose(0, 1).T
 
-            x1 = random.randint(0, w - tw)
-            y1 = random.randint(0, h - th)
+            c, h, w = left_img.shape
 
-            left_img = left_img.crop((x1, y1, x1 + tw, y1 + th))
-            right_img = right_img.crop((x1, y1, x1 + tw, y1 + th))
+            left_img =  transforms.functional.crop(left_img, h - 352,  w - 1200, h, w)
+            right_img =  transforms.functional.crop(right_img, h - 352,  w - 1200, h, w)
 
-            dataL = dataL[y1:y1 + th, x1:x1 + tw]
+            left_img = transforms.Normalize(**self.normalize)(left_img)
+            right_img = transforms.Normalize(**self.normalize)(right_img)
 
-            processed = preprocess.get_transform(augment=False)
-            left_img = processed(left_img)
-            right_img = processed(right_img)
-
-        else:
-            w, h = left_img.size
-
-            # left_img = left_img.crop((w - 1232, h - 368, w, h))
-            # right_img = right_img.crop((w - 1232, h - 368, w, h))
-            left_img = left_img.crop((w - 1200, h - 352, w, h))
-            right_img = right_img.crop((w - 1200, h - 352, w, h))
-
-            # dataL1 = dataL[h - 368:h, w - 1232:w]
             dataL = dataL[h - 352:h, w - 1200:w]
 
-            processed = preprocess.get_transform(augment=False)
-            left_img = processed(left_img)
-            right_img = processed(right_img)
+        else:
+            left_img = torch.tensor(left_img, dtype=torch.float32, device=device).transpose(0, 1).T
+            right_img = torch.tensor(right_img, dtype=torch.float32, device=device).transpose(0, 1).T
+
+            c, h, w = left_img.shape
+        
+            left_img =  transforms.functional.crop(left_img, h - 352,  w - 1200, h, w)
+            right_img =  transforms.functional.crop(right_img, h - 352,  w - 1200, h, w)
+
+            left_img = transforms.Normalize(**self.normalize)(left_img)
+            right_img = transforms.Normalize(**self.normalize)(right_img)
+
+            dataL = dataL[h - 352:h, w - 1200:w]
 
         dataL = torch.from_numpy(dataL).float()
-        return left_img, right_img, dataL
+        return left_img.cpu(), right_img.cpu(), dataL
 
     def __len__(self):
         return len(self.left)

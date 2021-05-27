@@ -43,7 +43,7 @@ class KittiDataset(Dataset):
         annotationPath = os.path.join(self.rootAnnotations, self.annotationNames[index])
         calibrationPath = os.path.join(self.rootCalibration, self.calibrationNames[index])
 
-        image = self.read_image_pil(imagePath)
+        image = self.read_image_cv2(imagePath)
         # image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         pointcloud = self.read_pointcloud_bin(pointcloudPath)
         labels = self.read_labels_annotations(annotationPath)
@@ -52,7 +52,7 @@ class KittiDataset(Dataset):
 
         if self.stereo_mode:
             rightImagesPath = os.path.join(self.rootRightImages, self.rightImagesNames[index])
-            rightImage = self.read_image_pil(rightImagesPath)
+            rightImage = self.read_image_cv2(rightImagesPath)
 
             return image, rightImage, labels, calib
 

@@ -21,7 +21,7 @@ def parse_configs():
     parser = argparse.ArgumentParser(description='Testing config for the Implementation')
     
     parser.add_argument('--save_path', type=str, default='results/',help='the path of saving video and pickle files')
-    parser.add_argument('--pretrained_anynet', type=str, default='checkpoints/anynet.tar',help='pretrained model path')
+    parser.add_argument('--pretrained_anynet', type=str, default='checkpoints/checkpoint.tar',help='pretrained model path')
     parser.add_argument('--pretrained_sfa', type=str, default='checkpoints/sfa.pth', metavar='PATH')
     parser.add_argument('--generate_pickle', action='store_true', help='If true, generate pickle file.')
     parser.add_argument('--generate_video', action='store_true', help='If true, generate video.')
