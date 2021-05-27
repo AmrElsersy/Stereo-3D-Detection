@@ -19,14 +19,11 @@ def is_image_file(filename):
 
 
 def default_loader(path):
-    pil_image =  Image.open(path).convert('RGB')
-    return cv2.cvtColor(np.array(pil_image), cv2.COLOR_RGB2BGR)
+    return cv2.imread(path, 1)
 
 
 def disparity_loader(path):
     return np.load(path).astype(np.float32)
-
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 class myImageFloder(data.Dataset):
     def __init__(self, left, right, left_disparity, training, loader=default_loader, dploader=disparity_loader):
@@ -49,8 +46,8 @@ class myImageFloder(data.Dataset):
         dataL = self.dploader(disp_L)
 
         if self.training:
-            left_img = torch.tensor(left_img, dtype=torch.float32, device=device).transpose(0, 1).T
-            right_img = torch.tensor(right_img, dtype=torch.float32, device=device).transpose(0, 1).T
+            left_img = torch.tensor(left_img, dtype=torch.float32).transpose(0, 1).T
+            right_img = torch.tensor(right_img, dtype=torch.float32).transpose(0, 1).T
 
             c, h, w = left_img.shape
 
@@ -63,8 +60,8 @@ class myImageFloder(data.Dataset):
             dataL = dataL[h - 352:h, w - 1200:w]
 
         else:
-            left_img = torch.tensor(left_img, dtype=torch.float32, device=device).transpose(0, 1).T
-            right_img = torch.tensor(right_img, dtype=torch.float32, device=device).transpose(0, 1).T
+            left_img = torch.tensor(left_img, dtype=torch.float32).transpose(0, 1).T
+            right_img = torch.tensor(right_img, dtype=torch.float32).transpose(0, 1).T
 
             c, h, w = left_img.shape
         
@@ -77,7 +74,7 @@ class myImageFloder(data.Dataset):
             dataL = dataL[h - 352:h, w - 1200:w]
 
         dataL = torch.from_numpy(dataL).float()
-        return left_img.cpu(), right_img.cpu(), dataL
+        return left_img, right_img, dataL
 
     def __len__(self):
         return len(self.left)

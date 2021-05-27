@@ -75,8 +75,7 @@ class KittiDataset(Dataset):
         return image
 
     def read_image_cv2(self, path):
-        pil_image = self.read_image_pil(path)
-        return self.convert_pil_cv2(pil_image)
+        return cv2.imread(path, 1)
     
     def convert_pil_cv2(self, pil_image):
         return cv2.cvtColor(np.array(pil_image), cv2.COLOR_RGB2BGR)
