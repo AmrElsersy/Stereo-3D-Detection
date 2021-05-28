@@ -215,6 +215,7 @@ def test(dataloader, model, log, epoch=-1):
         # info_str = '\t'.join(['Stage {} = {:.4f}({:.4f})'.format(x, D1s[x].val, D1s[x].avg) for x in range(stages)])
         # log.info('[{}/{}] {}'.format(
         #     batch_idx, length_loader, info_str))
+        torch.cuda.empty_cache()
 
     info_str = ', '.join(['Stage {}={:.3f}%'.format(x, D1s[x].avg * 100) for x in range(stages)])
     Error3 = np.asarray(Error["3"], dtype=np.float32)
@@ -236,9 +237,9 @@ def error_estimating(disp, ground_truth, maxdisp=192):
     return err3.float() / mask.sum().float()
 
 def adjust_learning_rate(optimizer, epoch):
-    if epoch <= 35:
+    if epoch <= 32:
         lr = args.lr
-    elif epoch <= 44:
+    elif epoch <= 55:
         lr = args.lr * 0.1
     else:
         lr = args.lr * 0.01
