@@ -32,7 +32,7 @@ NOTE: this installlation is compatible with linux only, nearly will support wind
    	
 	```shell script
 		conda install -c pytorch torchvision=0.8.2
-		pip install PyQt5 vtk tqdm matplotlib==3.3.3 easydict==1.9
+		pip install PyQt5 vtk tqdm matplotlib==3.3.3 easydict==1.9 tensorboard==2.2.1
 		pip install mayavi
 		conda install scikit-image shapely
 		conda install -c conda-forge opencv

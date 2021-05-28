@@ -20,7 +20,7 @@ from ..utils.torch_utils import to_cpu, _sigmoid
 
 def _gather_feat(feat, ind, mask=None):
     dim = feat.size(2)
-    ind = ind.unsqueeze(2).expand(ind.size(0), ind.size(1), dim)
+    ind = ind.unsqueeze(2).expand(ind.size(0), ind.size(1), dim).cuda()
     feat = feat.gather(1, ind)
     if mask is not None:
         mask = mask.unsqueeze(2).expand_as(feat)
@@ -43,13 +43,12 @@ def _neg_loss(pred, gt, alpha=2, beta=4):
         pred (batch x c x h x w)
         gt_regr (batch x c x h x w)
     '''
-    pos_inds = gt.eq(1).float()
-    neg_inds = gt.lt(1).float()
+    pos_inds = gt.eq(1).cuda().float()
+    neg_inds = gt.lt(1).cuda().float()
 
-    neg_weights = torch.pow(1 - gt, beta)
+    neg_weights = torch.pow(1 - gt, beta).cuda()
 
     loss = 0
-
     pos_loss = torch.log(pred) * torch.pow(1 - pred, alpha) * pos_inds
     neg_loss = torch.log(1 - pred) * torch.pow(pred, alpha) * neg_weights * neg_inds
 
@@ -81,7 +80,8 @@ class L1Loss(nn.Module):
 
     def forward(self, output, mask, ind, target):
         pred = _transpose_and_gather_feat(output, ind)
-        mask = mask.unsqueeze(2).expand_as(pred).float()
+        mask = mask.unsqueeze(2).expand_as(pred).float().cuda()
+        target=target.cuda()
         loss = F.l1_loss(pred * mask, target * mask, size_average=False)
         loss = loss / (mask.sum() + 1e-4)
         return loss
@@ -102,7 +102,8 @@ class L1Loss_Balanced(nn.Module):
 
     def forward(self, output, mask, ind, target):
         pred = _transpose_and_gather_feat(output, ind)
-        mask = mask.unsqueeze(2).expand_as(pred).float()
+        mask = mask.unsqueeze(2).expand_as(pred).float().cuda()
+        target=target.cuda()
         loss = self.balanced_l1_loss(pred * mask, target * mask)
         loss = loss.sum() / (mask.sum() + 1e-4)
 

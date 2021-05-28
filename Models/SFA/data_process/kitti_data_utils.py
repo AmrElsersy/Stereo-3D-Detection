@@ -12,6 +12,7 @@ from __future__ import print_function
 import os
 import sys
 
+import torch
 import numpy as np
 import cv2
 
@@ -229,6 +230,7 @@ def gen_hm_radius(heatmap, center, radius, k=1):
 
 
 def get_filtered_lidar(lidar, boundary, labels=None):
+    lidar = torch.tensor(lidar)
     minX = boundary['minX']
     maxX = boundary['maxX']
     minY = boundary['minY']
@@ -237,7 +239,7 @@ def get_filtered_lidar(lidar, boundary, labels=None):
     maxZ = boundary['maxZ']
 
     # Remove the point out of range x,y,z
-    mask = np.where((lidar[:, 0] >= minX) & (lidar[:, 0] <= maxX) &
+    mask = torch.where((lidar[:, 0] >= minX) & (lidar[:, 0] <= maxX) &
                     (lidar[:, 1] >= minY) & (lidar[:, 1] <= maxY) &
                     (lidar[:, 2] >= minZ) & (lidar[:, 2] <= maxZ))
     lidar = lidar[mask]
@@ -247,11 +249,11 @@ def get_filtered_lidar(lidar, boundary, labels=None):
         label_x = (labels[:, 1] >= minX) & (labels[:, 1] < maxX)
         label_y = (labels[:, 2] >= minY) & (labels[:, 2] < maxY)
         label_z = (labels[:, 3] >= minZ) & (labels[:, 3] < maxZ)
-        mask_label = label_x & label_y & label_z
+        mask_label = (label_x & label_y & label_z)
         labels = labels[mask_label]
-        return lidar, labels
+        return lidar.numpy(), labels
     else:
-        return lidar
+        return lidar.numpy()
 
 
 def box3d_corners_to_center(box3d_corner):

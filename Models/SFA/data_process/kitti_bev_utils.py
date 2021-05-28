@@ -12,44 +12,56 @@ import numpy as np
 import torch
 
 from ..config import kitti_config as cnf
+from visualization.BEVutils import *
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-def makeBEVMap(PointCloud_, boundary):
-    Height = cnf.BEV_HEIGHT + 1
-    Width = cnf.BEV_WIDTH + 1
+def makeBEVMap(pointcloud, boundary):
+    # sort by z ... to get the maximum z when using unique 
+    # (as unique function gets the first unique elemnt so we attatch it with max value)
+    pointcloud = torch.tensor(pointcloud)
+    z_indices = torch.argsort(pointcloud[:,2])
+    pointcloud = pointcloud[z_indices]
 
-    # Discretize Feature Map
-    PointCloud = np.copy(PointCloud_)
-    PointCloud[:, 0] = np.int_(np.floor(PointCloud[:, 0] / cnf.DISCRETIZATION))
-    PointCloud[:, 1] = np.int_(np.floor(PointCloud[:, 1] / cnf.DISCRETIZATION) + Width / 2)
+    MAP_HEIGHT = cnf.BEV_HEIGHT + 1
+    MAP_WIDTH  = cnf.BEV_WIDTH  + 1
 
-    # sort-3times
-    sorted_indices = np.lexsort((-PointCloud[:, 2], PointCloud[:, 1], PointCloud[:, 0]))
-    PointCloud = PointCloud[sorted_indices]
-    _, unique_indices, unique_counts = np.unique(PointCloud[:, 0:2], axis=0, return_index=True, return_counts=True)
-    # print(unique_counts.shape, unique_indices.shape, unique_counts, unique_indices)
-    PointCloud_top = PointCloud[unique_indices]
+    height_map    = torch.zeros((MAP_HEIGHT, MAP_WIDTH), dtype=torch.float32)
+    intensity_map = torch.zeros((MAP_HEIGHT, MAP_WIDTH), dtype=torch.float32)  
+    density_map   = torch.zeros((MAP_HEIGHT, MAP_WIDTH), dtype=torch.float32)
+    x_bev = torch.tensor( pointcloud[:, 0] * descretization_x, dtype=torch.long)
+    y_bev = torch.tensor((cnf.BEV_WIDTH/2) + pointcloud[:, 1] * descretization_y, dtype=torch.long)
+    z_bev = pointcloud[:, 2] # float32, cuda
+                
+    xy_bev = torch.stack((x_bev, y_bev), dim=1)
 
-    # Height Map, Intensity Map & Density Map
-    heightMap = np.zeros((Height, Width))
-    intensityMap = np.zeros((Height, Width))
-    densityMap = np.zeros((Height, Width))
+    # counts.shape  (n_unique_elements,) .. counts is count of repeate times of each unique element (needed for density)
+    xy_bev_unique, inverse_indices, counts = torch.unique(xy_bev, return_counts=True, return_inverse=True, dim=0)
+    
 
-    # some important problem is image coordinate is (y,x), not (x,y)
-    max_height = float(np.abs(boundary['maxZ'] - boundary['minZ']))
-    heightMap[np.int_(PointCloud_top[:, 0]), np.int_(PointCloud_top[:, 1])] = PointCloud_top[:, 2] / max_height
+    perm = torch.arange(inverse_indices.size(0), dtype=inverse_indices.dtype)
+    inverse_indices, perm = inverse_indices.flip([0]), perm.flip([0])
+    indices = inverse_indices.new_empty(xy_bev_unique.size(0)).scatter_(0, inverse_indices, perm)
 
-    normalizedCounts = np.minimum(1.0, np.log(unique_counts + 1) / np.log(64))
-    intensityMap[np.int_(PointCloud_top[:, 0]), np.int_(PointCloud_top[:, 1])] = 1
-    densityMap[np.int_(PointCloud_top[:, 0]), np.int_(PointCloud_top[:, 1])] = normalizedCounts
+    # 1 or reflectivity if supported
+    intensity_map[xy_bev_unique[:,0], xy_bev_unique[:,1]] = 1
 
-    RGB_Map = np.zeros((3, cnf.BEV_HEIGHT, cnf.BEV_WIDTH))
-    RGB_Map[2, :, :] = densityMap[:cnf.BEV_HEIGHT, :cnf.BEV_WIDTH]  # r_map
-    RGB_Map[1, :, :] = heightMap[:cnf.BEV_HEIGHT, :cnf.BEV_WIDTH]  # g_map
-    RGB_Map[0, :, :] = intensityMap[:cnf.BEV_HEIGHT, :cnf.BEV_WIDTH]  # b_map
+    # points are sorted by z, so unique indices (first found indices) is the max z
+    height_map[xy_bev_unique[:,0], xy_bev_unique[:,1]] = z_bev[indices] / max_height
 
-    return RGB_Map
+    density_map[xy_bev_unique[:,0], xy_bev_unique[:,1]] = torch.minimum(
+        torch.ones_like(counts), 
+        torch.log(counts.float() + 1)/ np.log(64)
+        )
 
+    RGB_Map = torch.zeros((3, cnf.BEV_HEIGHT, cnf.BEV_WIDTH), dtype=torch.float32)
+    RGB_Map[2, :, :] = density_map[:cnf.BEV_HEIGHT, :cnf.BEV_WIDTH]  # r_map
+    RGB_Map[1, :, :] = height_map[:cnf.BEV_HEIGHT, :cnf.BEV_WIDTH]  # g_map
+    RGB_Map[0, :, :] = intensity_map[:cnf.BEV_HEIGHT, :cnf.BEV_WIDTH]  # b_map
+
+    # RGB_Map = torch.unsqueeze(RGB_Map, 0)
+    # print(RGB_Map.shape)
+    return RGB_Map.numpy()
 
 # bev image coordinates format
 def get_corners(x, y, w, l, yaw):

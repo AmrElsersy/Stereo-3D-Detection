@@ -25,12 +25,6 @@ import torch.multiprocessing as mp
 import torch.utils.data.distributed
 from tqdm import tqdm
 
-src_dir = os.path.dirname(os.path.realpath(__file__))
-while not src_dir.endswith("sfa"):
-    src_dir = os.path.dirname(src_dir)
-if src_dir not in sys.path:
-    sys.path.append(src_dir)
-
 from Models.SFA.data_process.kitti_dataloader import create_train_dataloader, create_val_dataloader
 from Models.SFA.models.model_utils import create_model, make_data_parallel, get_num_parameters
 from Models.SFA.utils.train_utils import create_optimizer, create_lr_scheduler, get_saved_state, save_checkpoint
@@ -39,7 +33,6 @@ from Models.SFA.utils.misc import AverageMeter, ProgressMeter
 from Models.SFA.utils.logger import Logger
 from Models.SFA.config.train_config import parse_train_configs
 from Models.SFA.losses.losses import Compute_Loss
-
 
 from Models.SFA.utils.evaluation_utils import decode, post_processing, draw_predictions, convert_det_to_real_values
 from Models.SFA.utils.torch_utils import _sigmoid

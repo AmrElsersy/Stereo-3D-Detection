@@ -22,14 +22,14 @@ def parse_train_configs():
     parser.add_argument('--saved_fn', type=str, default='fpn_resnet_18', metavar='FN',
                         help='The name using for saving logs, models,...')
 
-    parser.add_argument('--root-dir', type=str, default='../', metavar='PATH',
+    parser.add_argument('--root-dir', type=str, default='./', metavar='PATH',
                         help='The ROOT working directory')
     ####################################################################
     ##############     Model configs            ########################
     ####################################################################
     parser.add_argument('--arch', type=str, default='fpn_resnet_18', metavar='ARCH',
                         help='The name of the model architecture')
-    parser.add_argument('--pretrained_path', type=str, default='../checkpoints/fpn_resnet_18/Model_fpn_resnet_18_epoch_10.pth', metavar='PATH',
+    parser.add_argument('--pretrained_path', type=str, default='./checkpoints/sfa.pth', metavar='PATH',
                         help='the path of the pretrained checkpoint')
 
     ####################################################################
@@ -145,9 +145,9 @@ def parse_train_configs():
     ####################################################################
     ############## Dataset, logs, Checkpoints dir ######################
     ####################################################################
-    configs.dataset_dir = os.path.join(configs.root_dir, '../' , 'data', 'kitti')
-    configs.checkpoints_dir = os.path.join(configs.root_dir, 'checkpoints', configs.saved_fn)
-    configs.logs_dir = os.path.join(configs.root_dir, 'logs', configs.saved_fn)
+    configs.dataset_dir = os.path.join('data', 'kitti')
+    configs.checkpoints_dir = os.path.join('checkpoints')
+    configs.logs_dir = os.path.join('results')
 
     if not os.path.isdir(configs.checkpoints_dir):
         os.makedirs(configs.checkpoints_dir)
