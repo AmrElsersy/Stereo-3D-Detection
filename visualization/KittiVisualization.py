@@ -387,7 +387,7 @@ class KittiVisualizer:
             class_id = class_name_to_label(class_id)
 
         colors = [
-            (128,128,128),
+            (168, 50, 162),
             (0,205,255),
             (255,255,51),
         ]
