@@ -23,6 +23,7 @@ def parse_configs():
     parser.add_argument('--save_path', type=str, default='results/',help='the path of saving video and pickle files')
     parser.add_argument('--pretrained_anynet', type=str, default='checkpoints/checkpoint.tar',help='pretrained model path')
     parser.add_argument('--pretrained_sfa', type=str, default='checkpoints/sfa.pth', metavar='PATH')
+    parser.add_argument('--data', type=str, default='kitti')
     parser.add_argument('--generate_pickle', action='store_true', help='If true, generate pickle file.')
     parser.add_argument('--generate_video', action='store_true', help='If true, generate video.')
     parser.add_argument('--profiling', action='store_true', help='put small limit for loop length')
@@ -88,7 +89,7 @@ def parse_configs():
 
     # #### set it to empty as this file is inside the root of the project ####
     configs.root_dir = ''
-    configs.dataset_dir = os.path.join(configs.root_dir, 'data', 'kitti')
+    configs.dataset_dir = os.path.join(configs.root_dir, 'data', configs.data)
     # # An-Paths
     # configs.dataset_dir = '/home/ayman/FOE-Linux/Graduation_Project/KITTI'
 
@@ -108,7 +109,7 @@ def main():
 
     if cfg.generate_video:
         img_list = []
-        VIDEO_ROOT_PATH = 'data/demo'
+        VIDEO_ROOT_PATH = 'data/' + 'demo'
         VIDEO_NAME = "2011_09_26_0059"
         # VIDEO_ROOT_PATH = '/home/ayman/FOE-Linux/Graduation_Project/KITTI/2011_09_26_drive_0001'
         dataset = KittiVideo(

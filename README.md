@@ -59,6 +59,28 @@ Stereo-3D-Detection
 ├── .
 ├── .
 ```
+
+To Add your own Dataset :
+```
+Stereo-3D-Detection
+├── checkpoints
+├── data
+│   ├── <dataset folder>
+│   │   │── training
+│   │   │   ├──calib & velodyne & label_2 & image_2 & image_3
+│   │   │── testing
+├── Models
+├── utils_classes
+├── .
+├── .
+```
+In terminal:
+
+```shell script
+python demo.py --data <folder_name>
+
+```
+
 ## Checkpoints Preparation
 
 You can download all checkpoints from this [Drive](https://drive.google.com/drive/folders/1QOAIldySCMdQuJ99SOOAmz-ckgPo-XgM?usp=sharing)
@@ -79,22 +101,23 @@ Stereo-3D-Detection
 
 - To go from stereo to 3D object detection
 ```shell script
-python sfa_demo.py
+python demo.py
 ```
 Note: you can navigate between images by pressing any key, and to exit press ESC
 
-- To generate demo video, be sure you adjusted the path in [`sfa_demo.py`](./sfa_demo.py) then run:
+- To generate demo video, be sure you adjusted the path in [`demo.py`](./demo.py) then run:
 ```shell script
-python sfa_demo.py --generate_video
+python demo.py --generate_video
 ```
 
 ## Evaluation
 
 1. you need To generate predictions pickle file by running:
 ```shell script
-python sfa_demo.py --generate_pickle
+python demo.py --generate_pickle
 ```
-2. Then, to evaluate the resulted prediction run [`evaluation.py`](./evaluation.py)
+
+2. Then, to evaluate the resulted prediction run [`demo_eval.py`](./demo_eval.py)
 ```shell script
-python evaluation.py
+python demo_eval.py
 ```
