@@ -47,7 +47,6 @@ class KittiDataset(Dataset):
 
         if bev_saving:
             self.dataset_dir = '../' + self.dataset_dir
-        self.image_dir = os.path.join(self.dataset_dir, sub_folder, "image_2")
         self.lidar_dir = os.path.join(self.dataset_dir, sub_folder, "velodyne")
         self.calib_dir = os.path.join(self.dataset_dir, sub_folder, "calib")
         self.label_dir = os.path.join(self.dataset_dir, sub_folder, "label_2")
@@ -94,7 +93,6 @@ class KittiDataset(Dataset):
     def save_bev(self, index):
         """Load images and targets for the training and validation phase"""
         sample_id = int(self.sample_id_list[index])
-        img_path = os.path.join(self.image_dir, '{:06d}.png'.format(sample_id))
         lidarData = self.get_lidar(sample_id)
         calib = self.get_calib(sample_id)
         labels, has_labels = self.get_label(sample_id)
@@ -165,7 +163,6 @@ class KittiDataset(Dataset):
     def load_img_with_targets(self, index):
         """Load images and targets for the training and validation phase"""
         sample_id = int(self.sample_id_list[index])
-        img_path = os.path.join(self.image_dir, '{:06d}.png'.format(sample_id))
         lidarData = self.get_lidar(sample_id)
         calib = self.get_calib(sample_id)
         labels, has_labels = self.get_label(sample_id)
@@ -189,7 +186,6 @@ class KittiDataset(Dataset):
         targets = self.build_targets(labels, hflipped)
 
         metadatas = {
-            'img_path': img_path,
             'hflipped': hflipped
         }
 
@@ -209,7 +205,7 @@ class KittiDataset(Dataset):
     def get_lidar(self, idx):
         lidar_file = os.path.join(self.lidar_dir, '{:06d}.bin'.format(idx))
         # assert os.path.isfile(lidar_file)
-        return np.fromfile(lidar_file, dtype=np.float32).reshape(-1, 4)
+        return np.fromfile(lidar_file, dtype=np.float32).reshape(-1, 3)
 
     def get_label(self, idx):
         labels = []
@@ -353,8 +349,8 @@ class KittiDataset(Dataset):
 
 if __name__ == '__main__':
     from easydict import EasyDict as edict
-    from data_process.transformation import OneOf, Random_Scaling, Random_Rotation, lidar_to_camera_box
-    from utils.visualization_utils import merge_rgb_to_bev, show_rgb_image_with_boxes
+    from .transformation import OneOf, Random_Scaling, Random_Rotation, lidar_to_camera_box
+    from ..utils.visualization_utils import merge_rgb_to_bev, show_rgb_image_with_boxes
 
     configs = edict()
     configs.distributed = False  # For testing
