@@ -7,9 +7,11 @@ import torch
 import pickle
 
 from visualization.KittiUtils import *
+from visualization.evaluation import *
 from visualization.KittiDataset import KittiDataset
 from visualization.KittiDataset import KittiVideo
 from visualization.KittiVisualization import KittiVisualizer
+
 from Models.SFA.utils.misc import time_synchronized
 
 from utils_classes.SFA3D import SFA3D
@@ -21,10 +23,10 @@ def parse_configs():
     parser = argparse.ArgumentParser(description='Testing config for the Implementation')
     
     parser.add_argument('--save_path', type=str, default='results/',help='the path of saving video and pickle files')
-    parser.add_argument('--pretrained_anynet', type=str, default='checkpoints/checkpoint.tar',help='pretrained model path')
-    parser.add_argument('--pretrained_sfa', type=str, default='checkpoints/sfa.pth', metavar='PATH')
+    parser.add_argument('--pretrained_anynet', type=str, default='checkpoints/anynet.tar',help='pretrained model path')
+    parser.add_argument('--pretrained_sfa', type=str, default='checkpoints/sfa10.pth', metavar='PATH')
     parser.add_argument('--data', type=str, default='kitti')
-    parser.add_argument('--generate_pickle', action='store_true', help='If true, generate pickle file.')
+    parser.add_argument('--evaluate', action='store_true', help='If true, generate pickle file.')
     parser.add_argument('--generate_video', action='store_true', help='If true, generate video.')
     parser.add_argument('--profiling', action='store_true', help='put small limit for loop length')
     parser.add_argument('--with_spn', action='store_true', default=True, help='Allow using spn layer')
@@ -88,8 +90,7 @@ def parse_configs():
     configs.num_input_features = 4
 
     # #### set it to empty as this file is inside the root of the project ####
-    configs.root_dir = ''
-    configs.dataset_dir = os.path.join(configs.root_dir, 'data', configs.data)
+    configs.dataset_dir = os.path.join('data', configs.data)
     # # An-Paths
     # configs.dataset_dir = '/home/ayman/FOE-Linux/Graduation_Project/KITTI'
 
@@ -110,7 +111,7 @@ def main():
     if cfg.generate_video:
         img_list = []
         VIDEO_ROOT_PATH = 'data/' + 'demo'
-        VIDEO_NAME = "2011_09_26_0059"
+        VIDEO_NAME = "2011_09_26_0106"
         # VIDEO_ROOT_PATH = '/home/ayman/FOE-Linux/Graduation_Project/KITTI/2011_09_26_drive_0001'
         dataset = KittiVideo(
                 imgL_dir=os.path.join(VIDEO_ROOT_PATH, VIDEO_NAME + "/image_02/data"),
@@ -167,8 +168,36 @@ def main():
         torch.cuda.empty_cache()
 
     if cfg.generate_pickle:
-        with open(cfg.save_path + '/sfa.pickle', 'wb') as f:
-            pickle.dump(predictions, f)
+        evaluations = [
+            Evaluation(iou_threshold=0.5, evaluate_class='Car',        mode=EvalMode.IOU_3D),
+            Evaluation(iou_threshold=0.7, evaluate_class='Car',        mode=EvalMode.IOU_3D),
+            Evaluation(iou_threshold=0.5, evaluate_class='Car',        mode=EvalMode.IOU_BEV),
+            Evaluation(iou_threshold=0.7, evaluate_class='Car',        mode=EvalMode.IOU_BEV)
+            # Evaluation(iou_threshold=0.5, evaluate_class='Pedestrian', mode=EvalMode.IOU_3D),
+            # Evaluation(iou_threshold=0.5, evaluate_class='Pedestrian', mode=EvalMode.IOU_BEV),
+            # Evaluation(iou_threshold=0.5, evaluate_class='Cyclist',    mode=EvalMode.IOU_3D),
+            # Evaluation(iou_threshold=0.5, evaluate_class='Cyclist',    mode=EvalMode.IOU_BEV),
+        ]
+
+        mAP_strings = []
+        for i in range(2):
+            enable_filter = False
+            if i == 1:
+                enable_filter = True
+
+            for evaluation in evaluations:
+                mAP = evaluate(evaluation, predictions, enable_filter)
+                mode = '3D' if evaluation.mode == EvalMode.IOU_3D else 'BEV'
+                has_filter = 'filter = 0.3' if enable_filter else 'no filter'
+                mAP_string = f'mAP = {str(mAP.item())}, {evaluation.evaluate_class_name}, IOU = {str(evaluation.iou_threshold)}, {mode}, {has_filter}'
+                print(mAP_string)
+                mAP_strings.append(mAP_string)
+                
+        file = open(os.path.join(cfg.save_path, 'sfa_mAP.txt'), 'w')
+        one_mAP_string = '\n'.join([string for string in mAP_strings])
+        file.write(one_mAP_string)
+        file.close()
+        print('Saved @ File: ', cfg.save_path + '/demo_mAP.txt')
 
     elif cfg.generate_video:
         avg_time = avg_time / (loop_length-1)

@@ -65,7 +65,7 @@ class KittiDataset(Dataset):
         # read .bin and convert to tensor
         pointCloud = np.fromfile(path, dtype=np.float32)
         # reshape to get each point
-        pointCloud = pointCloud.reshape(-1, 4)
+        pointCloud = pointCloud.reshape(-1, 3)
 
         return pointCloud
 

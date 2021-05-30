@@ -188,17 +188,13 @@ class Evaluation:
         average_precision = torch.trapz(precisions, recalls)
         return average_precision
 
-def evaluate(args, evaluation, enable_filter = False):
+def evaluate(evaluation, predictions, enable_filter = False):
 
     global visualizer
 
     dataset_root = os.path.join('data', 'kitti', 'training')
     KITTI = KittiDataset(dataset_root, mode='val')
-
-    path = args.path
-    with open(path, 'rb') as f:
-        predictions = pickle.load(f)
-
+  
     # ======================================================================
     for i in range(len(KITTI)):
         image, pointcloud, labels, calib = KITTI[i]
@@ -230,41 +226,3 @@ def evaluate(args, evaluation, enable_filter = False):
     print('='*60)
     # print(f'mAP = {mAP}')
     return mAP
-
-
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--path', type=str, default='results/sfa.pickle', help='path of loading 3D bboxes predicitons')
-    parser.add_argument('--save_path', type=str, default='results/sfa_mAP.txt', help='file path to save the evaluation results')
-    args = parser.parse_args()
-
-    evaluations = [
-        Evaluation(iou_threshold=0.5, evaluate_class='Car',        mode=EvalMode.IOU_3D),
-        Evaluation(iou_threshold=0.7, evaluate_class='Car',        mode=EvalMode.IOU_3D),
-        Evaluation(iou_threshold=0.5, evaluate_class='Car',        mode=EvalMode.IOU_BEV),
-        Evaluation(iou_threshold=0.7, evaluate_class='Car',        mode=EvalMode.IOU_BEV)
-        # Evaluation(iou_threshold=0.5, evaluate_class='Pedestrian', mode=EvalMode.IOU_3D),
-        # Evaluation(iou_threshold=0.5, evaluate_class='Pedestrian', mode=EvalMode.IOU_BEV),
-        # Evaluation(iou_threshold=0.5, evaluate_class='Cyclist',    mode=EvalMode.IOU_3D),
-        # Evaluation(iou_threshold=0.5, evaluate_class='Cyclist',    mode=EvalMode.IOU_BEV),
-    ]
-
-    mAP_strings = []
-    for i in range(2):
-        enable_filter = False
-        if i == 1:
-            enable_filter = True
-
-        for evaluation in evaluations:
-            mAP = evaluate(args, evaluation, enable_filter)
-            mode = '3D' if evaluation.mode == EvalMode.IOU_3D else 'BEV'
-            has_filter = 'filter = 0.3' if enable_filter else 'no filter'
-            mAP_string = f'mAP = {str(mAP.item())}, {evaluation.evaluate_class_name}, IOU = {str(evaluation.iou_threshold)}, {mode}, {has_filter}'
-            print(mAP_string)
-            mAP_strings.append(mAP_string)
-            
-    file = open(os.path.join(args.save_path), 'w')
-    one_mAP_string = '\n'.join([string for string in mAP_strings])
-    file.write(one_mAP_string)
-    file.close()
-    print('Saved @ File: ', args.save_path)
