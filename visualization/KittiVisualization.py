@@ -5,7 +5,6 @@ from visualization.KittiUtils import *
 import visualization.BEVutils as BEVutils
 import cv2, PIL
 import os
-
 from torch import tensor
 from mayavi import mlab
 
@@ -21,7 +20,7 @@ class KittiVisualizer:
         self.ground_truth_color = (0,1,0) # green
         self.thickness = 3
         self.user_press = None
-        self.confidence_score_thresh = 0.4 
+        self.confidence_score_thresh = 0.3 
         
     def visualize_scene_3D(self, pointcloud, objects, labels=None, calib=None):
         """
@@ -78,8 +77,9 @@ class KittiVisualizer:
         image_and_bev[:new_image_height, :, :] = _image
         image_and_bev[new_image_height:, :, :] = _bev
 
-        cv2.imshow("scene 2D", image_and_bev)
-        self.__show_2D()
+        return image_and_bev
+        # cv2.imshow("scene 2D", image_and_bev)
+        # self.__show_2D()
 
 
     def visualize_stereo_scene(self, imgL, disp, pointcloud):

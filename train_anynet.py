@@ -69,17 +69,17 @@ def main():
 
     if args.datatype == 'other':
         train_left_img, train_right_img, train_left_disp, test_left_img, test_right_img, test_left_disp = ls.dataloader(
-            args.datapath, args.train_file, args.validation_file)
+            args.datapath, args.train_file, args.validation_file, load_npy=args.load_npy)
     else:
         train_left_img, train_right_img, train_left_disp, test_left_img, test_right_img, test_left_disp = ls.dataloader(
             args.datapath, log, args.split_file)
 
     TrainImgLoader = torch.utils.data.DataLoader(
-        DA.myImageFloder(train_left_img, train_right_img, train_left_disp, True),
+        DA.myImageFloder(train_left_img, train_right_img, train_left_disp, load_npy=args.load_npy),
         batch_size=args.train_bsize, shuffle=True, num_workers=4, drop_last=False)
 
     TestImgLoader = torch.utils.data.DataLoader(
-        DA.myImageFloder(test_left_img, test_right_img, test_left_disp, False),
+        DA.myImageFloder(test_left_img, test_right_img, test_left_disp, load_npy=args.load_npy),
         batch_size=args.test_bsize, shuffle=False, num_workers=4, drop_last=False)
     
     if not os.path.isdir(args.save_path):

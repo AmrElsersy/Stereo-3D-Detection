@@ -28,6 +28,7 @@ def parse_configs():
     parser.add_argument('--data', type=str, default='kitti')
     parser.add_argument('--eval', action='store_true', help='If true, evaluate your pipeline.')
     parser.add_argument('--generate_video', action='store_true', help='If true, generate video.')
+    parser.add_argument('--with_bev', action='store_true', help='If true, generate video.')
     parser.add_argument('--profiling', action='store_true', help='put small limit for loop length')
     parser.add_argument('--with_spn', action='store_true', default=True, help='Allow using spn layer')
     parser.add_argument('--print_freq', type=int, default=5, help='print frequence')
@@ -147,8 +148,9 @@ def main():
             else:
                 printer = True
         with torch.no_grad():
-            BEV = anynet_model.predict(imgL, imgR, calib.calib_path, printer=printer)
-            detections = sfa_model.predict(BEV, printer=printer)
+            if cfg.with_bev: 
+                bev, sparse_points = anynet_model.predict(imgL, imgR, calib.calib_path, printer=printer)
+            detections = sfa_model.predict(bev, printer=printer)
             objects = SFA3D_output_to_kitti_objects(detections)
         if cfg.eval:
             predictions.append(objects)
@@ -158,7 +160,10 @@ def main():
             if i == 0:
                 continue 
             avg_time += (time_synchronized() - t)
-            img_ = visualizer.visualize_scene_image(imgL, objects, calib)
+            if cfg.with_bev:
+                img_ = visualizer.visualize_scene_2D(sparse_points.cpu().numpy(), imgL, objects, calib=calib)
+            else:
+                img_ = visualizer.visualize_scene_image(imgL, objects, calib)
             img_list.append(img_)
         elif not cfg.profiling:
             visualizer.visualize_scene_image(imgL, objects, calib=calib, scene_2D_mode=False)
@@ -204,7 +209,7 @@ def main():
         FPS = 1 / avg_time     
         print("Samples Average Time",avg_time)
         print("FPS", FPS)
-        height, width, channels = dataset[0][0].shape
+        height, width, channels = img_list[0].shape
         fourcc = cv2.VideoWriter_fourcc(*'mp4v')
         outVideo = cv2.VideoWriter(cfg.save_path + '/'+ VIDEO_NAME+'.mp4', fourcc, FPS, (width, height))
         for img in img_list:

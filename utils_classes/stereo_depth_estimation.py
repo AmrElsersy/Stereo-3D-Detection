@@ -149,6 +149,8 @@ class Stereo_Depth_Estimation:
         # b = bev.permute((1,2,0)).cpu().numpy()
         # cv2.imshow('bev', b)
         # cv2.waitKey(0)
+        if self.cfgs.with_bev:
+            return bev, sparse_points
         
         return bev
 
