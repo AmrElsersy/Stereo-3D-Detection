@@ -24,9 +24,9 @@ def parse_configs():
     
     parser.add_argument('--save_path', type=str, default='results/',help='the path of saving video and pickle files')
     parser.add_argument('--pretrained_anynet', type=str, default='checkpoints/anynet.tar',help='pretrained model path')
-    parser.add_argument('--pretrained_sfa', type=str, default='checkpoints/sfa10.pth', metavar='PATH')
+    parser.add_argument('--pretrained_sfa', type=str, default='checkpoints/sfa.pth', metavar='PATH')
     parser.add_argument('--data', type=str, default='kitti')
-    parser.add_argument('--evaluate', action='store_true', help='If true, generate pickle file.')
+    parser.add_argument('--eval', action='store_true', help='If true, evaluate your pipeline.')
     parser.add_argument('--generate_video', action='store_true', help='If true, generate video.')
     parser.add_argument('--profiling', action='store_true', help='put small limit for loop length')
     parser.add_argument('--with_spn', action='store_true', default=True, help='Allow using spn layer')
@@ -142,7 +142,7 @@ def main():
             printer = ((i % cfg.print_freq) == 0)
         else:
             imgL, imgR, labels, calib = KITTI_stereo[i]
-            if cfg.generate_pickle:
+            if cfg.eval:
                 printer = False
             else:
                 printer = True
@@ -150,7 +150,7 @@ def main():
             BEV = anynet_model.predict(imgL, imgR, calib.calib_path, printer=printer)
             detections = sfa_model.predict(BEV, printer=printer)
             objects = SFA3D_output_to_kitti_objects(detections)
-        if cfg.generate_pickle:
+        if cfg.eval:
             predictions.append(objects)
             if i % cfg.print_freq == 0:
                 print(i)
@@ -167,7 +167,7 @@ def main():
                 break
         torch.cuda.empty_cache()
 
-    if cfg.generate_pickle:
+    if cfg.eval:
         evaluations = [
             Evaluation(iou_threshold=0.5, evaluate_class='Car',        mode=EvalMode.IOU_3D),
             Evaluation(iou_threshold=0.7, evaluate_class='Car',        mode=EvalMode.IOU_3D),
@@ -193,7 +193,7 @@ def main():
                 print(mAP_string)
                 mAP_strings.append(mAP_string)
                 
-        file = open(os.path.join(cfg.save_path, 'sfa_mAP.txt'), 'w')
+        file = open(os.path.join(cfg.save_path, 'demo_mAP.txt'), 'w')
         one_mAP_string = '\n'.join([string for string in mAP_strings])
         file.write(one_mAP_string)
         file.close()
@@ -205,7 +205,8 @@ def main():
         print("Samples Average Time",avg_time)
         print("FPS", FPS)
         height, width, channels = dataset[0][0].shape
-        outVideo = cv2.VideoWriter(cfg.save_path + '/'+ VIDEO_NAME+'.mp4', cv2.VideoWriter_fourcc(*'MP4V'), 10, (width, height))
+        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+        outVideo = cv2.VideoWriter(cfg.save_path + '/'+ VIDEO_NAME+'.mp4', fourcc, FPS, (width, height))
         for img in img_list:
             outVideo.write(img)
 
