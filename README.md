@@ -113,10 +113,10 @@ python demo.py
 #### OPTIONS:
 
 - Choose a mode:
-   -  Regular mood, Add no option -> You can navigate between images by pressing any key, and to exit press ESC
+   - Regular mood, Add no option -> You can navigate between images by pressing any key, and to exit press ESC
+   - To evaluate the pipeline, Add `--evaluate`
    - To generate a video, Be sure that you have adjusted the path in [`demo.py`](https://github.com/AmrElsersy/Stereo-3D-Detection/blob/aeb7f0b0b15da3ed7534f3b7346aa01011a71950/demo.py#L115), Then add `--generate_video`
       - To generate the video with bev view, Add `--with_bev`
-   - To evaluate the pipeline, Add `--evaluate`
 - To Spasify How often to print time durations In case of video, Add `--print_freq <no>`
 - Data path is set to `data/kitti` by default, To change it add `--datapath <datapath>`
 - Anynet checkpoint path is set to `checkpoints/anynet.tar` by default, To change it add `--pretrained_anynet <checkpoint path>`
