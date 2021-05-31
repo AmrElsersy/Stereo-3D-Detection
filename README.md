@@ -134,10 +134,9 @@ python train_anynet.py  --maxdisp <default: 192> \
                         --train_file <train file path if exist> \
                         --validation_file <validation file path> \
                         --save_path <default: 'results/train_anynet'> \
-                        --with_spn 
+                        --with_spn <Activates Anynet last layer [RECOMMENDED]>
 ```
 ```python
---with_spn           #OPTIONAL: Activates Anynet last layer  [RECOMMENDED]
 --load_npy           #OPTIONAL: If disparity files are .npy format
 --evaluate           #OPTIONAL: If you want to evaluate your pretrained checkpoint without training
 --split_file         #OPTIONAL: Incase of datatype 2012/2015
