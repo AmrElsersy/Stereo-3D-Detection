@@ -80,12 +80,6 @@ Stereo-3D-Detection
 ├── .
 ├── .
 ```
-In terminal:
-
-```shell script
-python demo.py --data <folder_name>
-
-```
 
 <hr>
 
