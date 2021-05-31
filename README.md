@@ -132,7 +132,7 @@ Stereo-3D-Detection
 │   │   │   ├──disp_occ_0 & image_2 & image_3
 ├── .
 ```
-Incase of npy disp:
+Incase of .npy disparities:
 ```
 Stereo-3D-Detection
 ├── checkpoints
