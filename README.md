@@ -102,7 +102,7 @@ python demo.py
 ```
 Note: you can navigate between images by pressing any key, and to exit press ESC
 
-- To generate demo video, be sure you adjusted the path in [`demo.py`](./demo.py) then run:
+- To generate demo video, be sure you adjusted the path in [`demo.py`](./demo.py#L115) then run:
 ```shell script
 python demo.py --generate_video
 ```
