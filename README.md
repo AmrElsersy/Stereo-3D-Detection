@@ -144,7 +144,7 @@ python train_anynet.py  --maxdisp <default: 192> \
 --train_file         #OPTIONAL: Incase of training datatype of other, and want to train on specefic file names
 --validation_file    #OPTIONAL: Incase of training datatype of other, and want to validate/test on specefic file names
 ```
-Example:  
+For Kitti Object:  
 ```shell script
 python train_anynet.py  --maxdisp 192 \
                         --datapath data/kitti/ \
@@ -154,7 +154,7 @@ python train_anynet.py  --maxdisp 192 \
                         --validation_file data/kitti/imagesets/val.txt \
                         --with_spn --load_npy
 ``` 
-For kitti2015:
+For Kitti 2015:
 ```shell script
 python train_anynet.py  --maxdisp 192 \
                         --datapath data/path-to-kitti2015/training/ \
@@ -164,7 +164,7 @@ python train_anynet.py  --maxdisp 192 \
                         --split_file data/path-to-kitti2015/split.txt
                         --with_spn
 ```
-For kitti2012:
+For Kitti 2012:
 ```shell script
 python train_anynet.py  --maxdisp 192 \
                         --datapath data/path-to-kitti2012/training/ \
