@@ -7,7 +7,7 @@ import torch
 import pickle
 
 from visualization.KittiUtils import *
-from visualization.evaluation import *
+from tools.evaluation import *
 from visualization.KittiDataset import KittiDataset
 from visualization.KittiDataset import KittiVideo
 from visualization.KittiVisualization import KittiVisualizer
@@ -112,7 +112,7 @@ def main():
     if cfg.generate_video:
         img_list = []
         VIDEO_ROOT_PATH = 'data/' + 'demo'
-        VIDEO_NAME = "2011_09_26_0106"
+        VIDEO_NAME = "2011_09_26_0059"
         # VIDEO_ROOT_PATH = '/home/ayman/FOE-Linux/Graduation_Project/KITTI/2011_09_26_drive_0001'
         dataset = KittiVideo(
                 imgL_dir=os.path.join(VIDEO_ROOT_PATH, VIDEO_NAME + "/image_02/data"),
@@ -150,6 +150,8 @@ def main():
         with torch.no_grad():
             if cfg.with_bev: 
                 bev, sparse_points = anynet_model.predict(imgL, imgR, calib.calib_path, printer=printer)
+            else:
+                bev = anynet_model.predict(imgL, imgR, calib.calib_path, printer=printer)
             detections = sfa_model.predict(bev, printer=printer)
             objects = SFA3D_output_to_kitti_objects(detections)
         if cfg.eval:
@@ -210,8 +212,8 @@ def main():
         print("Samples Average Time",avg_time)
         print("FPS", FPS)
         height, width, channels = img_list[0].shape
-        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-        outVideo = cv2.VideoWriter(cfg.save_path + '/'+ VIDEO_NAME+'.mp4', fourcc, FPS, (width, height))
+        fourcc = cv2.VideoWriter_fourcc(*'MJPG')
+        outVideo = cv2.VideoWriter(cfg.save_path + '/'+ VIDEO_NAME+'.avi', fourcc, FPS, (width, height))
         for img in img_list:
             outVideo.write(img)
 

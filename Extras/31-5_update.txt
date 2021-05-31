@@ -1,0 +1,71 @@
+Good Morning Mr. Fathy ^^
+
+This week was a frutful week, there is a lot of progress and we need to discuss with you some points
+
+Time for this week update:
+- We accelerated the processing of data by converting numpy operation to tensors operation on cuda
+
+old version time durations
+pre-processing: 25~40 ms
+post-processing: 130~160 ms
+total pipeline fps: 2 FPS
+
+recent version:
+pre-processing: 10~6 ms (with rare spikes to 15ms)
+post-processing: 10~15 ms (yes we decreased the time down to 90% of its value
+total pipeline fps: 12~13 FPS
+
+- when we integrated anynet with sfa in one file and evaluated the total pipeline it got evalution numbers:
+3D:
+mAP = 18.72%, IOU = 0.5, 3D, no filter
+mAP = 04.78%, IOU = 0.7, 3D, no filter
+mAP = 18.69%, IOU = 0.5, 3D, filter = 0.3
+mAP = 04.95%, IOU = 0.7, 3D, filter = 0.3
+
+BEV:
+mAP = 22.81%, IOU = 0.5, no filter
+mAP = 08.75%, IOU = 0.7, no filter
+mAP = 22.47%, IOU = 0.5, filter = 0.3
+mAP = 08.99%, IOU = 0.7, filter = 0.3
+
+and this was so bad evalution results compared to when we evaluted anynet and sfa sepratly before the integration. After we changed the preprocessing and the postprocessing (disparity to bev coversion) we decided to train them again, we trained anynet localy and trained sfa through colab since the data required for sfa where small so it can be uploaded we subscribed on colab pro service to have a better and faster gpu, as the normal colab processor is not better than our local gpus
+
+After training the new evaluation numbers are:
+3D:
+mAP = 35.50%, IOU = 0.5, no filter
+mAP = 13.53%, IOU = 0.7, no filter
+mAP = 35.45%, IOU = 0.5, filter = 0.3
+mAP = 13.89%, IOU = 0.7, filter = 0.3
+
+BEV:
+mAP = 39.99%, IOU = 0.5, no filter
+mAP = 21.03%, IOU = 0.7, no filter
+mAP = 39.36%, IOU = 0.5, filter = 0.3
+mAP = 21.41%, IOU = 0.7, filter = 0.3
+
+These numbers are the best model can do, although pseudolidar++ have a better numbers which is double of our numbers but it takes longer time 2FPS or less
+
+- After assuring everything is working well, we made a branch called old-version and moved old files on it and put our new version on the master branch if you review it, you will find that it is much cleaner, easier to use and easy to download the repo dependancy
+
+- After the successul training on colab, we decided to subscribe also on drive to have up to 2 TB so we can download our data on the drive and use it for training We know exploring other stereo models which are as fast as ours with less error and higher accuracy, we started with 
+hitnet (official code is with tensorflow and unofficial is with pytorch but until now they are not as fast as they stated) and they dont offer pretrained weights so we use colab to train the model
+
+- We are exploring also ESnet and AAnet, but the problem here is these repo dont provide a clear readme or any instructions how to go through the code, so we divided into teams working on understanding these repos
+
+- we found a new dataset based on kitti format with 17k example, we downloaded the right and left images locally, and downloading them on drive so it can be a good dataset to train the new models on.
+
+But unfortuntly we cant train anynet with full performance on colab, because the spn-layer has specefic configuration that doesnt work on colab. we can only train anynet on colab without the spn layer.
+
+And because of that we are asking if anynet will be our last option if the other repos failed to get the speed and accuracy we targeting, can we use an affectiva's machine to train our model on this 17k dataset?
+
+- we working on the repo and the repo's readme to be more clear and informative
+
+-----------------------------------------------------------------------------------------------------------------------
+
+EXTRAS:
+
+- When trained anynet with the new preprocessing on kitti 2015 and kitti 2012, it got a better accuracy than the pretrained weights provided by anynet owner
+
+- You can see the new generated videos, uploaded on the drive you will see 3 videos with score threshold 0.4 and other videos with threshold 0.2
+Drive link:
+https://drive.google.com/drive/folders/1cXLT2R3xuVPNzc2aE5UkUcuAIeBk6BSQ?usp=sharing

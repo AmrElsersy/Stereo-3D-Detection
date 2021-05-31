@@ -14,28 +14,28 @@ import Models.AnyNet.models.anynet as anynet
 import tqdm
 
 parser = argparse.ArgumentParser(description='Anynet fintune on KITTI')
-parser.add_argument('--maxdisp', type=int, default=192,
-                    help='maxium disparity')
+parser.add_argument('--pretrained', type=str, default='results/pretrained_anynet/checkpoint.tar', help='pretrained model path')
+parser.add_argument('--resume', type=str, default=None, help='resume path')
+parser.add_argument('--datatype', default='2015', help='datapath')
+parser.add_argument('--datapath', default=None, help='datapath')
+
+parser.add_argument('--save_path', type=str, default='results/train_anynet', help='the path of saving checkpoints and log')
+parser.add_argument('--load_npy', action='store_true')
+parser.add_argument('--evaluate', action='store_true')
+parser.add_argument('--split_file', type=str, default=None)
+parser.add_argument('--train_file', type=str, default=None)
+parser.add_argument('--validation_file', type=str, default=None)
+
+parser.add_argument('--epochs', type=int, default=110, help='number of epochs to train')
+parser.add_argument('--lr', type=float, default=1e-5, help='learning rate')   
+parser.add_argument('--train_bsize', type=int, default=8, help='batch size for training (default: 6)')
+parser.add_argument('--test_bsize', type=int, default=8, help='batch size for testing (default: 8)')
+
+parser.add_argument('--maxdisp', type=int, default=192, help='maxium disparity')
 parser.add_argument('--loss_weights', type=float, nargs='+', default=[0.5, 0.7, 1, 1])
 parser.add_argument('--max_disparity', type=int, default=192)
 parser.add_argument('--maxdisplist', type=int, nargs='+', default=[12, 3, 3])
-parser.add_argument('--datatype', default='2015',
-                    help='datapath')
-parser.add_argument('--datapath', default=None, help='datapath')
-parser.add_argument('--epochs', type=int, default=110,
-                    help='number of epochs to train')
-parser.add_argument('--train_bsize', type=int, default=8,
-                    help='batch size for training (default: 6)')
-parser.add_argument('--test_bsize', type=int, default=8,
-                    help='batch size for testing (default: 8)')
-parser.add_argument('--save_path', type=str, default='results/finetune_anynet',
-                    help='the path of saving checkpoints and log')
-parser.add_argument('--resume', type=str, default=None,
-                    help='resume path')
-parser.add_argument('--lr', type=float, default=1e-5,
-                    help='learning rate')   
 parser.add_argument('--with_spn', action='store_true', help='with spn network or not')
-parser.add_argument('--print_freq', type=int, default=25, help='print frequence')
 parser.add_argument('--init_channels', type=int, default=1, help='initial channels for 2d feature extractor')
 parser.add_argument('--nblocks', type=int, default=2, help='number of layers in each stage')
 parser.add_argument('--channels_3d', type=int, default=4, help='number of initial channels 3d feature extractor ')
@@ -43,13 +43,6 @@ parser.add_argument('--layers_3d', type=int, default=4, help='number of initial 
 parser.add_argument('--growth_rate', type=int, nargs='+', default=[4,1,1], help='growth rate in the 3d network')
 parser.add_argument('--spn_init_channels', type=int, default=8, help='initial channels for spnet')
 parser.add_argument('--start_epoch_for_spn', type=int, default=5)
-parser.add_argument('--pretrained', type=str, default='results/pretrained_anynet/checkpoint.tar',
-                    help='pretrained model path')
-parser.add_argument('--train_file', type=str, default=None)
-parser.add_argument('--validation_file', type=str, default=None)
-parser.add_argument('--load_npy', action='store_true')
-parser.add_argument('--evaluate', action='store_true')
-parser.add_argument('--split_file', type=str, default=None)
 
 args = parser.parse_args()
 
@@ -124,7 +117,6 @@ def main():
         test(TestImgLoader, model, log)
         return
     for epoch in range(args.start_epoch, args.epochs):
-        # log.info('This is {}-th epoch'.format(epoch))
         adjust_learning_rate(optimizer, epoch)
 
         train(TrainImgLoader, model, optimizer, log, epoch)
@@ -136,7 +128,6 @@ def main():
             'optimizer': optimizer.state_dict(),
         }, savefilename)
 
-        # if epoch > 10 and (epoch % 3):
         test(TestImgLoader, model, log, epoch)
 
     test(TestImgLoader, model, log)
@@ -177,11 +168,6 @@ def train(dataloader, model, optimizer, log, epoch=0):
 
         for idx in range(num_out):
             losses[idx].update(loss[idx].item())
-        # if (batch_idx % args.print_freq) == 0:
-        #     info_str = ['Stage {} = {:.2f}({:.2f})'.format(x, losses[x].val, losses[x].avg) for x in range(num_out)]
-        #     info_str = '\t'.join(info_str)
-        #     log.info('Epoch{} [{}/{}] {}'.format(
-        #         epoch, batch_idx, length_loader, info_str))
         torch.cuda.empty_cache()
 
     info_str = '\t'.join(['Stage {} = {:.4f}'.format(x, losses[x].avg) for x in range(stages)])
@@ -212,9 +198,6 @@ def test(dataloader, model, log, epoch=-1):
                 output = torch.squeeze(outputs[x], 1)
                 D1s[x].update(error_estimating(output, disp_L).item())
                 Error[str(x)].append(D1s[x].val)
-        # info_str = '\t'.join(['Stage {} = {:.4f}({:.4f})'.format(x, D1s[x].val, D1s[x].avg) for x in range(stages)])
-        # log.info('[{}/{}] {}'.format(
-        #     batch_idx, length_loader, info_str))
         torch.cuda.empty_cache()
 
     info_str = ', '.join(['Stage {}={:.3f}%'.format(x, D1s[x].avg * 100) for x in range(stages)])

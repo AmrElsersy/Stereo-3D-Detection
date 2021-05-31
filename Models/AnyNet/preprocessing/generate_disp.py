@@ -6,7 +6,8 @@ import numpy as np
 import scipy.misc as ssc
 import cv2
 from PIL import Image
-import kitti_util
+import torch
+from . import kitti_util
 
 def generate_dispariy_from_velo(pc_velo, height, width, calib):
     pts_2d = calib.project_velo_to_image(pc_velo)
@@ -16,11 +17,11 @@ def generate_dispariy_from_velo(pc_velo, height, width, calib):
     imgfov_pc_velo = pc_velo[fov_inds, :]
     imgfov_pts_2d = pts_2d[fov_inds, :]
     imgfov_pc_rect = calib.project_velo_to_rect(imgfov_pc_velo)
-    depth_map = np.zeros((height, width)) - 1
-    imgfov_pts_2d = np.round(imgfov_pts_2d).astype(int)
+    depth_map = torch.zeros((height, width)) - 1
+    imgfov_pts_2d = torch.round(imgfov_pts_2d).long()
     for i in range(imgfov_pts_2d.shape[0]):
         depth = imgfov_pc_rect[i, 2]
-        depth_map[int(imgfov_pts_2d[i, 1]), int(imgfov_pts_2d[i, 0])] = depth
+        depth_map[(imgfov_pts_2d[i, 1]).long(), (imgfov_pts_2d[i, 0]).long()] = depth
     baseline = 0.54
     disp_map = (calib.f_u * baseline) / depth_map
     return disp_map

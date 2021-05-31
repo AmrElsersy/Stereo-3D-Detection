@@ -121,3 +121,32 @@ python demo.py --generate_pickle
 ```shell script
 python demo_eval.py
 ```
+
+## Training
+
+* ### Train Anynet Model
+
+```shell script
+python train_anynet.py --maxdisp <default: 192> --with_spn --datapath <datapath, ex: data/kitti/> --pretrained <pretrained checkpoint path, ex: checkpoints/anynet.tar> --datatype <2012/2015/other> --train_file <train file path if exist, ex: data/kitti/imagesets/train.txt> data/kitti/imagesets/train.txt --validation_file <validation file path> --save_path <default: 'results/train_anynet'>
+```
+Example:  
+```shell script
+python train_anynet.py --maxdisp 192 --with_spn --datapath data/kitti/ --pretrained checkpoints/anynet.tar --datatype other --train_file data/kitti/imagesets/train.txt --validation_file data/kitti/imagesets/val.txt --load_npy
+``` 
+For kitti2015:
+```shell script
+python train_anynet.py --maxdisp 192 --with_spn --datapath data/path-to-kitti2015/training/  --save_path results/kitti2015 --datatype 2015 --pretrained checkpoints/anynet.tar  --split_file data/path-to-kitti2015/split.txt
+```
+For kitti2012:
+```shell script
+python train_anynet.py --maxdisp 192 --with_spn --datapath data/path-to-kitti2012/training/  --save_path results/kitti2012 --datatype 2012 --pretrained checkpoints/anynet.tar  --split_file data/path-to-kitti2012/split.txt
+```
+
+```python
+--with_spn           #OPTIONAL: Activates Anynet last layer  [RECOMMENDED]
+--load_npy           #OPTIONAL: If disparity files are .npy format
+--evaluate           #OPTIONAL: If you want to evaluate your pretrained checkpoint without training
+--split_file         #OPTIONAL: Incase of datatype 2012/2015
+--train_file         #OPTIONAL: Incase of training datatype of other, and want to train on specefic file names
+--validation_file    #OPTIONAL: Incase of training datatype of other, and want to validate/test on specefic file names
+```

@@ -1,0 +1,30 @@
+python lidar.py --maxdisp 192 --with_spn --datapath path-to-kitti  --datatype other --pretrained checkpoint/kitti/checkpoint.tar --max_high 1  --evaluate
+
+python lidar.py --maxdisp 192 --with_spn --datapath path-to-kitti2015  --datatype 2015 --pretrained checkpoint/kitti2015_ck/checkpoint.tar --max_high 1  --evaluate
+
+
+python finetune.py --maxdisp 192 --with_spn --datapath path-to-kitti/ --pretrained checkpoint/kitti2015_ck/checkpoint.tar --datatype other --train_file path-to-kitti/train.txt --validation_file path-to-kitti/val.txt --load_npy --resume
+
+python ./preprocessing/view_npy.py --main_dir path-to-kitti --save_dir path-to-kitti/ --limit 4
+
+python ./preprocessing/generate_disp.py --data_path ./path-to-kitti/training
+
+python ./preprocessing/generate_lidar.py --calib_dir ./path-to-kitti-small/training/calib --disparity_dir ./path-to-kitti2015/training/disp_occ_0 --save_dir ./path-to-kitti-small/training/predicted_velodyne
+
+
+python kitti_sparsify.py --pl_path  ./point_cloud/ --sparse_pl_path  ./results
+
+python finetune.py --maxdisp 192 --with_spn --datapath path-to-kitti2015/training/  --save_path results/kitti2015 --datatype 2015 --pretrained checkpoint/kitti2015_ck/checkpoint.tar  --split_file checkpoint/kitti2015_ck/split.txt --evaluate
+
+python main.py --maxdisp 192 --with_spn --datapath path-to-kitti/ --train_file path-to-kitti/train.txt --validation_file path-to-kitti/val.txt --load_npy
+
+python finetune.py --maxdisp 192 --with_spn --datapath path-to-kitti/ --pretrained checkpoint/kitti/sceneflow_ck_latest.tar --datatype other --train_file path-to-kitti/train.txt --validation_file path-to-kitti/val.txt --load_npy --resume checkpoint/kitti/sceneflow_ck_latest.tar
+
+python finetune.py --maxdisp 192 --with_spn --datapath path-to-kitti/ --pretrained checkpoint/kitti/sceneflow.tar --datatype other --train_file path-to-kitti/train.txt --validation_file path-to-kitti/val.txt --load_npy --resume checkpoint/kitti/checkpoint54.tar
+
+python evaluate.py --with_spn --datapath path-to-kitti --pretrained checkpoint/kitti/checkpoint.tar --limit 10 
+
+python evaluate.py --with_spn --datapath data/kitti --pretrained checkpoints/anynet.tar --limit 10 
+
+3d stereo:
+python anynet.py --maxdisp 192 --with_spn --datapath data/kitti/ --pretrained checkpoints/anynet.tar --datatype other --train_file data/train.txt --validation_file data/val.txt

@@ -12,8 +12,8 @@ dirname = os.path.dirname(__file__)
 
 pointcloud = np.fromfile(os.path.join(dirname, args.image.zfill(6)+".bin"), dtype=np.float32, count=-1).reshape(-1,4)
 
-print(pointcloud)
-print(pointcloud.shape)
+# print(pointcloud)
+# print(pointcloud.shape)
 x = pointcloud[:, 0]  # x position of point
 y = pointcloud[:, 1]  # y position of point
 z = pointcloud[:, 2]  # z position of point
