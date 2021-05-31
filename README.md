@@ -127,19 +127,44 @@ python demo_eval.py
 * ### Train Anynet Model
 
 ```shell script
-python train_anynet.py --maxdisp <default: 192> --with_spn --datapath <datapath, ex: data/kitti/> --pretrained <pretrained checkpoint path, ex: checkpoints/anynet.tar> --datatype <2012/2015/other> --train_file <train file path if exist, ex: data/kitti/imagesets/train.txt> data/kitti/imagesets/train.txt --validation_file <validation file path> --save_path <default: 'results/train_anynet'>
+python train_anynet.py  --maxdisp <default: 192> \ 
+                        --datapath <datapath, ex: data/kitti/> \
+                        --pretrained <pretrained checkpoint path, ex: checkpoints/anynet.tar> \
+                        --datatype <2012/2015/other> \
+                        --train_file <train file path if exist, ex: data/kitti/imagesets/train.txt> \
+                        --validation_file <validation file path> \
+                        --save_path <default: 'results/train_anynet'> \
+                        --with_spn 
 ```
 Example:  
 ```shell script
-python train_anynet.py --maxdisp 192 --with_spn --datapath data/kitti/ --pretrained checkpoints/anynet.tar --datatype other --train_file data/kitti/imagesets/train.txt --validation_file data/kitti/imagesets/val.txt --load_npy
+python train_anynet.py  --maxdisp 192 \
+                        --datapath data/kitti/ \
+                        --pretrained checkpoints/anynet.tar \
+                        --datatype other \
+                        --train_file data/kitti/imagesets/train.txt \
+                        --validation_file data/kitti/imagesets/val.txt \
+                        --with_spn --load_npy
 ``` 
 For kitti2015:
 ```shell script
-python train_anynet.py --maxdisp 192 --with_spn --datapath data/path-to-kitti2015/training/  --save_path results/kitti2015 --datatype 2015 --pretrained checkpoints/anynet.tar  --split_file data/path-to-kitti2015/split.txt
+python train_anynet.py  --maxdisp 192 \
+                        --datapath data/path-to-kitti2015/training/ \
+                        --save_path results/kitti2015 \
+                        --datatype 2015 \
+                        --pretrained checkpoints/anynet.tar  \
+                        --split_file data/path-to-kitti2015/split.txt
+                        --with_spn
 ```
 For kitti2012:
 ```shell script
-python train_anynet.py --maxdisp 192 --with_spn --datapath data/path-to-kitti2012/training/  --save_path results/kitti2012 --datatype 2012 --pretrained checkpoints/anynet.tar  --split_file data/path-to-kitti2012/split.txt
+python train_anynet.py  --maxdisp 192 \
+                        --datapath data/path-to-kitti2012/training/ \
+                        --save_path results/kitti2012 \
+                        --datatype 2012 \
+                        --pretrained checkpoints/anynet.tar  \
+                        --split_file data/path-to-kitti2012/split.txt
+                        --with_spn
 ```
 
 ```python
