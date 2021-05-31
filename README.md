@@ -109,7 +109,7 @@ python demo.py --generate_video
 
 ## Evaluation
 
-1. you need To generate predictions pickle file by running:
+If you want to evaluate the pipeline, run:
 ```shell script
 python demo.py --eval
 ```
