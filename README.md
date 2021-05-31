@@ -141,7 +141,7 @@ python train_anynet.py  --maxdisp <default: 192> \
 --evaluate           #OPTIONAL: If you want to evaluate your pretrained checkpoint without training
 --split_file         #OPTIONAL: Incase of datatype 2012/2015
 --train_file         #OPTIONAL: Incase of training datatype of other, and want to train on specefic file names
---validation_file    #OPTIONAL: Incase of training datatype of other, and want to validate/test on specefic file names
+--validation_file    #OPTIONAL: Incase of testing datatype of other, and want to validate/test on specefic file names
 ```
 For Kitti Object:  
 ```shell script
