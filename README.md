@@ -128,10 +128,10 @@ python demo_eval.py
 
 ```shell script
 python train_anynet.py  --maxdisp <default: 192> \ 
-                        --datapath <datapath, ex: data/kitti/> \
-                        --pretrained <pretrained checkpoint path, ex: checkpoints/anynet.tar> \
+                        --datapath <datapath> \
+                        --pretrained <pretrained checkpoint path> \
                         --datatype <2012/2015/other> \
-                        --train_file <train file path if exist, ex: data/kitti/imagesets/train.txt> \
+                        --train_file <train file path if exist> \
                         --validation_file <validation file path> \
                         --save_path <default: 'results/train_anynet'> \
                         --with_spn 
