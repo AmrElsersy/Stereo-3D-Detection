@@ -136,6 +136,14 @@ python train_anynet.py  --maxdisp <default: 192> \
                         --save_path <default: 'results/train_anynet'> \
                         --with_spn 
 ```
+```python
+--with_spn           #OPTIONAL: Activates Anynet last layer  [RECOMMENDED]
+--load_npy           #OPTIONAL: If disparity files are .npy format
+--evaluate           #OPTIONAL: If you want to evaluate your pretrained checkpoint without training
+--split_file         #OPTIONAL: Incase of datatype 2012/2015
+--train_file         #OPTIONAL: Incase of training datatype of other, and want to train on specefic file names
+--validation_file    #OPTIONAL: Incase of training datatype of other, and want to validate/test on specefic file names
+```
 Example:  
 ```shell script
 python train_anynet.py  --maxdisp 192 \
@@ -167,11 +175,4 @@ python train_anynet.py  --maxdisp 192 \
                         --with_spn
 ```
 
-```python
---with_spn           #OPTIONAL: Activates Anynet last layer  [RECOMMENDED]
---load_npy           #OPTIONAL: If disparity files are .npy format
---evaluate           #OPTIONAL: If you want to evaluate your pretrained checkpoint without training
---split_file         #OPTIONAL: Incase of datatype 2012/2015
---train_file         #OPTIONAL: Incase of training datatype of other, and want to train on specefic file names
---validation_file    #OPTIONAL: Incase of training datatype of other, and want to validate/test on specefic file names
-```
+
