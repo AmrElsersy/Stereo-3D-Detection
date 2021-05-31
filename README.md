@@ -22,7 +22,10 @@ This repository containts a real time **3D depth estmiation** using stereo camer
 
 ## Installation	
 - Open your anaconda terminal
-- Create new conda enviroment with python 3.8.5 by running this command `conda create --name obj_det python=3.8.5`
+- Create new conda enviroment with python 3.8.5 by running this command 
+```
+conda create --name obj_det python=3.8.5
+```
 - Activate your enviroment `conda activate obj_det`
 - Install dependencies following this commands
  
