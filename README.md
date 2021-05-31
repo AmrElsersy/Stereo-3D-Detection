@@ -122,12 +122,12 @@ python demo_eval.py
 ## Training
 
 * ### Train Anynet Model
-Data structure
+You have to organize your own dataset as the following format
 ```
 Stereo-3D-Detection
 ├── checkpoints
 ├── data
-│   ├── kitti
+│   ├── <dataset>
 │   │   │── training
 │   │   │   ├──disp_occ_0 & image_2 & image_3
 ├── .
@@ -137,7 +137,7 @@ Incase of .npy disparities:
 Stereo-3D-Detection
 ├── checkpoints
 ├── data
-│   ├── kitti
+│   ├── <dataset>
 │   │   │── training
 │   │   │   ├──disp_occ_0_npy & image_2 & image_3
 ├── .
