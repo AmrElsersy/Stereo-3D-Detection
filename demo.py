@@ -212,8 +212,8 @@ def main():
         print("Samples Average Time",avg_time)
         print("FPS", FPS)
         height, width, channels = img_list[0].shape
-        fourcc = cv2.VideoWriter_fourcc(*'MJPG')
-        outVideo = cv2.VideoWriter(cfg.save_path + '/'+ VIDEO_NAME+'.avi', fourcc, FPS, (width, height))
+        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+        outVideo = cv2.VideoWriter(cfg.save_path + '/'+ VIDEO_NAME+'.mp4', fourcc, FPS, (width, height))
         for img in img_list:
             outVideo.write(img)
 

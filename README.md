@@ -102,7 +102,7 @@ python demo.py
 ```
 Note: you can navigate between images by pressing any key, and to exit press ESC
 
-- To generate demo video, be sure you adjusted the path in [`demo.py`](./demo.py#L115) then run:
+- To generate demo video, be sure you adjusted the path in [`demo.py`](https://github.com/AmrElsersy/Stereo-3D-Detection/blob/aeb7f0b0b15da3ed7534f3b7346aa01011a71950/demo.py#L115) then run:
 ```shell script
 python demo.py --generate_video
 ```
