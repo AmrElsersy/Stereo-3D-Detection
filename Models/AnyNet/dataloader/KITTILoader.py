@@ -17,13 +17,13 @@ IMG_EXTENSIONS = [
 def is_image_file(filename):
     return any(filename.endswith(extension) for extension in IMG_EXTENSIONS)
 
-def default_loader(path):
+def disparity_loader(path):
     pil_image =  Image.open(path)
     dataL = np.ascontiguousarray(pil_image, dtype=np.float32)/256
     return dataL
 
-def disparity_loader(path):
-    return Image.open(path)
+def default_loader(path):
+    return cv2.imread(path, 1)
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -59,7 +59,7 @@ class myImageFloder(data.Dataset):
         dataL = dataL[h - 352:h, w - 1200:w]
         dataL = torch.from_numpy(dataL)
             
-        return left_img.cpu(), right_img.cpu()
+        return left_img.cpu(), right_img.cpu(), dataL
 
     def __len__(self):
         return len(self.left)
