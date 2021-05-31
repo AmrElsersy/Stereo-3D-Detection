@@ -1,7 +1,7 @@
 [![Made withPython](https://img.shields.io/badge/Made%20with-python-407eaf?style=for-the-badge&logo=python)](https://www.python.org/)
 [![Made withPytorch](https://img.shields.io/badge/Made%20with-pytorch-ee4c2c?style=for-the-badge&logo=pytorch)](https://www.pytorch.org/)
 [![Made withCuda](https://img.shields.io/badge/Made%20with-cuda-76b900?style=for-the-badge&logo=nvidia)](https://developer.nvidia.com/cuda-downloads)
-[![Made withAnaconda](https://img.shields.io/badge/Made%20with-anaconda-43b049?style=for-the-badge&logo=anaconda)](https://www.anaconda.com/) <br>
+[![Made withAnaconda](https://img.shields.io/badge/Made%20with-anaconda-43b049?style=for-the-badge&logo=anaconda)](https://docs.anaconda.com/anaconda/install/) <br>
 ![Supports_windows](https://img.shields.io/badge/windows-0078D6?style=for-the-badge&logo=windows)
 ![Supports_linux](https://img.shields.io/badge/linux-white?style=for-the-badge&logo=linux)
 ![Supports_macos](https://img.shields.io/badge/macos-black?style=for-the-badge&logo=macos)
@@ -20,31 +20,23 @@ This repository containts a real time **3D depth estmiation** using stereo camer
 
 <hr>
 
-## Installation
-
-NOTE: this installlation is compatible with linux only, nearly will support windows
-
-1. you must install CUDA local on your system environment, follow this [link](https://developer.nvidia.com/Cuda-downloads)
-2. you must instakk cuDNN local in your system environment, follow this [link](https://docs.nvidia.com/deeplearning/cudnn/install-guide/index.html)
-3. you should build a specific environment so we recommend to install [anaconda](https://docs.anaconda.com/anaconda/install/)
-4. Install the dependencies for demos and visualizaiotn
+## Installation	
+- Open your anaconda terminal
+- Create new conda enviroment with python 3.8.5 by running this command `conda create --name obj_det python=3.8.5`
+- Activate your enviroment `conda activate obj_det`
+- Install dependencies following this commands
+ 
+```shell script
+   conda install -c pytorch torchvision=0.8.2
+   pip install PyQt5 vtk tqdm matplotlib==3.3.3 easydict==1.9 tensorboard==2.2.1
+   pip install mayavi
+   conda install scikit-image shapely
+   conda install -c conda-forge opencv
+```
 	
-   - Open your anaconda terminal
-   - Create new conda enviroment with python 3.8.5 by running this command ```conda create --name obj_det python=3.8.5```
-   - Activate your enviroment ```conda activate obj_det```
-   - Install dependencies following this commands
-   	
-	```shell script
-		conda install -c pytorch torchvision=0.8.2
-		pip install PyQt5 vtk tqdm matplotlib==3.3.3 easydict==1.9 tensorboard==2.2.1
-		pip install mayavi
-		conda install scikit-image shapely
-		conda install -c conda-forge opencv
-	```
-	
-   - Then Navigate to Models/AnyNet/models/spn_t1 to activate spn layer 
-   - If you are windows user, open git bash cmd and activate the enviroment and run`sh make.sh`
-   - If you are Linuex user, open terminal and activate the enviroment and run `./make.sh` 
+- Then Navigate to `Models/AnyNet/models/spn_t1` to activate SPN layer.
+- For windows, open the git bash cmd and activate the enviroment and run `sh make.sh`
+- For Linux, open the terminal and activate the enviroment and run `./make.sh` 
 
 <hr>
    
@@ -115,8 +107,9 @@ Stereo-3D-Detection
 │   │   │── training
 │   │   │   ├──disp_occ_0 & image_2 & image_3
 ├── .
+├── .
 ```
-Incase of .npy disparities:
+Incase of `.npy` Disparities:
 ```
 Stereo-3D-Detection
 ├── checkpoints
@@ -124,6 +117,7 @@ Stereo-3D-Detection
 │   ├── <dataset>
 │   │   │── training
 │   │   │   ├──disp_occ_0_npy & image_2 & image_3
+├── .
 ├── .
 ```
 Command:
@@ -143,6 +137,7 @@ python train_anynet.py  --maxdisp <default: 192> \
 - In case of datatype 2012/2015, Add `--split_file`
 - In case of training datatype of other, and want to train on specefic file names `--train_file`
 - In case of testing datatype of other, and want to validate/test on specefic file names `--validation_file`
+- If you want to start from specefic index, you can use this flag `--index <no>`
 
 <hr>
 
@@ -179,4 +174,51 @@ python train_anynet.py  --maxdisp 192 \
 
 <hr>
 
+## Utils
 
+To generate disparity from point cloud, Be sure your folder structure is like this:
+```
+├── checkpoints
+├── data
+│   ├── <dataset>
+│   │   │── training
+│   │   │   ├── image_2 & velodyne & calib
+├── .
+├── .
+```
+Then run this command:
+```
+python ./tools/generate_disp.py --datapath <datapath>
+```
+#### OPTIONS:
+- There is `--limit <no>` flag if you dont to limit who much of the dataset you want to convert 
+- Data path is set to `data/kitti/training` by default, To change it add `--datapath <datapath>`
+NOTE: When specifiying your data path make it relative to Stereo-3D-Detection directory
+
+This will generate 2 disaprity folders at the data path location `generated_disp/disp_occ_0` and `generated_disp/disp_occ_0_npy`, you can use any. But we recommend to use `.npy` files 
+
+<hr>
+
+To generate point cloud from disparity/depth, Be sure your folder structure is like this:
+```
+├── checkpoints
+├── data
+│   ├── <dataset>
+│   │   │── training
+│   │   │   ├── disp_occ_0 & calib
+├── .
+├── .
+```
+Then run this command:
+```
+python ./tools/generate_lidar.py --datapath <datapath>
+```
+#### OPTIONS:
+- If your converting depth images, use this flag `--is_depth`
+- Data path is set to `data/kitti/training` by default, To change it add `--datapath <datapath>`
+- There is `--limit <no>` flag if you dont to limit who much of the dataset you want to convert
+NOTE: When specifiying your data path make it relative to Stereo-3D-Detection directory
+
+This will generate a velodyne folder at the data path location `generated_lidar/velodyne` 
+
+<hr>

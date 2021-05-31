@@ -1,4 +1,4 @@
-import argparse, cv2, time
+import argparse, cv2, time, tqdm
 from PIL import Image
 import torch.backends.cudnn as cudnn
 from easydict import EasyDict as edict
@@ -22,6 +22,7 @@ torch.cuda.empty_cache()
 def parse_configs():
     parser = argparse.ArgumentParser(description='Testing config for the Implementation')
     
+    parser.add_argument('--index', type=int, default=0, help="start index in dataset")
     parser.add_argument('--save_path', type=str, default='results/',help='the path of saving video and pickle files')
     parser.add_argument('--pretrained_anynet', type=str, default='checkpoints/anynet.tar',help='pretrained model path')
     parser.add_argument('--pretrained_sfa', type=str, default='checkpoints/sfa.pth', metavar='PATH')
@@ -42,7 +43,6 @@ def parse_configs():
     parser.add_argument('--num_workers', type=int, default=1, help='Number of threads for loading data')
     parser.add_argument('--peak_thresh', type=float, default=0.2)
     parser.add_argument('--save_test_output', action='store_true', help='If true, the output image of the testing phase will be saved')
-    parser.add_argument('--index', type=int, default=0, help="start index in dataset")
     parser.add_argument('--maxdisp', type=int, default=192,help='maxium disparity')
     parser.add_argument('--loss_weights', type=float, nargs='+', default=[0.25, 0.5, 1., 1.])
     parser.add_argument('--max_disparity', type=int, default=192)
@@ -123,19 +123,23 @@ def main():
 
             )
         loop_length=len(dataset)
+        desc = 'Generating videos'
         avg_time = 0.
     else:
+        desc = 'View images'
+        if cfg.evaluate: 
+            desc = 'Evaluating'
         dataset_root = os.path.join(cfg.datapath, "training")
         KITTI_stereo = KittiDataset(dataset_root, stereo_mode=True, mode='val')
         loop_length = len(KITTI_stereo)
         if cfg.profiling:
             loop_length = 20
-
-    for i in range(cfg.index, loop_length):
+            desc = 'Profiling'
+    for i in tqdm.tqdm(range(cfg.index, loop_length), ascii=True, desc=(desc), total=(loop_length - cfg.index), unit='iteration'):
         if cfg.generate_video:
             imgL, imgR, pointcloud, calib = dataset[i]
             t = time_synchronized()
-            printer = ((i % cfg.print_freq) == 0)
+            printer = False
         else:
             imgL, imgR, labels, calib = KITTI_stereo[i]
             if cfg.evaluate:
@@ -151,8 +155,6 @@ def main():
             objects = SFA3D_output_to_kitti_objects(detections)
         if cfg.evaluate:
             predictions.append(objects)
-            if i % cfg.print_freq == 0:
-                print(i)
         elif cfg.generate_video:
             if i == 0:
                 continue 

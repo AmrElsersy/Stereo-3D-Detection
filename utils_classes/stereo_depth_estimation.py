@@ -8,7 +8,6 @@ import numpy as np
 from PIL import Image
 import torchvision.transforms as transforms
 
-from Models.AnyNet.preprocessing.generate_lidar import  Calibration
 from Models.AnyNet.models.anynet import AnyNet
 import Models.AnyNet.dataloader.preprocess as preprocess
 
