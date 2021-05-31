@@ -50,23 +50,8 @@ NOTE: this installlation is compatible with linux only, nearly will support wind
    
 ## Dataset Preparation
 
-You need to make data directory first and construct dataset as following
+You need to make data directory first and construct dataset folder as following :
 
-```
-Stereo-3D-Detection
-├── checkpoints
-├── data
-│   ├── kitti
-│   │   │── training
-│   │   │   ├──calib & velodyne & label_2 & image_2 & image_3
-│   │   │── testing
-├── Models
-├── utils_classes
-├── .
-├── .
-```
-
-To Add your own Dataset :
 ```
 Stereo-3D-Detection
 ├── checkpoints
