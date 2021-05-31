@@ -25,8 +25,8 @@ def parse_configs():
     parser.add_argument('--save_path', type=str, default='results/',help='the path of saving video and pickle files')
     parser.add_argument('--pretrained_anynet', type=str, default='checkpoints/anynet.tar',help='pretrained model path')
     parser.add_argument('--pretrained_sfa', type=str, default='checkpoints/sfa.pth', metavar='PATH')
-    parser.add_argument('--data', type=str, default='kitti')
-    parser.add_argument('--eval', action='store_true', help='If true, evaluate your pipeline.')
+    parser.add_argument('--datapath', type=str, default='data/kitti')
+    parser.add_argument('--evaluate', action='store_true', help='If true, evaluate your pipeline.')
     parser.add_argument('--generate_video', action='store_true', help='If true, generate video.')
     parser.add_argument('--with_bev', action='store_true', help='If true, generate video.')
     parser.add_argument('--profiling', action='store_true', help='put small limit for loop length')
@@ -90,12 +90,7 @@ def parse_configs():
     }
     configs.num_input_features = 4
 
-    # #### set it to empty as this file is inside the root of the project ####
-    configs.dataset_dir = os.path.join('data', configs.data)
-    # # An-Paths
-    # configs.dataset_dir = '/home/ayman/FOE-Linux/Graduation_Project/KITTI'
-
-        
+    # #### set it to empty as this file is inside the root of the project ####        
     return configs
 
 def main():
@@ -130,7 +125,7 @@ def main():
         loop_length=len(dataset)
         avg_time = 0.
     else:
-        dataset_root = os.path.join(cfg.dataset_dir, "training")
+        dataset_root = os.path.join(cfg.datapath, "training")
         KITTI_stereo = KittiDataset(dataset_root, stereo_mode=True, mode='val')
         loop_length = len(KITTI_stereo)
         if cfg.profiling:
@@ -143,7 +138,7 @@ def main():
             printer = ((i % cfg.print_freq) == 0)
         else:
             imgL, imgR, labels, calib = KITTI_stereo[i]
-            if cfg.eval:
+            if cfg.evaluate:
                 printer = False
             else:
                 printer = True
@@ -154,7 +149,7 @@ def main():
                 bev = anynet_model.predict(imgL, imgR, calib.calib_path, printer=printer)
             detections = sfa_model.predict(bev, printer=printer)
             objects = SFA3D_output_to_kitti_objects(detections)
-        if cfg.eval:
+        if cfg.evaluate:
             predictions.append(objects)
             if i % cfg.print_freq == 0:
                 print(i)
@@ -174,7 +169,7 @@ def main():
                 break
         torch.cuda.empty_cache()
 
-    if cfg.eval:
+    if cfg.evaluate:
         evaluations = [
             Evaluation(iou_threshold=0.5, evaluate_class='Car',        mode=EvalMode.IOU_3D),
             Evaluation(iou_threshold=0.7, evaluate_class='Car',        mode=EvalMode.IOU_3D),

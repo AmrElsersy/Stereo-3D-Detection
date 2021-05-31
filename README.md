@@ -10,11 +10,15 @@
 
 This repository containts a real time **3D depth estmiation** using stereo camera on [KITTI Benchmark](http://www.cvlibs.net/datasets/kitti/)
 
+<hr>
+
 ## Dependencies
 
 - [CUDA >= 10.0](https://developer.nvidia.com/Cuda-Toolkit)
 - [Pytorch >= 1.0](https://pytorch.org/)
 - [cuDNN](https://docs.nvidia.com/deeplearning/cudnn/)
+
+<hr>
 
 ## Installation
 
@@ -41,6 +45,8 @@ NOTE: this installlation is compatible with linux only, nearly will support wind
    - Then Navigate to Models/AnyNet/models/spn_t1 to activate spn layer 
    - If you are windows user, open git bash cmd and activate the enviroment and run`sh make.sh`
    - If you are Linuex user, open terminal and activate the enviroment and run `./make.sh` 
+
+<hr>
    
 ## Dataset Preparation
 
@@ -81,6 +87,8 @@ python demo.py --data <folder_name>
 
 ```
 
+<hr>
+
 ## Checkpoints Preparation
 
 You can download all checkpoints from this [Drive](https://drive.google.com/drive/folders/1QOAIldySCMdQuJ99SOOAmz-ckgPo-XgM?usp=sharing)
@@ -94,28 +102,31 @@ Stereo-3D-Detection
 ├── .
 ```
 
+<hr>
+
 ## Demo
 
 - To go from stereo to 3D object detection
 ```shell script
 python demo.py
 ```
-Note: you can navigate between images by pressing any key, and to exit press ESC
+#### OPTIONS:
 
-- To generate demo video, be sure you adjusted the path in [`demo.py`](https://github.com/AmrElsersy/Stereo-3D-Detection/blob/aeb7f0b0b15da3ed7534f3b7346aa01011a71950/demo.py#L115) then run:
-```shell script
-python demo.py --generate_video
-```
+- Choose a mode:
+   -  Regular mood, Add no option -> You can navigate between images by pressing any key, and to exit press ESC
+   - To generate a video, Be sure that you have adjusted the path in [`demo.py`](https://github.com/AmrElsersy/Stereo-3D-Detection/blob/aeb7f0b0b15da3ed7534f3b7346aa01011a71950/demo.py#L115), Then add `--generate_video`
+      - To generate the video with bev view, Add `--with_bev`
+   - To evaluate the pipeline, Add `--evaluate`
+- To Spasify How often to print time durations In case of video, Add `--print_freq <no>`
+- Data path is set to `data/kitti` by default, To change it add `--datapath <datapath>`
+- Anynet checkpoint path is set to `checkpoints/anynet.tar` by default, To change it add `--pretrained_anynet <checkpoint path>`
+- SFA checkpoint path is set to `checkpoints/sfa.pth` by default, To change it add `--pretrained_sfa <checkpoint path>`
 
-## Evaluation
+<hr>
 
-If you want to evaluate the pipeline, run:
-```shell script
-python demo.py --eval
-```
 ## Training
 
-* ### Train Anynet Model
+#### Train Anynet Model
 You have to organize your own dataset as the following format
 ```
 Stereo-3D-Detection
@@ -147,14 +158,16 @@ python train_anynet.py  --maxdisp <default: 192> \
                         --save_path <default: 'results/train_anynet'> \
                         --with_spn <Activates Anynet last layer [RECOMMENDED]>
 ```
-```python
---load_npy           #OPTIONAL: If disparity files are .npy format
---evaluate           #OPTIONAL: If you want to evaluate your pretrained checkpoint without training
---split_file         #OPTIONAL: Incase of datatype 2012/2015
---train_file         #OPTIONAL: Incase of training datatype of other, and want to train on specefic file names
---validation_file    #OPTIONAL: Incase of testing datatype of other, and want to validate/test on specefic file names
-```
-For Kitti Object:  
+###### OPTIONS:
+- If disparity files are .npy format, Add `--load_npy` 
+- If you want to evaluate your pretrained checkpoint without training, Add `--evaluate`
+- In case of datatype 2012/2015, Add `--split_file`
+- In case of training datatype of other, and want to train on specefic file names `--train_file`
+- In case of testing datatype of other, and want to validate/test on specefic file names `--validation_file`
+
+<hr>
+
+##### To train on Kitti Object:  
 ```shell script
 python train_anynet.py  --maxdisp 192 \
                         --datapath data/kitti/ \
@@ -164,7 +177,7 @@ python train_anynet.py  --maxdisp 192 \
                         --validation_file data/kitti/imagesets/val.txt \
                         --with_spn --load_npy
 ``` 
-For Kitti 2015:
+##### To train on Kitti 2015:
 ```shell script
 python train_anynet.py  --maxdisp 192 \
                         --datapath data/path-to-kitti2015/training/ \
@@ -174,7 +187,7 @@ python train_anynet.py  --maxdisp 192 \
                         --split_file data/path-to-kitti2015/split.txt
                         --with_spn
 ```
-For Kitti 2012:
+##### To train on Kitti 2012:
 ```shell script
 python train_anynet.py  --maxdisp 192 \
                         --datapath data/path-to-kitti2012/training/ \
@@ -184,5 +197,7 @@ python train_anynet.py  --maxdisp 192 \
                         --split_file data/path-to-kitti2012/split.txt
                         --with_spn
 ```
+
+<hr>
 
 
