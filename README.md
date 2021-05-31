@@ -111,14 +111,8 @@ python demo.py --generate_video
 
 1. you need To generate predictions pickle file by running:
 ```shell script
-python demo.py --generate_pickle
+python demo.py --eval
 ```
-
-2. Then, to evaluate the resulted prediction run [`demo_eval.py`](./demo_eval.py)
-```shell script
-python demo_eval.py
-```
-
 ## Training
 
 * ### Train Anynet Model
