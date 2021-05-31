@@ -91,9 +91,6 @@ Stereo-3D-Detection
 │   ├── anynet.tar
 │   ├── sfa.pth
 ├── data
-├── Models
-├── utils_classes
-├── .
 ├── .
 ```
 
@@ -125,7 +122,27 @@ python demo_eval.py
 ## Training
 
 * ### Train Anynet Model
-
+Data structure
+```
+Stereo-3D-Detection
+├── checkpoints
+├── data
+│   ├── kitti
+│   │   │── training
+│   │   │   ├──disp_occ_0 & image_2 & image_3
+├── .
+```
+Incase of npy disp:
+```
+Stereo-3D-Detection
+├── checkpoints
+├── data
+│   ├── kitti
+│   │   │── training
+│   │   │   ├──disp_occ_0_npy & image_2 & image_3
+├── .
+```
+Command:
 ```shell script
 python train_anynet.py  --maxdisp <default: 192> \ 
                         --datapath <datapath> \
