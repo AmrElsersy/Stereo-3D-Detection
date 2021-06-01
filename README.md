@@ -179,6 +179,8 @@ python train_anynet.py  --maxdisp 192 \
 
 ## Utils
 
+### Generate disparity
+
 To generate disparity from point cloud, Be sure your folder structure is like this:
 ```
 ├── checkpoints
@@ -201,6 +203,8 @@ NOTE: When specifiying your data path make it relative to Stereo-3D-Detection di
 This will generate 2 disaprity folders at the data path location `generated_disp/disp_occ_0` and `generated_disp/disp_occ_0_npy`, you can use any. But we recommend to use `.npy` files 
 
 <hr>
+
+### Generate disparity/depth
 
 To generate point cloud from disparity/depth, Be sure your folder structure is like this:
 ```
@@ -226,6 +230,8 @@ This will generate a velodyne folder at the data path location `generated_lidar/
 
 <hr>
 
+### Visualize point cloud
+
 To View a point cloud file `.bin`, You can use View_bin.py file in tools folder. Just copy it in point cloud folder, then run:
 ```
 python view_bin.py
@@ -234,6 +240,8 @@ python view_bin.py
 - By default, it will show you image `000000.bin`, but you can specify the image you want by using `--image <image no>` flag
 
 <hr>
+
+### Profiling
 
 We added another way to track how long each function take and how frequent it have been called. you can see this by running :
 ```
