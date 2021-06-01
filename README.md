@@ -38,9 +38,8 @@ conda create --name obj_det python=3.8.5
 ```
 	
 - Then Navigate to `Models/AnyNet/models/spn_t1` to activate SPN layer.
-- For windows, open the git bash cmd and activate the enviroment and run `sh make.sh`
-- For Linux, open the terminal and activate the enviroment and run `./make.sh` 
-
+- For windows, Open git bash terminal, Activate the enviroment then run `sh make.sh`
+- For Linux  , Open the terminal, Activate the enviroment then run  `./make.sh` 
 <hr>
    
 ## Dataset Preparation
