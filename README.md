@@ -92,7 +92,7 @@ python demo.py
    - To generate a video, Be sure that you have adjusted the path in [`demo.py`](https://github.com/AmrElsersy/Stereo-3D-Detection/blob/aeb7f0b0b15da3ed7534f3b7346aa01011a71950/demo.py#L115), Then add `--generate_video`
       - To generate the video with bev view, Add `--with_bev`
 - To Spasify How often to print time durations In case of video, Add `--print_freq <no>`
-- Data path is set to `data/kitti` by default, To change it add `--datapath <datapath>`
+- Data path is set to `data/kitti` by default, To change it add `--data_path <datapath>`
 - Anynet checkpoint path is set to `checkpoints/anynet.tar` by default, To change it add `--pretrained_anynet <checkpoint path>`
 - SFA checkpoint path is set to `checkpoints/sfa.pth` by default, To change it add `--pretrained_sfa <checkpoint path>`
 
@@ -100,7 +100,7 @@ python demo.py
 
 ## Training
 
-#### Train Anynet Model
+### Train Anynet Model
 You have to organize your own dataset as the following format
 ```
 Stereo-3D-Detection
@@ -126,12 +126,12 @@ Stereo-3D-Detection
 Command:
 ```shell script
 python train_anynet.py  --maxdisp <default: 192> \ 
-                        --datapath <datapath> \
-                        --pretrained <pretrained checkpoint path> \
                         --datatype <2012/2015/other> \
+                        --data_path <datapath> \
+                        --save_path <default: 'results/train_anynet'> \
+                        --pretrained_path <pretrained checkpoint path> \
                         --train_file <train file path if exist> \
                         --validation_file <validation file path> \
-                        --save_path <default: 'results/train_anynet'> \
                         --with_spn <Activates Anynet last layer [RECOMMENDED]>
 ```
 ###### OPTIONS:
@@ -147,9 +147,9 @@ python train_anynet.py  --maxdisp <default: 192> \
 ##### To train on Kitti Object:  
 ```shell script
 python train_anynet.py  --maxdisp 192 \
-                        --datapath data/kitti/ \
-                        --pretrained checkpoints/anynet.tar \
                         --datatype other \
+                        --data_path data/kitti/ \
+                        --pretrained_path checkpoints/anynet.tar \
                         --train_file data/kitti/imagesets/train.txt \
                         --validation_file data/kitti/imagesets/val.txt \
                         --with_spn --load_npy
@@ -157,23 +157,53 @@ python train_anynet.py  --maxdisp 192 \
 ##### To train on Kitti 2015:
 ```shell script
 python train_anynet.py  --maxdisp 192 \
-                        --datapath data/path-to-kitti2015/training/ \
-                        --save_path results/kitti2015 \
                         --datatype 2015 \
-                        --pretrained checkpoints/anynet.tar  \
-                        --split_file data/path-to-kitti2015/split.txt
+                        --save_path results/kitti2015 \
+                        --data_path data/path-to-kitti2015/training/ \
+                        --pretrained_path checkpoints/anynet.tar  \
+                        --split_file data/path-to-kitti2015/split.txt \
                         --with_spn
 ```
 ##### To train on Kitti 2012:
 ```shell script
 python train_anynet.py  --maxdisp 192 \
-                        --datapath data/path-to-kitti2012/training/ \
-                        --save_path results/kitti2012 \
                         --datatype 2012 \
-                        --pretrained checkpoints/anynet.tar  \
-                        --split_file data/path-to-kitti2012/split.txt
+                        --save_path results/kitti2012 \
+                        --data_path data/path-to-kitti2012/training/ \
+                        --pretrained_path checkpoints/anynet.tar  \
+                        --split_file data/path-to-kitti2012/split.txt \
                         --with_spn
 ```
+
+<hr>
+
+### Train SFA Model
+You have to organize your own dataset as the following format
+```
+Stereo-3D-Detection
+├── checkpoints
+├── data
+│   ├── <dataset>
+│   │   │── ImageSets
+│   │   │   ├── train.txt & test.txt & val.txt
+│   │   │── training
+│   │   │   ├── velodyne & calib & label_2
+├── .
+├── .
+```
+Command:
+```shell script
+python train_sfa.py
+```
+###### OPTIONS:
+- By default data path is set to 'data/kitti', To change it use `--data_path <datapath>`
+- By default pretrained path is set to 'checkpoints/sfa.pth', To change it use `--pretrained_path <pretrained checkpoint path>`
+- By default the name used for saved files is set to 'fpn_resnet_18', To change it use `--saved_fn <name>`
+- By default the batch size is set to 2, To change it use `--batch_size <no>`
+- You can adjust how often to print/save checkpoint/ Tensorboard freq through these flags `--print_freq <no>` `--checkpoint_freq <no>` `--tensorboard_freq <no>`
+- If you want to evaluate your pretrained checkpoint without training, Add `--evaluate`
+
+NOTE: The text files in ImageSets are split files, you can find the split files of Kitti object dataset [here](https://drive.google.com/drive/folders/1acbucPC1Sni57j8KUUQdvmyl0E-sX_aB?usp=sharing)
 
 <hr>
 
@@ -197,7 +227,7 @@ python ./tools/generate_disp.py --datapath <datapath>
 ```
 #### OPTIONS:
 - There is `--limit <no>` flag if you dont to limit who much of the dataset you want to convert 
-- Data path is set to `data/kitti/training` by default, To change it add `--datapath <datapath>`
+- Data path is set to `data/kitti/training` by default, To change it add `--data_path <datapath>`
 NOTE: When specifiying your data path make it relative to Stereo-3D-Detection directory
 
 This will generate 2 disaprity folders at the data path location `generated_disp/disp_occ_0` and `generated_disp/disp_occ_0_npy`, you can use any. But we recommend to use `.npy` files 
@@ -222,7 +252,7 @@ python ./tools/generate_lidar.py --datapath <datapath>
 ```
 #### OPTIONS:
 - If your converting depth images, use this flag `--is_depth`
-- Data path is set to `data/kitti/training` by default, To change it add `--datapath <datapath>`
+- Data path is set to `data/kitti/training` by default, To change it add `--data_path <datapath>`
 - There is `--limit <no>` flag if you dont to limit who much of the dataset you want to convert
 NOTE: When specifiying your data path make it relative to Stereo-3D-Detection directory
 
@@ -247,7 +277,7 @@ We added another way to track how long each function take and how frequent it ha
 ```
 sh profiling.sh
 ```
-Then you will find your results in `[profiling.txt](profiling.txt)`. 
+Then you will find your results in new generated file `profiling.txt`. 
 
 <hr>
 

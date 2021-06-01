@@ -24,14 +24,14 @@ def parse_configs():
     
     parser.add_argument('--index', type=int, default=0, help="start index in dataset")
     parser.add_argument('--save_path', type=str, default='results/',help='the path of saving video and pickle files')
-    parser.add_argument('--pretrained_anynet', type=str, default='checkpoints/anynet.tar',help='pretrained model path')
+    parser.add_argument('--pretrained_anynet', type=str, default='checkpoints/anynet4.tar',help='pretrained model path')
     parser.add_argument('--pretrained_sfa', type=str, default='checkpoints/sfa.pth', metavar='PATH')
-    parser.add_argument('--datapath', type=str, default='data/kitti')
+    parser.add_argument('--data_path', type=str, default='data/kitti')
     parser.add_argument('--evaluate', action='store_true', help='If true, evaluate your pipeline.')
     parser.add_argument('--generate_video', action='store_true', help='If true, generate video.')
     parser.add_argument('--with_bev', action='store_true', help='If true, generate video.')
     parser.add_argument('--profiling', action='store_true', help='put small limit for loop length')
-    parser.add_argument('--with_spn', action='store_true', default=True, help='Allow using spn layer')
+    parser.add_argument('--with_spn', action='store_true', default=False, help='Allow using spn layer')
     parser.add_argument('--print_freq', type=int, default=5, help='print frequence')
 
     parser.add_argument('--saved_fn', type=str, default='fpn_resnet_18', metavar='FN', help='The name using for saving logs, models,...')
@@ -129,7 +129,7 @@ def main():
         desc = 'View images'
         if cfg.evaluate: 
             desc = 'Evaluating'
-        dataset_root = os.path.join(cfg.datapath, "training")
+        dataset_root = os.path.join(cfg.data_path, "training")
         KITTI_stereo = KittiDataset(dataset_root, stereo_mode=True, mode='val')
         loop_length = len(KITTI_stereo)
         if cfg.profiling:

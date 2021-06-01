@@ -21,7 +21,6 @@ def parse_train_configs():
                         help='re-produce the results with seed random')
     parser.add_argument('--saved_fn', type=str, default='fpn_resnet_18', metavar='FN',
                         help='The name using for saving logs, models,...')
-
     parser.add_argument('--root-dir', type=str, default='./', metavar='PATH',
                         help='The ROOT working directory')
     ####################################################################
@@ -29,9 +28,9 @@ def parse_train_configs():
     ####################################################################
     parser.add_argument('--arch', type=str, default='fpn_resnet_18', metavar='ARCH',
                         help='The name of the model architecture')
-    parser.add_argument('--pretrained_path', type=str, default='./checkpoints/sfa.pth', metavar='PATH',
+    parser.add_argument('--data_path', default='data/kitti', help='datapath')
+    parser.add_argument('--pretrained_path', type=str, default='checkpoints/sfa.pth', metavar='PATH',
                         help='the path of the pretrained checkpoint')
-
     ####################################################################
     ##############     Dataloader and Running configs            #######
     ####################################################################
@@ -43,7 +42,7 @@ def parse_train_configs():
                         help='Take a subset of the dataset to run and debug')
     parser.add_argument('--num_workers', type=int, default=4,
                         help='Number of threads for loading data')
-    parser.add_argument('--batch_size', type=int, default=16,
+    parser.add_argument('--batch_size', type=int, default=2,
                         help='mini-batch size (default: 16), this is the total'
                              'batch size of all GPUs on the current node when using'
                              'Data Parallel or Distributed Data Parallel')
@@ -145,7 +144,7 @@ def parse_train_configs():
     ####################################################################
     ############## Dataset, logs, Checkpoints dir ######################
     ####################################################################
-    configs.dataset_dir = os.path.join('data', 'kitti')
+    configs.dataset_dir = configs.data_path
     configs.checkpoints_dir = os.path.join('checkpoints')
     configs.logs_dir = os.path.join('results')
 

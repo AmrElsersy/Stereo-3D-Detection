@@ -14,17 +14,18 @@ import Models.AnyNet.models.anynet as anynet
 import tqdm
 
 parser = argparse.ArgumentParser(description='Anynet fintune on KITTI')
-parser.add_argument('--pretrained', type=str, default='checkpoints/checkpoint.tar', help='pretrained model path')
-parser.add_argument('--resume', type=str, default=None, help='resume path')
-parser.add_argument('--datatype', default='2015', help='datapath')
-parser.add_argument('--datapath', default=None, help='datapath')
-
+parser.add_argument('--datatype', default='2015', help='data type')
+parser.add_argument('--data_path', default=None, help='datapath')
+parser.add_argument('--pretrained_path', type=str, default='checkpoints/checkpoint.tar', help='pretrained model path')
+parser.add_argument('--resume_path', type=str, default=None, help='resume path')
 parser.add_argument('--save_path', type=str, default='results/train_anynet', help='the path of saving checkpoints and log')
-parser.add_argument('--load_npy', action='store_true')
-parser.add_argument('--evaluate', action='store_true')
+
 parser.add_argument('--split_file', type=str, default=None)
 parser.add_argument('--train_file', type=str, default=None)
 parser.add_argument('--validation_file', type=str, default=None)
+parser.add_argument('--load_npy', action='store_true')
+parser.add_argument('--evaluate', action='store_true')
+parser.add_argument('--with_spn', action='store_true', help='with spn network or not')
 
 parser.add_argument('--epochs', type=int, default=110, help='number of epochs to train')
 parser.add_argument('--lr', type=float, default=1e-5, help='learning rate')   
@@ -35,7 +36,6 @@ parser.add_argument('--maxdisp', type=int, default=192, help='maxium disparity')
 parser.add_argument('--loss_weights', type=float, nargs='+', default=[0.5, 0.7, 1, 1])
 parser.add_argument('--max_disparity', type=int, default=192)
 parser.add_argument('--maxdisplist', type=int, nargs='+', default=[12, 3, 3])
-parser.add_argument('--with_spn', action='store_true', help='with spn network or not')
 parser.add_argument('--init_channels', type=int, default=1, help='initial channels for 2d feature extractor')
 parser.add_argument('--nblocks', type=int, default=2, help='number of layers in each stage')
 parser.add_argument('--channels_3d', type=int, default=4, help='number of initial channels 3d feature extractor ')
@@ -62,10 +62,10 @@ def main():
 
     if args.datatype == 'other':
         train_left_img, train_right_img, train_left_disp, test_left_img, test_right_img, test_left_disp = ls.dataloader(
-            args.datapath, args.train_file, args.validation_file, load_npy=args.load_npy)
+            args.data_path, args.train_file, args.validation_file, load_npy=args.load_npy)
     else:
         train_left_img, train_right_img, train_left_disp, test_left_img, test_right_img, test_left_disp = ls.dataloader(
-            args.datapath, log, args.split_file)
+            args.data_path, log, args.split_file)
 
     TrainImgLoader = torch.utils.data.DataLoader(
         DA.myImageFloder(train_left_img, train_right_img, train_left_disp, load_npy=args.load_npy),
@@ -88,26 +88,26 @@ def main():
 
     args.start_epoch = 0
     cudnn.benchmark = True
-    if args.resume:
-        if os.path.isfile(args.resume):
-            log.info("=> loading checkpoint '{}'".format(args.resume))
-            checkpoint = torch.load(args.resume)
+    if args.resume_path:
+        if os.path.isfile(args.resume_path):
+            log.info("=> loading checkpoint '{}'".format(args.resume_path))
+            checkpoint = torch.load(args.resume_path)
             args.start_epoch = checkpoint['epoch'] + 1
             model.load_state_dict(checkpoint['state_dict'])
             optimizer.load_state_dict(checkpoint['optimizer'])
-            log.info("=> loaded checkpoint '{}' (epoch {})".format(args.resume, checkpoint['epoch']))
+            log.info("=> loaded checkpoint '{}' (epoch {})".format(args.resume_path, checkpoint['epoch']))
             # test(TestImgLoader, model, log, checkpoint['epoch'])
         else:
-            log.info("=> no checkpoint found at '{}'".format(args.resume))
+            log.info("=> no checkpoint found at '{}'".format(args.resume_path))
             log.info("=> Will start from scratch.")
-    elif args.pretrained:
-        if os.path.isfile(args.pretrained):
-            checkpoint = torch.load(args.pretrained)
+    elif args.pretrained_path:
+        if os.path.isfile(args.pretrained_path):
+            checkpoint = torch.load(args.pretrained_path)
             model.load_state_dict(checkpoint['state_dict'], strict=False)
-            log.info("=> loaded pretrained model '{}'".format(args.pretrained))
+            log.info("=> loaded pretrained model '{}'".format(args.pretrained_path))
         else:
             log.info("=> no pretrained model found at '{}'".format(
-                args.pretrained))
+                args.pretrained_path))
             log.info("=> Will start from scratch.")
     else:
         log.info("=> Will start from scratch.")

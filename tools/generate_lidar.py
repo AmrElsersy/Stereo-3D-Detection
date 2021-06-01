@@ -59,16 +59,16 @@ def project_depth_to_points(calib, depth, max_high):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Generate Libar')
-    parser.add_argument('--datapath', type=str, default='data/kitti/training')
+    parser.add_argument('--data_path', type=str, default='data/kitti/training')
     parser.add_argument('--max_high', type=int, default=1)
     parser.add_argument('--is_depth', action='store_true')
     parser.add_argument('--limit', type=int, default=-1)
 
     args = parser.parse_args()
 
-    disparity_dir = os.path.join(src_dir, args.datapath, "disp_occ_0")
-    calib_dir = os.path.join(src_dir, args.datapath, "calib")
-    save_dir = os.path.join(src_dir, args.datapath, "generated_lidar", "velodyne")
+    disparity_dir = os.path.join(src_dir, args.data_path, "disp_occ_0")
+    calib_dir = os.path.join(src_dir, args.data_path, "calib")
+    save_dir = os.path.join(src_dir, args.data_path, "generated_lidar", "velodyne")
 
     assert os.path.isdir(disparity_dir)
     assert os.path.isdir(calib_dir)

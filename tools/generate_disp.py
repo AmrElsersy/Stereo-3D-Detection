@@ -36,16 +36,16 @@ def generate_dispariy_from_velo(pc_velo, height, width, calib):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Generate Disparity')
-    parser.add_argument('--datapath', type=str, default='../data/kitti/training/')
+    parser.add_argument('--data_path', type=str, default='../data/kitti/training/')
     parser.add_argument('--limit', type=int, default=-1)
     args = parser.parse_args()
 
-    assert os.path.isdir(args.datapath)
-    lidar_dir = args.datapath + '/velodyne/'
-    calib_dir = args.datapath + '/calib/'
-    image_dir = args.datapath + '/image_2/'
-    disparity_dir = args.datapath + "/generated_disp" + '/disp_occ_0/'
-    disparity_npy_dir = args.datapath + "/generated_disp" + '/disp_occ_0_npy/'
+    assert os.path.isdir(args.data_path)
+    lidar_dir = args.data_path + '/velodyne/'
+    calib_dir = args.data_path + '/calib/'
+    image_dir = args.data_path + '/image_2/'
+    disparity_dir = args.data_path + "/generated_disp" + '/disp_occ_0/'
+    disparity_npy_dir = args.data_path + "/generated_disp" + '/disp_occ_0_npy/'
 
 
     assert os.path.isdir(lidar_dir)
