@@ -87,7 +87,7 @@ python demo.py
 #### OPTIONS:
 
 - Choose a mode:
-   - Regular mood, Add no option -> You can navigate between images by pressing any key, and to exit press ESC
+   - Regular mode, Add no option -> You can navigate between images by pressing any key, and to exit press ESC
    - To evaluate the pipeline, Add `--evaluate`
    - To generate a video, Be sure that you have adjusted the path in [`demo.py`](https://github.com/AmrElsersy/Stereo-3D-Detection/blob/aeb7f0b0b15da3ed7534f3b7346aa01011a71950/demo.py#L115), Then add `--generate_video`
       - To generate the video with bev view, Add `--with_bev`
@@ -225,3 +225,23 @@ NOTE: When specifiying your data path make it relative to Stereo-3D-Detection di
 This will generate a velodyne folder at the data path location `generated_lidar/velodyne` 
 
 <hr>
+
+To View a point cloud file `.bin`, You can use View_bin.py file in tools folder. Just copy it in point cloud folder, then run:
+```
+python view_bin.py
+```
+#### OPTIONS:
+- By default, it will show you image `000000.bin`, but you can specify the image you want by using `--image <image no>` flag
+
+<hr>
+
+We added another way to track how long each function take and how frequent it have been called. you can see this by running :
+```
+sh profiling.sh
+```
+Then you will find your results in `[profiling.txt](profiling.txt)`. 
+
+<hr>
+
+
+

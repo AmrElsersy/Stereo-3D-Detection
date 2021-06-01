@@ -50,13 +50,13 @@ class myImageFloder(data.Dataset):
 
         c, h, w = left_img.shape
 
-        left_img =  transforms.functional.crop(left_img, h - 352,  w - 1200, h, w)
-        right_img =  transforms.functional.crop(right_img, h - 352,  w - 1200, h, w)
+        left_img =  transforms.functional.crop(left_img, max(0, h - 352), max(0, w - 1200), h, w)
+        right_img =  transforms.functional.crop(right_img, max(0, h - 352), max(0, w - 1200), h, w)
 
         left_img = transforms.Normalize(**self.normalize)(left_img)
         right_img = transforms.Normalize(**self.normalize)(right_img)
 
-        dataL = dataL[h - 352:h, w - 1200:w]
+        dataL = dataL[max(0, h - 352):h, max(0, w -1200) :w]
         dataL = torch.from_numpy(dataL)
             
         return left_img.cpu(), right_img.cpu(), dataL

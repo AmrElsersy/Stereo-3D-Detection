@@ -14,7 +14,7 @@ import Models.AnyNet.models.anynet as anynet
 import tqdm
 
 parser = argparse.ArgumentParser(description='Anynet fintune on KITTI')
-parser.add_argument('--pretrained', type=str, default='results/pretrained_anynet/checkpoint.tar', help='pretrained model path')
+parser.add_argument('--pretrained', type=str, default='checkpoints/checkpoint.tar', help='pretrained model path')
 parser.add_argument('--resume', type=str, default=None, help='resume path')
 parser.add_argument('--datatype', default='2015', help='datapath')
 parser.add_argument('--datapath', default=None, help='datapath')
@@ -202,7 +202,7 @@ def test(dataloader, model, log, epoch=-1):
 
     info_str = ', '.join(['Stage {}={:.3f}%'.format(x, D1s[x].avg * 100) for x in range(stages)])
     Error3 = np.asarray(Error["3"], dtype=np.float32)
-    log.info("Max Error is {}, while Min Error is {}".format(np.max(Error3), np.min(Error3)))
+    # log.info("Max Error is {}, while Min Error is {}".format(np.max(Error3), np.min(Error3)))
     if epoch > -1:
         log.info('Average test 3-Pixel Error at Epoch {}: '.format(epoch) + info_str)
     else:
