@@ -52,7 +52,7 @@ class KittiVisualizer:
 
         self.__show_3D()
 
-    def visualize_scene_2D(self, pointcloud, image, objects, labels=None, calib=None):
+    def visualize_scene_2D(self, pointcloud, image, objects, labels=None, calib=None, visualize=True):
         # read BEV & image
         self.__scene_2D_mode = True
         _image = self.visualize_scene_image(image, objects, calib)
@@ -77,9 +77,11 @@ class KittiVisualizer:
         image_and_bev[:new_image_height, :, :] = _image
         image_and_bev[new_image_height:, :, :] = _bev
 
-        return image_and_bev
-        # cv2.imshow("scene 2D", image_and_bev)
-        # self.__show_2D()
+        if visualize:
+            cv2.imshow("scene 2D", image_and_bev)
+            self.__show_2D()
+        else:
+            return image_and_bev
 
 
     def visualize_stereo_scene(self, imgL, disp, pointcloud):
@@ -125,7 +127,6 @@ class KittiVisualizer:
         # 3D Boxes of model output
         for obj in objects:
             color = self.__get_box_color(obj.label)
-            color = [c * 255 for c in color]
             self.__draw_bev_box3d(BEV, obj.bbox_3d, color, calib)
 
         # # 3D Boxes of dataset labels 

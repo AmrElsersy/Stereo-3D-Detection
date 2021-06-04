@@ -22,9 +22,9 @@ torch.cuda.empty_cache()
 def parse_configs():
     parser = argparse.ArgumentParser(description='Testing config for the Implementation')
     
-    parser.add_argument('--index', type=int, default=0, help="start index in dataset")
+    parser.add_argument('--index', type=int, default=1, help="start index in dataset")
     parser.add_argument('--save_path', type=str, default='results/',help='the path of saving video and pickle files')
-    parser.add_argument('--pretrained_anynet', type=str, default='checkpoints/anynet4.tar',help='pretrained model path')
+    parser.add_argument('--pretrained_anynet', type=str, default='checkpoints/anynet.tar',help='pretrained model path')
     parser.add_argument('--pretrained_sfa', type=str, default='checkpoints/sfa.pth', metavar='PATH')
     parser.add_argument('--data_path', type=str, default='data/kitti')
     parser.add_argument('--evaluate', action='store_true', help='If true, evaluate your pipeline.')
@@ -130,7 +130,7 @@ def main():
         if cfg.evaluate: 
             desc = 'Evaluating'
         dataset_root = os.path.join(cfg.data_path, "training")
-        KITTI_stereo = KittiDataset(dataset_root, stereo_mode=True, mode='val')
+        KITTI_stereo = KittiDataset(dataset_root, stereo_mode=True, mode='train')
         loop_length = len(KITTI_stereo)
         if cfg.profiling:
             loop_length = 20
@@ -165,7 +165,8 @@ def main():
                 img_ = visualizer.visualize_scene_image(imgL, objects, calib)
             img_list.append(img_)
         elif not cfg.profiling:
-            visualizer.visualize_scene_image(imgL, objects, calib=calib, scene_2D_mode=False)
+            # visualizer.visualize_scene_image(imgL, objects, calib=calib, scene_2D_mode=False)
+            visualizer.visualize_scene_2D(sparse_points.cpu().numpy(), imgL, objects, labels, calib=calib)
             if visualizer.user_press == 27:
                 cv2.destroyAllWindows()
                 break
