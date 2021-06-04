@@ -16,7 +16,7 @@ from visualization.BEVutils import *
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-def makeBEVMap(pointcloud, boundary):
+def makeBEVMap(pointcloud, boundary, pointpainting = False):
     # sort by z ... to get the maximum z when using unique 
     # (as unique function gets the first unique elemnt so we attatch it with max value)
     pointcloud = torch.tensor(pointcloud)
@@ -32,6 +32,10 @@ def makeBEVMap(pointcloud, boundary):
     x_bev = torch.tensor( pointcloud[:, 0] * descretization_x, dtype=torch.long)
     y_bev = torch.tensor((cnf.BEV_WIDTH/2) + pointcloud[:, 1] * descretization_y, dtype=torch.long)
     z_bev = pointcloud[:, 2] # float32, cuda
+
+    if pointpainting:
+        semantic_map  = torch.ones((MAP_HEIGHT, MAP_WIDTH),dtype=torch.float32) * 255 # semantic map default value 255 (which is background value) 
+        semantic_bev = pointcloud[:, 3]
                 
     xy_bev = torch.stack((x_bev, y_bev), dim=1)
 
@@ -49,15 +53,24 @@ def makeBEVMap(pointcloud, boundary):
     # points are sorted by z, so unique indices (first found indices) is the max z
     height_map[xy_bev_unique[:,0], xy_bev_unique[:,1]] = z_bev[indices] / max_height
 
-    density_map[xy_bev_unique[:,0], xy_bev_unique[:,1]] = torch.minimum(
-        torch.ones_like(counts), 
-        torch.log(counts.float() + 1)/ np.log(64)
-        )
+    if pointpainting:
+        # same as height .. assign each pixel in the semantic channel to its semantic value by indices
+        # indices is considered the index of heighst pixel semantic (since pointcloud is sorted by height)
+        semantic_map[xy_bev_unique[:,0], xy_bev_unique[:,1]] = semantic_bev[indices]
+    else:
+        density_map[xy_bev_unique[:,0], xy_bev_unique[:,1]] = torch.minimum(
+            torch.ones_like(counts), 
+            torch.log(counts.float() + 1)/ np.log(64)
+            )
 
     RGB_Map = torch.zeros((3, cnf.BEV_HEIGHT, cnf.BEV_WIDTH), dtype=torch.float32)
     RGB_Map[2, :, :] = density_map[:cnf.BEV_HEIGHT, :cnf.BEV_WIDTH]  # r_map
     RGB_Map[1, :, :] = height_map[:cnf.BEV_HEIGHT, :cnf.BEV_WIDTH]  # g_map
-    RGB_Map[0, :, :] = intensity_map[:cnf.BEV_HEIGHT, :cnf.BEV_WIDTH]  # b_map
+
+    if pointpainting:
+        RGB_Map[0, :, :] = semantic_map[:cnf.BEV_HEIGHT, :cnf.BEV_WIDTH]  # b_map
+    else:
+        RGB_Map[0, :, :] = intensity_map[:cnf.BEV_HEIGHT, :cnf.BEV_WIDTH]  # b_map
 
     # RGB_Map = torch.unsqueeze(RGB_Map, 0)
     # print(RGB_Map.shape)
