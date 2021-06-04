@@ -24,7 +24,7 @@ def parse_configs():
     
     parser.add_argument('--index', type=int, default=0, help="start index in dataset")
     parser.add_argument('--save_path', type=str, default='results/',help='the path of saving video and pickle files')
-    parser.add_argument('--pretrained_anynet', type=str, default='checkpoints/anynet4.tar',help='pretrained model path')
+    parser.add_argument('--pretrained_anynet', type=str, default='checkpoints/anynet_drive71.tar',help='pretrained model path')
     parser.add_argument('--pretrained_sfa', type=str, default='checkpoints/sfa.pth', metavar='PATH')
     parser.add_argument('--data_path', type=str, default='data/kitti')
     parser.add_argument('--evaluate', action='store_true', help='If true, evaluate your pipeline.')

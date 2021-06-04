@@ -30,8 +30,8 @@ conda create --name obj_det python=3.8.5
 - Install dependencies following this commands
  
 ```shell script
-   conda install -c pytorch torchvision=0.8.2
-   pip install PyQt5 vtk tqdm matplotlib==3.3.3 easydict==1.9 tensorboard==2.2.1
+   conda install pytorch torchvision torchaudio cudatoolkit=11.1 -c pytorch -c conda-forge
+   pip install PyQt5 vtk tqdm matplotlib==3.3.3 easydict==1.9 tensorboard
    pip install mayavi
    conda install scikit-image shapely
    conda install -c conda-forge opencv

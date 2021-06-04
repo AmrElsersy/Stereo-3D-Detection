@@ -72,7 +72,7 @@ class KittiCalibration:
         if from_video:
             self.calib_matrix = self.parse_calib_from_video(calib_path)
             self.calib_path = os.path.join(calib_path, "modified_calib_file.txt")
-            print('#################', self.calib_path)
+            # print('#################', self.calib_path)
         else:
             self.calib_matrix = self.parse_calib_files(calib_path)
 

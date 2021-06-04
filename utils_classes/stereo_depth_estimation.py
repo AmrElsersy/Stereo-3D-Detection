@@ -7,9 +7,9 @@ import time
 import numpy as np
 from PIL import Image
 import torchvision.transforms as transforms
-
 from Models.AnyNet.models.anynet import AnyNet
 import Models.AnyNet.dataloader.preprocess as preprocess
+from pthflops import count_ops
 
 
 import Models.SFA.config.kitti_config as cnf
@@ -58,13 +58,6 @@ class Stereo_Depth_Estimation:
 
         left_img = transforms.Normalize(**normalize)(left_img)
         right_img = transforms.Normalize(**normalize)(right_img)
-        # w, h = left_img.size
-        # left_img = left_img.crop((w - 1200, h - 352, w, h))
-        # right_img = right_img.crop((w - 1200, h - 352, w, h))
-
-        # processed = preprocess.get_transform(augment=False)
-        # left_img = processed(left_img)
-        # right_img = processed(right_img)
         
         left_img = left_img.unsqueeze(0)
         right_img = right_img.unsqueeze(0)
@@ -72,32 +65,34 @@ class Stereo_Depth_Estimation:
         return left_img, right_img
 
     def predict(self, imgL, imgR, calib_path, printer=False):
-        if printer:
-            start = time_synchronized()
-            imgL, imgR = self.preprocess(imgL, imgR)
-            end = time_synchronized()
-            print(f"Time for pre-processing: {1000 * (end - start)} ms")
+        # if printer:
+        #     start = time_synchronized()
+        #     imgL, imgR = self.preprocess(imgL, imgR)
+        #     end = time_synchronized()
+        #     print(f"Time for pre-processing: {1000 * (end - start)} ms")
 
-            start = time_synchronized()
-            disparity = self.stereo_to_disparity(imgL, imgR)
-            end = time_synchronized()
-            print(f"Time for stereo: {1000 * (end - start)} ms")
+        #     start = time_synchronized()
+        #     disparity = self.stereo_to_disparity(imgL, imgR)
+        #     end = time_synchronized()
+        #     print(f"Time for stereo: {1000 * (end - start)} ms")
 
-            start = time_synchronized()
-            psuedo_pointcloud = self.disparity_to_BEV(disparity, calib_path)
-            end = time_synchronized()
-            print(f"Time for post processing: {1000 * (end - start)} ms")
-        else:
-            imgL, imgR = self.preprocess(imgL, imgR)
-            disparity = self.stereo_to_disparity(imgL, imgR)
-            psuedo_pointcloud = self.disparity_to_BEV(disparity, calib_path, printer)
+        #     start = time_synchronized()
+        #     psuedo_pointcloud = self.disparity_to_BEV(disparity, calib_path)
+        #     end = time_synchronized()
+        #     print(f"Time for post processing: {1000 * (end - start)} ms")
+        # else:
+        imgL, imgR = self.preprocess(imgL, imgR)
+        disparity = self.stereo_to_disparity(imgL, imgR)
+        psuedo_pointcloud = self.disparity_to_BEV(disparity, calib_path, printer)
 
         return psuedo_pointcloud
 
     def stereo_to_disparity(self, imgL, imgR):
         imgL = imgL.float()
         imgR = imgR.float()
+        # count_ops(self.model)
         outputs = self.model(imgL, imgR)
+
         disp_map = torch.squeeze(outputs[-1], 1)[0].float()
         return disp_map
     
@@ -138,16 +133,6 @@ class Stereo_Depth_Estimation:
         # if printer:
         #     print(f"Time for BEV: {1000 * (end - start)} ms\n")
 
-        # numpy implementation (10 ms)
-        # bev = makeBEVMap(filtered.cpu().numpy(), cnf.boundary)
-        # bev = torch.from_numpy(bev).float().cuda()
-        # bev = torch.unsqueeze(bev, 0)
-
-        # visualize
-        # import cv2
-        # b = bev.permute((1,2,0)).cpu().numpy()
-        # cv2.imshow('bev', b)
-        # cv2.waitKey(0)
         if self.cfgs.with_bev:
             return bev, sparse_points
         
