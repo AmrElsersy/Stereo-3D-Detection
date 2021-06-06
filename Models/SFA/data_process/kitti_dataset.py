@@ -36,18 +36,6 @@ class KittiDataset(Dataset):
         pointpainting=False):
         self.pointpainting = pointpainting
 
-        if self.pointpainting:
-            # Semantic Segmentation
-            self.bisenetv2 = BiSeNetV2()
-            checkpoint = torch.load('checkpoints/BiseNetv2_150.pth', map_location=device)
-            self.bisenetv2.load_state_dict(checkpoint['bisenetv2'], strict=False)
-            self.bisenetv2.eval()
-            self.bisenetv2.to(device)
-
-            # PointPainting
-            self.painter = PointPainter()
-
-
         self.dataset_dir = configs.dataset_dir
         self.input_size = configs.input_size
         self.hm_size = configs.hm_size
@@ -142,29 +130,11 @@ class KittiDataset(Dataset):
         # =============================== Point Painting ========================================   
         lidarData, labels = get_filtered_lidar(lidarData, cnf.boundary, labels)
 
-        if self.pointpainting:
-            # Semantic Segmentation
-            img_path, image = self.get_image(sample_id)
-            input_image = preprocessing_kitti(image)
-            semantic = self.bisenetv2(input_image)
-            semantic = postprocessing(semantic)
-
-            cv2.imshow('semantic', semantic)
-            cv2.waitKey(0)
-
-            # Calib
-            calib_path = os.path.join(self.calib_dir, '{:06d}.txt'.format(sample_id))
-            calib_painting = KittiCalibration(calib_path)
-
-            lidarData = self.painter.paint(lidarData, semantic, calib_painting)
-
         bev_map = makeBEVMap(lidarData, cnf.boundary, pointpainting=self.pointpainting)
-
         # print(bev_map.shape)
         # bev = np.transpose(bev_map, (1,2,0))
         # cv2.imshow('bev', (bev * 255).astype(np.uint8))
-        # cv2.waitKey(0)
-        
+        # cv2.waitKey(0)        
         bev_map = torch.from_numpy(bev_map)
 
         # print(index, sample_id)

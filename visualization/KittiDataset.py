@@ -20,6 +20,8 @@ class KittiDataset(Dataset):
             end_idx = 6000
         elif mode == 'val':
             start_idx = 6000
+        elif mode == 'all':
+            end_idx = -1
         else:
             raise ValueError()
 
