@@ -20,7 +20,7 @@ class KittiVisualizer:
         self.ground_truth_color = (0,1,0) # green
         self.thickness = 3
         self.user_press = None
-        self.confidence_score_thresh = 0.25 
+        self.confidence_score_thresh = 0.3
         
     def visualize_scene_3D(self, pointcloud, objects, labels=None, calib=None):
         """
