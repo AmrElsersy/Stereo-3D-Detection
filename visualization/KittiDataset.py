@@ -16,23 +16,25 @@ class KittiDataset(Dataset):
 
         start_idx = 0
         end_idx = -1
-        if mode == 'train':
+        if self.mode == 'train':
             end_idx = 6000
-        elif mode == 'val':
+        elif self.mode == 'val':
             start_idx = 6000
-        elif mode == 'all':
+        elif self.mode == 'test':
             end_idx = -1
         else:
             raise ValueError()
 
         self.rootPointclouds = os.path.join(self.root, "velodyne")
         self.rootImages = os.path.join(self.root, "image_2")
-        self.rootAnnotations = os.path.join(self.root, "label_2")
+        if self.mode != 'test':
+            self.rootAnnotations = os.path.join(self.root, "label_2")
         self.rootCalibration = os.path.join(self.root, "calib")
 
         self.imagesNames      = sorted(os.listdir(self.rootImages)) [start_idx : end_idx]
         self.pointCloudNames  = sorted(os.listdir(self.rootPointclouds))[start_idx : end_idx]
-        self.annotationNames  = sorted(os.listdir(self.rootAnnotations))[start_idx : end_idx]
+        if self.mode != 'test':
+            self.annotationNames  = sorted(os.listdir(self.rootAnnotations))[start_idx : end_idx]
         self.calibrationNames = sorted(os.listdir(self.rootCalibration))[start_idx : end_idx]
 
         if self.stereo_mode:
@@ -42,26 +44,33 @@ class KittiDataset(Dataset):
     def __getitem__(self, index):
         imagePath = os.path.join(self.rootImages, self.imagesNames[index])
         pointcloudPath = os.path.join(self.rootPointclouds, self.pointCloudNames[index])
-        annotationPath = os.path.join(self.rootAnnotations, self.annotationNames[index])
+        if self.mode != 'test':
+            annotationPath = os.path.join(self.rootAnnotations, self.annotationNames[index])
         calibrationPath = os.path.join(self.rootCalibration, self.calibrationNames[index])
 
         image = self.read_image_cv2(imagePath)
-        # image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         pointcloud = self.read_pointcloud_bin(pointcloudPath)
-        labels = self.read_labels_annotations(annotationPath)
-        labels = self.convert_to_kitti_objects(labels)
+        if self.mode != 'test':
+            labels = self.read_labels_annotations(annotationPath)
+            labels = self.convert_to_kitti_objects(labels)
         calib = KittiCalibration(calib_path=calibrationPath)
 
         if self.stereo_mode:
             rightImagesPath = os.path.join(self.rootRightImages, self.rightImagesNames[index])
             rightImage = self.read_image_cv2(rightImagesPath)
 
+            if self.mode == 'test':
+                return image, rightImage, calib
+
             return image, rightImage, labels, calib
+
+        if self.mode == 'test':
+            return image, pointcloud, calib
 
         return image, pointcloud, labels, calib
 
     def __len__(self):
-        return len(self.annotationNames)
+        return len(self.imagesNames)
 
     def read_pointcloud_bin(self, path):
         # read .bin and convert to tensor

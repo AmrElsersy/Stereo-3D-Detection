@@ -22,17 +22,20 @@ torch.cuda.empty_cache()
 def parse_configs():
     parser = argparse.ArgumentParser(description='Testing config for the Implementation')
     
-    parser.add_argument('--index', type=int, default=1, help="start index in dataset")
+    parser.add_argument('--index', type=int, default=0, help="start index in dataset")
     parser.add_argument('--save_path', type=str, default='results/',help='the path of saving video and pickle files')
     parser.add_argument('--pretrained_anynet', type=str, default='checkpoints/anynet.tar',help='pretrained model path')
     parser.add_argument('--pretrained_sfa', type=str, default='checkpoints/sfa.pth', metavar='PATH')
     parser.add_argument('--data_path', type=str, default='data/kitti')
     parser.add_argument('--evaluate', action='store_true', help='If true, evaluate your pipeline.')
+    parser.add_argument('--testing', action='store_true', help='If true, run on testing data.')
     parser.add_argument('--generate_video', action='store_true', help='If true, generate video.')
     parser.add_argument('--with_bev', action='store_true', help='If true, generate video.')
     parser.add_argument('--profiling', action='store_true', help='put small limit for loop length')
+    parser.add_argument('--vis', action='store_true', default=False, help='Visualize')
     parser.add_argument('--with_spn', action='store_true', default=False, help='Allow using spn layer')
     parser.add_argument('--print_freq', type=int, default=5, help='print frequence')
+    parser.add_argument('--save_objects', type=str, default=None, help='To save the predicted objects.')
 
     parser.add_argument('--saved_fn', type=str, default='fpn_resnet_18', metavar='FN', help='The name using for saving logs, models,...')
     parser.add_argument('-a', '--arch', type=str, default='fpn_resnet_18', metavar='ARCH', help='The name of the model architecture')
@@ -108,7 +111,6 @@ def main():
         img_list = []
         VIDEO_ROOT_PATH = 'data/' + 'demo'
         VIDEO_NAME = "2011_09_26_0059"
-        # VIDEO_ROOT_PATH = '/home/ayman/FOE-Linux/Graduation_Project/KITTI/2011_09_26_drive_0001'
         dataset = KittiVideo(
                 imgL_dir=os.path.join(VIDEO_ROOT_PATH, VIDEO_NAME + "/image_02/data"),
                 imgR_dir=os.path.join(VIDEO_ROOT_PATH, VIDEO_NAME + "/image_03/data"),
@@ -129,19 +131,29 @@ def main():
         desc = 'View images'
         if cfg.evaluate: 
             desc = 'Evaluating'
-        dataset_root = os.path.join(cfg.data_path, "training")
-        KITTI_stereo = KittiDataset(dataset_root, stereo_mode=True, mode='train')
+        data_type = "training"
+        mode = "val"
+        if cfg.testing:
+            data_type = "testing"
+            mode = "test"
+        dataset_root = os.path.join(cfg.data_path, data_type)
+        KITTI_stereo = KittiDataset(dataset_root, stereo_mode=True, mode=mode)
         loop_length = len(KITTI_stereo)
         if cfg.profiling:
             loop_length = 20
             desc = 'Profiling'
+    if cfg.save_objects is not None:
+        objects_lines = []
     for i in tqdm.tqdm(range(cfg.index, loop_length), ascii=True, desc=(desc), total=(loop_length - cfg.index), unit='iteration'):
         if cfg.generate_video:
             imgL, imgR, pointcloud, calib = dataset[i]
             t = time_synchronized()
             printer = False
         else:
-            imgL, imgR, labels, calib = KITTI_stereo[i]
+            if not cfg.testing:
+                imgL, imgR, labels, calib = KITTI_stereo[i]
+            else:
+                imgL, imgR, calib = KITTI_stereo[i]
             if cfg.evaluate:
                 printer = False
             else:
@@ -153,6 +165,8 @@ def main():
                 bev = anynet_model.predict(imgL, imgR, calib.calib_path, printer=printer)
             detections = sfa_model.predict(bev, printer=printer)
             objects = SFA3D_output_to_kitti_objects(detections)
+            if cfg.save_objects is not None:
+                objects_lines.append(objects)
         if cfg.evaluate:
             predictions.append(objects)
         elif cfg.generate_video:
@@ -164,13 +178,17 @@ def main():
             else:
                 img_ = visualizer.visualize_scene_image(imgL, objects, calib)
             img_list.append(img_)
-        elif not cfg.profiling:
+        elif cfg.vis:
             # visualizer.visualize_scene_image(imgL, objects, calib=calib, scene_2D_mode=False)
             visualizer.visualize_scene_2D(sparse_points.cpu().numpy(), imgL, objects, labels, calib=calib)
             if visualizer.user_press == 27:
                 cv2.destroyAllWindows()
                 break
         torch.cuda.empty_cache()
+
+    if cfg.save_objects is not None:
+        with open(cfg.save_objects, 'wb') as file:
+            pickle.dump(objects_lines, file)
 
     if cfg.evaluate:
         evaluations = [
