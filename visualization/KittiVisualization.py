@@ -4,7 +4,7 @@ from visualization.KittiDataset import KittiDataset
 from visualization.KittiUtils import *
 import visualization.BEVutils as BEVutils
 import cv2, PIL
-import os
+import os, sys
 from torch import tensor
 from mayavi import mlab
 
@@ -12,6 +12,9 @@ from PIL import Image
 from PIL import ImageColor
 from PIL import ImageDraw
 from PIL import ImageFont
+
+sys.path.insert(0, '../')
+from Models.SFA.data_process.kitti_bev_utils import makeBEVMap
 
 class KittiVisualizer:
     def __init__(self):
@@ -21,6 +24,12 @@ class KittiVisualizer:
         self.thickness = 3
         self.user_press = None
         self.confidence_score_thresh = 0.25 
+        self.semantic_colors = {
+            0: (255,0,0),
+            1: (0,255,0),
+            2: (0,0,255),
+            3: (255,0,255)
+        }
         
     def visualize_scene_3D(self, pointcloud, objects, labels=None, calib=None):
         """
@@ -52,7 +61,7 @@ class KittiVisualizer:
 
         self.__show_3D()
 
-    def visualize_scene_2D(self, pointcloud, image, objects, labels=None, calib=None):
+    def visualize_scene_2D(self, pointcloud, image, objects, labels=None, calib=None, visualize=True):
         # read BEV & image
         self.__scene_2D_mode = True
         _image = self.visualize_scene_image(image, objects, calib)
@@ -77,9 +86,11 @@ class KittiVisualizer:
         image_and_bev[:new_image_height, :, :] = _image
         image_and_bev[new_image_height:, :, :] = _bev
 
-        return image_and_bev
-        # cv2.imshow("scene 2D", image_and_bev)
-        # self.__show_2D()
+        if visualize:
+            cv2.imshow("scene 2D", image_and_bev)
+            self.__show_2D()
+        else:
+            return image_and_bev
 
 
     def visualize_stereo_scene(self, imgL, disp, pointcloud):
@@ -114,8 +125,19 @@ class KittiVisualizer:
         cv2.imshow("disparity_scene", scene)
         self.__show_2D()
 
+    def bev_to_colored_bev_semantic(self, bev):
+        semantic_map = bev[:,:,3]
+        shape = semantic_map.shape[:2]
+        color_map = np.zeros((shape[0], shape[1], 3))
 
+        for label in self.semantic_colors:
+            color = self.semantic_colors[label]
+            color_map[semantic_map == id] = color[2], color[1], color[0]
+
+        return color_map
+        
     def visualize_scene_bev(self, pointcloud, objects, labels=None, calib=None):
+        # BEV = makeBEVMap(pointcloud, None, pointpainting=True)
         BEV = BEVutils.pointcloud_to_bev(pointcloud)
         BEV = self.__bev_to_colored_bev(BEV)
 
@@ -125,7 +147,6 @@ class KittiVisualizer:
         # 3D Boxes of model output
         for obj in objects:
             color = self.__get_box_color(obj.label)
-            color = [c * 255 for c in color]
             self.__draw_bev_box3d(BEV, obj.bbox_3d, color, calib)
 
         # # 3D Boxes of dataset labels 

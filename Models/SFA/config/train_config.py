@@ -108,9 +108,10 @@ def parse_train_configs():
                         help='the path of the resumed checkpoint')
     parser.add_argument('--K', type=int, default=50,
                         help='the number of top K')
+    parser.add_argument('--pointpainting', action='store_true', help='run pointpainting')
 
     configs = edict(vars(parser.parse_args()))
-
+    print('######### ', configs.pointpainting)
     ####################################################################
     ############## Hardware configurations #############################
     ####################################################################
