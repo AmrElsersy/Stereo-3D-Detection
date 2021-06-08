@@ -12,10 +12,10 @@ from visualization.KittiUtils import *
 from visualization.KittiDataset import KittiDataset
 from visualization.KittiVisualization import KittiVisualizer
 
-from BiseNetv2 import BiSeNetV2
-from pointpainting import PointPainter
-from paint_utils import postprocessing, preprocessing_kitti
-from label import trainId2label
+from .BiseNetv2 import BiSeNetV2
+from .pointpainting import PointPainter
+from .paint_utils import postprocessing, preprocessing_kitti
+from .label import trainId2label
 
 from Models.SFA.data_process.kitti_bev_utils import makeBEVMap
 
