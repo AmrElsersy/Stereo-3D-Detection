@@ -452,7 +452,7 @@ class Calibration(object):
             Output: nx2 points in image2 coord.
         '''
         pts_3d_rect = self.cart2hom(pts_3d_rect)
-        pts_2d = torch.dot(pts_3d_rect, torch.transpose(self.P, 0, 1))  # nx3
+        pts_2d = torch.matmul(pts_3d_rect, torch.transpose(self.P, 0, 1))  # nx3
         pts_2d[:, 0] /= pts_2d[:, 2]
         pts_2d[:, 1] /= pts_2d[:, 2]
         return pts_2d[:, 0:2]
