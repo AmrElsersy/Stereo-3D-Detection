@@ -139,6 +139,7 @@ def main():
         dataset_root = os.path.join(cfg.data_path, data_type)
         KITTI_stereo = KittiDataset(dataset_root, stereo_mode=True, mode=mode)
         loop_length = len(KITTI_stereo)
+        print(loop_length)
         if cfg.profiling:
             loop_length = 20
             desc = 'Profiling'
@@ -187,6 +188,7 @@ def main():
         torch.cuda.empty_cache()
 
     if cfg.save_objects is not None:
+        print(len(objects_lines))
         with open(cfg.save_objects, 'wb') as file:
             pickle.dump(objects_lines, file)
 

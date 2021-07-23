@@ -15,13 +15,13 @@ class KittiDataset(Dataset):
         self.mode = mode
 
         start_idx = 0
-        end_idx = -1
+        end_idx = None
         if self.mode == 'train':
             end_idx = 6000
         elif self.mode == 'val':
             start_idx = 6000
         elif self.mode == 'test':
-            end_idx = -1
+            end_idx = None
         else:
             raise ValueError()
 
@@ -76,7 +76,7 @@ class KittiDataset(Dataset):
         # read .bin and convert to tensor
         pointCloud = np.fromfile(path, dtype=np.float32)
         # reshape to get each point
-        pointCloud = pointCloud.reshape(-1, 3)
+        pointCloud = pointCloud.reshape(-1, 4)
 
         return pointCloud
 
