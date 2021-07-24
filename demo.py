@@ -28,11 +28,11 @@ def parse_configs():
     parser.add_argument('--pretrained_sfa', type=str, default='checkpoints/sfa.pth', metavar='PATH')
     parser.add_argument('--data_path', type=str, default='data/kitti')
     parser.add_argument('--evaluate', action='store_true', help='If true, evaluate your pipeline.')
-    parser.add_argument('--testing', action='store_true', help='If true, run on testing data.')
+    parser.add_argument('--testing', action='store_true', default=True, help='If true, run on testing data.')
     parser.add_argument('--generate_video', action='store_true', help='If true, generate video.')
     parser.add_argument('--with_bev', action='store_true', help='If true, generate video.')
     parser.add_argument('--profiling', action='store_true', help='put small limit for loop length')
-    parser.add_argument('--vis', action='store_true', default=False, help='Visualize')
+    parser.add_argument('--vis', action='store_true', default=True, help='Visualize')
     parser.add_argument('--with_spn', action='store_true', default=False, help='Allow using spn layer')
     parser.add_argument('--print_freq', type=int, default=5, help='print frequence')
     parser.add_argument('--save_objects', type=str, default=None, help='To save the predicted objects.')
@@ -139,7 +139,6 @@ def main():
         dataset_root = os.path.join(cfg.data_path, data_type)
         KITTI_stereo = KittiDataset(dataset_root, stereo_mode=True, mode=mode)
         loop_length = len(KITTI_stereo)
-        print(loop_length)
         if cfg.profiling:
             loop_length = 20
             desc = 'Profiling'
@@ -180,15 +179,14 @@ def main():
                 img_ = visualizer.visualize_scene_image(imgL, objects, calib)
             img_list.append(img_)
         elif cfg.vis:
-            # visualizer.visualize_scene_image(imgL, objects, calib=calib, scene_2D_mode=False)
-            visualizer.visualize_scene_2D(sparse_points.cpu().numpy(), imgL, objects, labels, calib=calib)
+            visualizer.visualize_scene_2D_Box(imgL, objects, calib=calib, scene_2D_mode=False)
+            # visualizer.visualize_scene_2D(sparse_points.cpu().numpy(), imgL, objects, labels, calib=calib)
             if visualizer.user_press == 27:
                 cv2.destroyAllWindows()
                 break
         torch.cuda.empty_cache()
 
     if cfg.save_objects is not None:
-        print(len(objects_lines))
         with open(cfg.save_objects, 'wb') as file:
             pickle.dump(objects_lines, file)
 
