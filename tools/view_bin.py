@@ -5,19 +5,18 @@ import os
 
 parser = argparse.ArgumentParser(description='Generate Libar')
 parser.add_argument('--image', type=str,
-                    default='0')
+                    default='000000')
 args = parser.parse_args()
 dirname = os.path.dirname(__file__)
 
 
-pointcloud = np.fromfile(os.path.join(dirname, args.image.zfill(6)+".bin"), dtype=np.float32, count=-1).reshape(-1,4)
+pointcloud = np.fromfile(os.path.join(dirname, args.image+".bin"), dtype=np.float32, count=-1).reshape(-1,3)
 
 # print(pointcloud)
 # print(pointcloud.shape)
 x = pointcloud[:, 0]  # x position of point
 y = pointcloud[:, 1]  # y position of point
 z = pointcloud[:, 2]  # z position of point
-r = pointcloud[:, 3]  # reflectance value of point
 d = np.sqrt(x ** 2 + y ** 2)  # Map Distance from sensor
 
 vals='height'

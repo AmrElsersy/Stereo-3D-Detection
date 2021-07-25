@@ -2,6 +2,8 @@ from os import error
 import torch
 import torch.nn as nn
 import torch.nn.parallel
+import skimage
+import skimage.io
 import torch.utils.data as data
 import time
 import numpy as np
@@ -132,7 +134,9 @@ class Stereo_Depth_Estimation:
         # end = time_synchronized()
         # if printer:
         #     print(f"Time for BEV: {1000 * (end - start)} ms\n")
-
+        skimage.io.imsave('results/sample/disparity.png', (disp_map).cpu().numpy().astype('uint8'))
+        lidar.cpu().numpy().tofile('{}/{}.bin'.format('results', 'pc'))
+        sparse_points.cpu().numpy().tofile('{}/{}.bin'.format('results', 'sparse_pc'))
         if self.cfgs.with_bev:
             return bev, sparse_points
         

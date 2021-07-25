@@ -32,7 +32,6 @@ def parse_configs():
     parser.add_argument('--generate_video', action='store_true', help='If true, generate video.')
     parser.add_argument('--with_bev', action='store_true', help='If true, generate video.')
     parser.add_argument('--profiling', action='store_true', help='put small limit for loop length')
-    parser.add_argument('--vis', action='store_true', default=False, help='Visualize')
     parser.add_argument('--with_spn', action='store_true', default=False, help='Allow using spn layer')
     parser.add_argument('--print_freq', type=int, default=5, help='print frequence')
     parser.add_argument('--save_objects', type=str, default=None, help='To save the predicted objects.')
@@ -178,9 +177,11 @@ def main():
             else:
                 img_ = visualizer.visualize_scene_image(imgL, objects, calib)
             img_list.append(img_)
-        elif cfg.vis:
-            # visualizer.visualize_scene_image(imgL, objects, calib=calib, scene_2D_mode=False)
-            visualizer.visualize_scene_2D(sparse_points.cpu().numpy(), imgL, objects, labels, calib=calib)
+        else:
+            if cfg.with_bev:
+                visualizer.visualize_scene_2D(sparse_points.cpu().numpy(), imgL, objects, labels, calib=calib)
+            else:
+                visualizer.visualize_scene_image(imgL, objects, calib=calib, scene_2D_mode=False)
             if visualizer.user_press == 27:
                 cv2.destroyAllWindows()
                 break

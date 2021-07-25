@@ -280,5 +280,22 @@ Then you will find your results in new generated file `profiling.txt`.
 
 <hr>
 
+## Citation
+```
+@article{wang2018anytime,
+  title={Anytime Stereo Image Depth Estimation on Mobile Devices},
+  author={Wang, Yan and Lai, Zihang and Huang, Gao and Wang, Brian H. and Van Der Maaten, Laurens and Campbell, Mark and Weinberger, Kilian Q},
+  journal={arXiv preprint arXiv:1810.11408},
+  year={2018}
+}
+```
 
+```bash
+@misc{Super-Fast-Accurate-3D-Object-Detection-PyTorch,
+  author =       {Nguyen Mau Dung},
+  title =        {{Super-Fast-Accurate-3D-Object-Detection-PyTorch}},
+  howpublished = {\url{https://github.com/maudzung/Super-Fast-Accurate-3D-Object-Detection}},
+  year =         {2020}
+}
+```
 
