@@ -28,7 +28,7 @@ def parse_configs():
     parser.add_argument('--pretrained_sfa', type=str, default='checkpoints/sfa.pth', metavar='PATH')
     parser.add_argument('--data_path', type=str, default='data/kitti')
     parser.add_argument('--evaluate', action='store_true', help='If true, evaluate your pipeline.')
-    parser.add_argument('--testing', action='store_true', help='If true, run on testing data.')
+    parser.add_argument('--testing', action='store_true', default=True, help='If true, run on testing data.')
     parser.add_argument('--generate_video', action='store_true', help='If true, generate video.')
     parser.add_argument('--with_bev', action='store_true', help='If true, generate video.')
     parser.add_argument('--profiling', action='store_true', help='put small limit for loop length')

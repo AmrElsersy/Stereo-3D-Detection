@@ -162,6 +162,51 @@ class KittiVisualizer:
         cv2.imshow("BEV", BEV)
         self.__show_2D()
 
+    def visualize_scene_2D_Box(self, image, kitti_objects, calib, scene_2D_mode=True):
+
+        # Preprocessing for viz.
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        image = Image.fromarray(image)
+
+        self.current_image = image
+
+        for object in kitti_objects:
+            if object.score < self.confidence_score_thresh:
+                continue
+
+            corners = self.__convert_3d_bbox_to_corners(object.bbox_3d, calib)
+            proj_corners = calib.project_lidar_to_image(corners)
+
+            filtered_corners = self.filter_truncated_points(proj_corners)
+
+            minimum = filtered_corners.min(axis=0)
+            maximum = filtered_corners.max(axis=0)
+
+            left = minimum[0]
+            top = minimum[1]
+            right = maximum[0]
+            bottom = maximum[1]
+
+            points = np.array([[left, top], [right, top], [left, bottom], [right, bottom]])
+            color = self.__get_box_color(object.label)
+            self.__draw_box_corners_2D(points, color, VisMode.SCENE_2D)
+
+            bbox_volume = object.bbox_3d.height * object.bbox_3d.width * object.bbox_3d.length
+
+            score_point = (left, top - 20 if top > 20 else top)
+            score_per_box = int(object.score * 100)
+            self.__draw_text_2D(f"Score: {score_per_box}", score_point, bbox_volume, color)
+
+        self.current_image = np.array(self.current_image)
+        self.current_image = cv2.cvtColor(self.current_image, cv2.COLOR_RGB2BGR)
+
+        if scene_2D_mode:
+            return np.array(self.current_image)
+
+        cv2.imshow('Image', self.current_image)
+        self.__show_2D()
+
+
     def visualize_scene_image(self, image, kitti_objects, calib, scene_2D_mode=True):
         
         # Preprocessing for viz.
@@ -193,9 +238,6 @@ class KittiVisualizer:
             score_point = (point[0], point[1]-20)
             score_per_box = int(object.score * 100)
             self.__draw_text_2D(f"Score: {score_per_box}", score_point, bbox_volume, color)
-
-            label_point = (point[0], point[1]-20)
-            # self.__draw_text_2D(f"{object.label}", (point[0], point[1]))
 
         self.current_image = np.array(self.current_image)
         self.current_image = cv2.cvtColor(self.current_image, cv2.COLOR_RGB2BGR) 
@@ -346,6 +388,21 @@ class KittiVisualizer:
 
         return corners
 
+    def __draw_box_corners_2D(self, corners, clr, vis_mode=VisMode.SCENE_3D):
+        if corners.shape[0] != 4:
+            print("Invalid box format")
+            return
+
+        c0 = corners[0]
+        c1 = corners[1]
+        c2 = corners[2]
+        c3 = corners[3]
+
+        self.__draw_line(c0, c1, clr, vis_mode)
+        self.__draw_line(c0, c2, clr, vis_mode)
+        self.__draw_line(c3, c1, clr, vis_mode)
+        self.__draw_line(c3, c2, clr, vis_mode)
+
     def __draw_box_corners(self, corners, clr, vis_mode=VisMode.SCENE_3D):
         if corners.shape[0] != 8:
             print("Invalid box format")
@@ -432,6 +489,20 @@ class KittiVisualizer:
 
         return False
 
+    def filter_truncated_points(self, corners=None):
+        assert corners is not None
+
+        for corner in corners:
+            if corner[0] < 0:
+                corner[0] = 0
+            if corner[0] > 1241:
+                corner[0] = 1241
+            if corner[1] < 0:
+                corner[1] = 0
+            if corner[1] > 374:
+                corner[1] = 374
+
+        return corners
 
 
 # KITTI = KittiDataset('/home/amrelsersy/SFA3D/dataset/kitti/testing')

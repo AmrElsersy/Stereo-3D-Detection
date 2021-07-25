@@ -206,6 +206,19 @@ NOTE: The text files in ImageSets are split files, you can find the split files 
 
 <hr>
 
+## KITTI Evaluation
+To evaluate the model on testing data on KITTI submition
+```
+python demo.py --testing --save_objects objects.pkl
+
+```
+```
+python submit_to_kitti.py
+```
+Then compress the label_2 folder in testing directory and submit it on KITTI 
+
+<hr>
+
 ## Utils
 
 ### Generate disparity
@@ -249,6 +262,7 @@ Then run this command:
 ```
 python ./tools/generate_lidar.py --datapath <datapath>
 ```
+
 #### OPTIONS:
 - If your converting depth images, use this flag `--is_depth`
 - Data path is set to `data/kitti/training` by default, To change it add `--data_path <datapath>`
