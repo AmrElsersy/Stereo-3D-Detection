@@ -12,6 +12,9 @@ This repository containts a real time **3D depth estmiation** using stereo camer
 
 <hr>
 
+![ezgif com-gif-maker](https://user-images.githubusercontent.com/35613645/127658809-faf09e66-48de-4c60-8733-8b6842529bf6.gif)
+
+
 ## Dependencies
 
 - [CUDA >= 10.0](https://developer.nvidia.com/Cuda-Toolkit)
