@@ -5,6 +5,7 @@ import time
 import warnings
 import numpy as np
 from pathlib import Path
+from pthflops import count_ops
 
 warnings.filterwarnings("ignore", category=UserWarning)
 
@@ -61,6 +62,7 @@ class SFA3D:
         #     print(f"Time for SFA: {1000 * (end - start)} ms\n")
         # else:
         outputs = self.model(bev)
+        count_ops(self.model, bev)
         detections = self.post_procesiing(outputs)
         return detections
 
