@@ -11,7 +11,6 @@ from PIL import Image
 import torchvision.transforms as transforms
 from Models.AnyNet.models.anynet import AnyNet
 import Models.AnyNet.dataloader.preprocess as preprocess
-# from pthflops import count_ops
 
 
 import Models.SFA.config.kitti_config as cnf
@@ -92,7 +91,6 @@ class Stereo_Depth_Estimation:
     def stereo_to_disparity(self, imgL, imgR):
         imgL = imgL.float()
         imgR = imgR.float()
-        # count_ops(self.model)
         outputs = self.model(imgL, imgR)
 
         disp_map = torch.squeeze(outputs[-1], 1)[0].float()
